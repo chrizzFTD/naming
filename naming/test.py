@@ -102,3 +102,4 @@ class TestFile(unittest.TestCase):
         self.assertEqual('myfile', f.base)
         self.assertEqual('_data.0', f.pipe)
         self.assertEqual('0', f.version)
+        self.assertEqual(f.get_name(), str(f.path))

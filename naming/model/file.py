@@ -13,12 +13,13 @@ CWD = None
 
 class File(Pipe):
     """docstring for File"""
+
     def _set_values(self):
         super(File, self)._set_values()
         self._extension = '[.](?P<extension>[a-zA-Z0-9]+)'
 
     def _get_joined_pattern(self):
-        return '{}{}'.format(super(File, self)._get_joined_pattern(), self._extension)
+        return rf'{super(File, self)._get_joined_pattern()}{self._extension}'
 
     def get_name(self, **values):
         if not values and self.name:
@@ -27,7 +28,7 @@ class File(Pipe):
             extension = values.get('extension') or self.extension or '[extension]'
         except AttributeError:
             extension = '[extension]'
-        return '{}.{}'.format(super(File, self).get_name(**values), extension)
+        return rf'{super(File, self).get_name(**values)}.{extension}'
 
     def _get_path_pattern_list(self):
         return []
@@ -40,5 +41,5 @@ class File(Pipe):
 
     @property
     def full_path(self):
-        cwd = Path.home() if not CWD else CWD
+        cwd = Path.home() if not CWD else Path(CWD)
         return Path.joinpath(cwd, self.path)
