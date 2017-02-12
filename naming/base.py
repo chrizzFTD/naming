@@ -1,13 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Object-oriented names.
-
-This module offers the base classes that represent a name in an object oriented way.
-New name objects can be created with minimum effort in a flexible way.
-
-Todo:
-    * Write appropriate documentation.
-"""
 # standard
 import re
 import abc
@@ -24,13 +14,13 @@ def __regex_pattern(pattern_name: str) -> typing.Dict[str, typing.Callable]:
     return {'fget': getter, 'fset': setter}
 
 
-class AbstractBase(object):
+class _AbstractBase(object):
     __metaclass__ = abc.ABCMeta
     """This is the base abstract class for Name objects.
     All subclasses should inherit from Name or EasyName instead of this one."""
 
     def __init__(self, name: str=None, separator: str='_'):
-        super(AbstractBase, self).__init__()
+        super(_AbstractBase, self).__init__()
         self.__values = {}
         self._set_separator(separator)
         self._set_patterns()
@@ -50,11 +40,12 @@ class AbstractBase(object):
 
     @property
     def separator(self) -> str:
-        """The string that acts as a separator of all the fields in the name."""
+        """ABC. The string that acts as a separator of all the fields in the name."""
         return self._separator
 
     @separator.setter
     def separator(self, value: str):
+        """ABC. The string that acts as a separator of all the fields in the name."""
         self._set_separator(value)
         name = self.get_name(**self.get_values()) if self.name else None
         self._init_name_core(name)
@@ -73,6 +64,7 @@ class AbstractBase(object):
 
     @property
     def name(self):
+        """ABC. The string that acts as a separator of all the fields in the name."""
         return self.__name
 
     @abc.abstractmethod
@@ -89,7 +81,7 @@ class AbstractBase(object):
         self.set_name(self.name)
 
     def set_name(self, name: str):
-        """"This is the set name method"""
+        """"ABC. This is the set name method"""
         match = self.__regex.match(name)
         if not match:
             msg = rf'Can not set invalid name "{name}".'
@@ -118,6 +110,7 @@ class AbstractBase(object):
         return self._separator_pattern.join(self._get_values_pattern())
 
     def get_values(self) -> typing.Dict[str, str]:
+        """ABC. The string that acts as a separator of all the fields in the name."""
         return {k: v for k, v in self._values.items() if not self._filter_kv(k, v)}
 
     def _filter_kv(self, k: str, v) -> bool:
@@ -132,12 +125,14 @@ class AbstractBase(object):
 
     @property
     def nice_name(self) -> str:
+        """ABC. The string that acts as a separator of all the fields in the name."""
         return self._get_nice_name()
 
     def _get_nice_name(self, **values) -> str:
         return self._separator.join(self._get_translated_pattern_list('_get_pattern_list', **values))
 
     def get_name(self, **values) -> str:
+        """ABC. The string that acts as a separator of all the fields in the name."""
         if not values and self.name:
             return self.name
         return self._get_nice_name(**values)
@@ -158,44 +153,3 @@ class AbstractBase(object):
             else:
                 _values.append(rf'[{nice_name}]')
         return _values
-
-
-class Name(AbstractBase):
-    """docstring for Name"""
-    def _set_values(self):
-        super(Name, self)._set_values()
-        self._base = '[\w]+?'
-
-    def _set_patterns(self):
-        super(Name, self)._set_patterns()
-        self._set_pattern('base')
-
-    def _get_pattern_list(self):
-        super(Name, self)._get_pattern_list()
-        return ['_base']
-
-
-class EasyName(Name):
-    config = None
-
-    def __init__(self, *args, **kwargs):
-        if self.config is None:
-            self.config = {}
-        self.__keys = self.config.keys()
-        self.__items = self.config.items()
-        super(EasyName, self).__init__(*args, **kwargs)
-
-    def _set_values(self):
-        super(EasyName, self)._set_values()
-        for k, v in self.__items:
-            setattr(self, rf'_{k}', v)
-
-    def _set_patterns(self):
-        super(EasyName, self)._set_patterns()
-        for k in self.__keys:
-            self._set_pattern(k)
-
-    def _get_pattern_list(self):
-        result = super(EasyName, self)._get_pattern_list()
-        result.extend([rf'_{k}' for k in self.__keys])
-        return result
