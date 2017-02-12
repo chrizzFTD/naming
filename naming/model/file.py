@@ -6,12 +6,12 @@ The file module.
 import os
 from pathlib import Path
 # package
-from .pipe import Pipe
+from .base import Name
 
 CWD = None
 
 
-class File(Pipe):
+class File(Name):
     """docstring for File"""
 
     def _set_values(self):

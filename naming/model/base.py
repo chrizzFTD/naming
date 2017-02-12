@@ -26,8 +26,9 @@ def __regex_pattern(pattern_name: str) -> typing.Dict[str, typing.Callable]:
 
 class AbstractBase(object):
     __metaclass__ = abc.ABCMeta
-    """This is the base abstract class for Name objects. All subclasses are recommended to inherit
-    from Name instead of this one."""
+    """This is the base abstract class for Name objects.
+    All subclasses should inherit from Name or EasyName instead of this one."""
+
     def __init__(self, name: str=None, separator: str='_'):
         super(AbstractBase, self).__init__()
         self.__values = {}
@@ -36,6 +37,8 @@ class AbstractBase(object):
         self._init_name_core(name)
 
     def _init_name_core(self, name: str):
+        """Runs whenever a Name object is initialized or its name is set."""
+
         self.__set_name(name)
         self._set_values()
         self.__set_regex()

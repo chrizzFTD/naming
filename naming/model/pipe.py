@@ -4,6 +4,7 @@ The pipe module.
 """
 # package
 from .base import Name
+from .file import File
 
 
 class Pipe(Name):
@@ -64,3 +65,7 @@ class Pipe(Name):
             kwargs = {k: values.get(k) for k in self._pipe_fields}
             pipe = self._get_pipe_field(**kwargs)
         return rf'{super(Pipe, self).get_name(**values)}{pipe}'
+
+
+class PipeFile(File, Pipe):
+    pass

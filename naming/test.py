@@ -11,21 +11,21 @@ from naming import *
 class TestName(unittest.TestCase):
 
     def test_empty_name(self):
-        p = Name()
-        self.assertEqual('[base]', p.get_name())
+        n = Name()
+        self.assertEqual('[base]', n.get_name())
 
     def test_init_name(self):
-        p = Name('initname')
-        self.assertEqual('initname', p.get_name())
+        n = Name('initname')
+        self.assertEqual('initname', n.get_name())
         with self.assertRaises(NameError):
             Name(dict(my_name='dict'))
-        p = Name(dict())
-        self.assertFalse(None, p.get_name())
+        n = Name(dict())
+        self.assertFalse(None, n.get_name())
 
     def test_set_name(self):
-        p = Name()
-        p.set_name('setname')
-        self.assertEqual('setname', p.get_name())
+        n = Name()
+        n.set_name('setname')
+        self.assertEqual('setname', n.get_name())
 
 
 class TestPipe(unittest.TestCase):
@@ -92,6 +92,21 @@ class TestFile(unittest.TestCase):
 
     def test_empty_name(self):
         f = File()
+        self.assertEqual('[base].[extension]', f.get_name())
+        self.assertEqual('[base].abc', f.get_name(extension='abc'))
+        self.assertEqual('[base].[extension]', f.get_name(extension=''))
+        with self.assertRaises(AttributeError):
+            f.extension
+        f.set_name('myfile.ext')
+        self.assertEqual('ext', f.extension)
+        self.assertEqual('myfile', f.base)
+        self.assertEqual(f.get_name(), str(f.path))
+
+
+class TestPipeFile(unittest.TestCase):
+
+    def test_empty_name(self):
+        f = PipeFile()
         self.assertEqual('[base]_[pipe].[extension]', f.get_name())
         self.assertEqual('[base]_[pipe].abc', f.get_name(extension='abc'))
         self.assertEqual('[base]_[pipe].[extension]', f.get_name(extension=''))
