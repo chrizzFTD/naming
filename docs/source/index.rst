@@ -12,7 +12,6 @@ Welcome to naming's documentation!
 
     API Reference
 
-
 Indices and tables
 ==================
 

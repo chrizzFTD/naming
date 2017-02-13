@@ -58,11 +58,16 @@ class File(Name):
         super(File, self)._set_values()
         self._extension = '[.](?P<extension>[a-zA-Z0-9]+)'
 
-    def _get_joined_pattern(self):
+    def _get_joined_pattern(self) -> str:
         return rf'{super(File, self)._get_joined_pattern()}{self._extension}'
 
-    def get_name(self, **values):
-        """FILE. The string that acts as a separator of all the fields in the name."""
+    def get_name(self, **values) -> str:
+        """
+        Get a string name of this object.
+
+        Args:
+            **values: Arbitrary field values to build the new name.
+        """
         if not values and self.name:
             return super(File, self).get_name(**values)
         try:
@@ -76,14 +81,14 @@ class File(Name):
 
     @property
     def path(self) -> Path:
-        """FILE. The string that acts as a separator of all the fields in the name."""
+        """The Path representing this object on the filesystem."""
         args = self._get_translated_pattern_list('_get_path_pattern_list')
         args.append(self.get_name())
         return Path(os.path.join(*args))
 
     @property
     def full_path(self) -> Path:
-        """FILE. The string that acts as a separator of all the fields in the name."""
+        """The resolved full Path representing this object on the filesystem."""
         cwd = Path.home() if not CWD else Path(CWD)
         return Path.joinpath(cwd, self.path)
 
@@ -107,8 +112,8 @@ class Pipe(Name):
         return rf'{super(Pipe, self)._get_joined_pattern()}{self._pipe}'
 
     @property
-    def pipe_name(self):
-        """PIPE. The string that acts as a separator of all the fields in the name."""
+    def pipe_name(self) -> str:
+        """The pipe name string of this object."""
         try:
             return rf'{self.nice_name}{self.pipe}'
         except AttributeError:
@@ -137,8 +142,7 @@ class Pipe(Name):
 
         return ''.join([self._format_pipe_field(k, v) for k, v in fields.items()])
 
-    def get_name(self, **values):
-        """PIPE. The string that acts as a separator of all the fields in the name."""
+    def get_name(self, **values) -> str:
         if not values and self.name:
             return super(Pipe, self).get_name(**values)
         try:

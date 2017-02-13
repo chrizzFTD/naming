@@ -40,12 +40,12 @@ class _AbstractBase(object):
 
     @property
     def separator(self) -> str:
-        """ABC. The string that acts as a separator of all the fields in the name."""
+        """The string that acts as a separator of all the fields in the name."""
         return self._separator
 
     @separator.setter
     def separator(self, value: str):
-        """ABC. The string that acts as a separator of all the fields in the name."""
+        """The string that acts as a separator of all the fields in the name."""
         self._set_separator(value)
         name = self.get_name(**self.get_values()) if self.name else None
         self._init_name_core(name)
@@ -64,12 +64,11 @@ class _AbstractBase(object):
 
     @property
     def name(self):
-        """ABC. The string that acts as a separator of all the fields in the name."""
+        """The name string set on the object."""
         return self.__name
 
     @abc.abstractmethod
     def _set_values(self):
-        """"This is the set values method"""
         pass
 
     def __set_regex(self):
@@ -81,7 +80,11 @@ class _AbstractBase(object):
         self.set_name(self.name)
 
     def set_name(self, name: str):
-        """"ABC. This is the set name method"""
+        """Set this object's name to the provided string.
+
+        Raises:
+            NameError: If an invalid string is provided.
+        """
         match = self.__regex.match(name)
         if not match:
             msg = rf'Can not set invalid name "{name}".'
@@ -90,7 +93,8 @@ class _AbstractBase(object):
         self.__values.update(match.groupdict())
 
     @property
-    def _values(self) -> typing.Dict[str, str]:
+    # def _values(self) -> typing.Dict[str, str]:
+    def _values(self) -> dict:
         return self.__values
 
     def __getattr__(self, attr):
@@ -109,8 +113,9 @@ class _AbstractBase(object):
     def _get_joined_pattern(self) -> str:
         return self._separator_pattern.join(self._get_values_pattern())
 
-    def get_values(self) -> typing.Dict[str, str]:
-        """ABC. The string that acts as a separator of all the fields in the name."""
+    # def get_values(self) -> typing.Dict[str, str]:
+    def get_values(self) -> dict:
+        """Get the field values of this object's name as a dictionary in the form of {field: value}."""
         return {k: v for k, v in self._values.items() if not self._filter_kv(k, v)}
 
     def _filter_kv(self, k: str, v) -> bool:
@@ -125,14 +130,18 @@ class _AbstractBase(object):
 
     @property
     def nice_name(self) -> str:
-        """ABC. The string that acts as a separator of all the fields in the name."""
+        """This object's pure name attribute."""
         return self._get_nice_name()
 
     def _get_nice_name(self, **values) -> str:
         return self._separator.join(self._get_translated_pattern_list('_get_pattern_list', **values))
 
     def get_name(self, **values) -> str:
-        """ABC. The string that acts as a separator of all the fields in the name."""
+        """Get a new name string from this object's name values.
+
+        Args:
+            **values: Arbitrary field values to replace and build the new name.
+        """
         if not values and self.name:
             return self.name
         return self._get_nice_name(**values)

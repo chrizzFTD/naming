@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # naming documentation build configuration file, created by
-# sphinx-quickstart on Sun Feb 12 12:56:58 2017.
+# sphinx-quickstart on Mon Feb 13 22:13:36 2017.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -17,9 +17,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath('.'))))
+# import os
+# import sys
+# sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- General configuration ------------------------------------------------
@@ -41,18 +41,16 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               'sphinx.ext.githubpages',
               'sphinx.ext.graphviz',
-              'sphinx.ext.inheritance_diagram']
+              'sphinx.ext.inheritance_diagram',
+              'sphinx_autodoc_typehints',
+              'sphinx.ext.napoleon']
+              # 'sphinx_pyreverse']
 
 graphviz_dot = r'B:\__appdata__\graphviz\bin\dot.exe'
 
-autodoc_member_order = 'bysource'
+autodoc_member_order = 'groupwise'
 autodoc_default_flags = ['members', 'show-inheritance', 'undoc-members']
-# graphviz_dot_args = ['-Gsize=15,15']
 
-# inheritance_node_attrs = dict(shape='ellipse', fontsize=14, height=0.75,
-#                               color='dodgerblue1', style='filled')
-# inheritance_graph_attrs = dict(rankdir="LR", size='"6.0, 8.0"',
-#                                fontsize=14, ratio='compress')
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -84,7 +82,7 @@ release = '0.1.0'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = 'en'
+language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -103,7 +101,23 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'nature'
+# html_theme = 'nature'
+html_theme = 'sphinx_rtd_theme'
+
+# import sphinx_py3doc_enhanced_theme
+# html_theme = "sphinx_py3doc_enhanced_theme"
+# html_theme_path = [sphinx_py3doc_enhanced_theme.get_html_theme_path()]
+
+# html_theme_options = {
+#     # 'githuburl': 'https://github.com/ionelmc/sphinx-py3doc-enhanced-theme/',
+#     'bodyfont': '"Lucida Grande",Arial,sans-serif',
+#     'headfont': '"Lucida Grande",Arial,sans-serif',
+#     'codefont': 'monospace,sans-serif',
+#     'linkcolor': '#0072AA',
+#     'visitedlinkcolor': '#6363bb',
+#     'extrastyling': False,
+# }
+# pygments_style = 'friendly'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -173,27 +187,6 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-
-
-# -- Options for Epub output ----------------------------------------------
-
-# Bibliographic Dublin Core info.
-epub_title = project
-epub_author = author
-epub_publisher = author
-epub_copyright = copyright
-
-# The unique identifier of the text. This can be a ISBN number
-# or the project homepage.
-#
-# epub_identifier = ''
-
-# A unique identification for the text.
-#
-# epub_uid = ''
-
-# A list of files that should not be packed into the epub file.
-epub_exclude_files = ['search.html']
 
 
 
