@@ -36,20 +36,21 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.intersphinx',
               'sphinx.ext.todo',
               'sphinx.ext.coverage',
-              'sphinx.ext.imgmath',
-              'sphinx.ext.ifconfig',
+              # 'sphinx.ext.imgmath',
+              # 'sphinx.ext.ifconfig',
               'sphinx.ext.viewcode',
-              'sphinx.ext.githubpages',
+              # 'sphinx.ext.githubpages',
               'sphinx.ext.graphviz',
               'sphinx.ext.inheritance_diagram',
-              'sphinx_autodoc_typehints',
+              # 'sphinx_autodoc_typehints',
               'sphinx.ext.napoleon']
               # 'sphinx_pyreverse']
 
-graphviz_dot = r'B:\__appdata__\graphviz\bin\dot.exe'
+# graphviz_dot = r'B:\__appdata__\graphviz\bin\dot.exe'
 
 autodoc_member_order = 'groupwise'
 autodoc_default_flags = ['members', 'show-inheritance', 'undoc-members']
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
