@@ -11,7 +11,7 @@ CWD = None
 
 
 class Name(_AbstractBase):
-    """docstring for Name"""
+    """Inherited by: :class:`naming.EasyName` :class:`naming.File` :class:`naming.Pipe`"""
     def _set_values(self):
         super(Name, self)._set_values()
         self._base = '[\w]+?'
@@ -52,7 +52,7 @@ class EasyName(Name):
 
 
 class File(Name):
-    """docstring for File"""
+    """Inherited by: :class:`naming.PipeFile`"""
 
     def _set_values(self):
         super(File, self)._set_values()
@@ -62,12 +62,7 @@ class File(Name):
         return rf'{super(File, self)._get_joined_pattern()}{self._extension}'
 
     def get_name(self, **values) -> str:
-        """
-        Get a string name of this object.
-
-        Args:
-            **values: Arbitrary field values to build the new name.
-        """
+        """Get a string name of this object."""
         if not values and self.name:
             return super(File, self).get_name(**values)
         try:
@@ -94,7 +89,7 @@ class File(Name):
 
 
 class Pipe(Name):
-    """docstring for Pipe"""
+    """Inherited by: :class:`naming.PipeFile`"""
     _pipe_fields = ('output', 'version', 'frame')
 
     def _set_values(self):

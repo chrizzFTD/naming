@@ -42,8 +42,10 @@ extensions = ['sphinx.ext.autodoc',
               # 'sphinx.ext.githubpages',
               'sphinx.ext.graphviz',
               'sphinx.ext.inheritance_diagram',
-              # 'sphinx_autodoc_typehints',
-              'sphinx.ext.napoleon']
+              'sphinx_autodoc_typehints']
+              # 'sphinx_autodoc_annotation']
+              # 'sphinx.ext.napoleon',
+              # 'sphinx_autodoc_napoleon_typehints']
               # 'sphinx_pyreverse']
 
 # graphviz_dot = r'B:\__appdata__\graphviz\bin\dot.exe'
@@ -192,4 +194,4 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {'https://docs.python.org/3': None}

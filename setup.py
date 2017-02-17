@@ -10,5 +10,6 @@ setup(
     author_email='christianlb.vfx@outlook.com',
     url='https://github.com/chrizzFTD/naming',
     download_url='https://github.com/chrizzFTD/naming/releases/tag/0.1.0',
-    classifiers=['Programming Language :: Python :: 3.6']
+    classifiers=['Programming Language :: Python :: 3.6'],
+    extras_require={'docs': ['sphinx_autodoc_typehints']}
 )
