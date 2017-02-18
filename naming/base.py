@@ -90,7 +90,7 @@ class _AbstractBase(object):
         """Set this object's name to the provided string.
 
         :param name: The name to be set on this object.
-        :raises ~exceptions.NameError: If an invalid string is provided.
+        :raises NameError: If an invalid string is provided.
         """
         match = self.__regex.match(name)
         if not match:
