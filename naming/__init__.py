@@ -11,7 +11,21 @@ CWD = None
 
 
 class Name(_AbstractBase):
-    """Inherited by: :class:`naming.EasyName` :class:`naming.File` :class:`naming.Pipe`"""
+    """Inherited by: :class:`naming.EasyName` :class:`naming.File` :class:`naming.Pipe`
+
+    Base class for name objects.
+
+    Contains only one field: *base* that accepts any word character.
+
+    Basic use::
+
+        >>> n = naming.Name()
+        >>> n.get_name()
+        '[base]'
+        >>> n.get_values()
+        {'base': None}
+
+    """
     def _set_values(self):
         super(Name, self)._set_values()
         self._base = '[\w]+?'
@@ -62,7 +76,11 @@ class File(Name):
         return rf'{super(File, self)._get_joined_pattern()}{self._extension}'
 
     def get_name(self, **values) -> str:
-        """Get a string name of this object."""
+        """Get a new name string from this object's name values.
+
+        :param values: Variable keyword arguments where the **key** should refer to a field on this object that will
+                       use the provided value to build the new name. Fields unique to File objects: *extension*.
+        """
         if not values and self.name:
             return super(File, self).get_name(**values)
         try:
@@ -138,6 +156,12 @@ class Pipe(Name):
         return ''.join([self._format_pipe_field(k, v) for k, v in fields.items()])
 
     def get_name(self, **values) -> str:
+        """Get a new name string from this object's name values.
+
+        :param values: Variable keyword arguments where the **key** should refer to a field on this object that will
+                       use the provided value to build the new name. Fields unique to Pipe objects: *output*, *version*
+                       and *frame*.
+        """
         if not values and self.name:
             return super(Pipe, self).get_name(**values)
         try:
