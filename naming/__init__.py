@@ -19,6 +19,7 @@ class Name(_AbstractBase):
 
     Basic use::
 
+        >>> import naming
         >>> n = naming.Name()
         >>> n.get_name()
         '[base]'
