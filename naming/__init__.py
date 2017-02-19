@@ -15,16 +15,23 @@ class Name(_AbstractBase):
 
     Base class for name objects.
 
-    Contains only one field: *base* that accepts any word character.
+    ======  ==========
+    **Unique Fields:**
+    ------------------
+    *base*  Accepts any amount of word characters
+    ======  ==========
 
     Basic use::
 
-        >>> import naming
-        >>> n = naming.Name()
+        >>> from naming import Name
+        >>> n = Name()
         >>> n.get_name()
-        '[base]'
+        '[basse]'
         >>> n.get_values()
-        {'base': None}
+        {}
+        >>> n.set_name('hello_world')
+        >>> n.get_values()
+        {'base': 'hello_world'}
 
     """
     def _set_values(self):
@@ -41,6 +48,50 @@ class Name(_AbstractBase):
 
 
 class EasyName(Name):
+    """Class that allows the easy creation of new Name objects.
+
+    ========  ============
+    **Unique attributes:**
+    ----------------------
+    *config*  Dictionary with the fields that will compose this name object.
+    ========  ============
+
+    Example::
+
+        >>> from naming import EasyName, PipeFile
+        >>> extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
+        >>> ProjectFile = type('ProjectFile', (EasyName, PipeFile), dict(config=extra_fields))
+        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast_base.17.abc')
+        >>> pf.get_values()
+        {'base': 'project_data_name',
+        'year': '2017',
+        'username': 'christianl',
+        'anotherfield': 'constant',
+        'lastfield': 'iamlast',
+        'output': 'base',
+        'version': '17',
+        'extension': 'abc'}
+        >>> pf.nice_name
+        'project_data_name_2017_christianl_constant_iamlast'
+        >>> pf.year
+        '2017'
+        >>> pf.lastfield
+        'iamlast'
+        >>> pf.extension
+        'abc'
+        >>> [pf.get_name(frame=x, output='render', year=2018) for x in range(10)]
+        ['project_data_name_2018_christianl_constant_iamlast_render.17.0.abc',
+        'project_data_name_2018_christianl_constant_iamlast_render.17.1.abc',
+        'project_data_name_2018_christianl_constant_iamlast_render.17.2.abc',
+        'project_data_name_2018_christianl_constant_iamlast_render.17.3.abc',
+        'project_data_name_2018_christianl_constant_iamlast_render.17.4.abc',
+        'project_data_name_2018_christianl_constant_iamlast_render.17.5.abc',
+        'project_data_name_2018_christianl_constant_iamlast_render.17.6.abc',
+        'project_data_name_2018_christianl_constant_iamlast_render.17.7.abc',
+        'project_data_name_2018_christianl_constant_iamlast_render.17.8.abc',
+        'project_data_name_2018_christianl_constant_iamlast_render.17.9.abc']
+
+    """
     config = None
 
     def __init__(self, *args, **kwargs):
@@ -67,7 +118,29 @@ class EasyName(Name):
 
 
 class File(Name):
-    """Inherited by: :class:`naming.PipeFile`"""
+    """Inherited by: :class:`naming.PipeFile`
+
+    File Name objects.
+
+    ===========  ===========
+    **Unique Fields:**
+    ------------------------
+    *extension*  Any amount of characters in the class [a-zA-Z0-9]
+    ===========  ===========
+
+    Basic use::
+
+        >>> from naming import File
+        >>> f = File()
+        >>> f.get_name()
+        '[basse].[extension]'
+        >>> f.get_name(extension='png')
+        '[base].png'
+        >>> f.set_name('hello.world')
+        >>> f.get_values()
+        {'base': 'hello', 'extension': 'world'}
+
+    """
 
     def _set_values(self):
         super(File, self)._set_values()
@@ -108,7 +181,39 @@ class File(Name):
 
 
 class Pipe(Name):
-    """Inherited by: :class:`naming.PipeFile`"""
+    """Inherited by: :class:`naming.PipeFile`
+
+    Pipe Name objects.
+
+    =========  =========
+    **Unique Fields:**
+    --------------------
+    *output**  Any amount of characters in the class [a-zA-Z0-9]
+    *version*  Any amount of digits
+    *frame***  Any amount of digits
+    \* optional field. ** exists only when *output* is there as well.
+    ====================
+
+    ======  ============
+    **Composed Fields:**
+    --------------------
+    *pipe*  Combination of unique fields in the form of: ({separator}{output})\*.{version}.{frame}**
+    ======  ============
+
+    Basic use::
+
+        >>> from naming import Pipe
+        >>> p = Pipe()
+        >>> p.get_name()
+        '[base]_[pipe]'
+        >>> p.get_name(version=10)
+        '[base].10'
+        >>> p.get_name(output='data')
+        '[base]_data.[version]'
+        >>> p.get_name(output='cache', version=7, frame=24)
+        '[base]_cache.7.24'
+
+    """
     _pipe_fields = ('output', 'version', 'frame')
 
     def _set_values(self):
@@ -175,4 +280,24 @@ class Pipe(Name):
 
 
 class PipeFile(File, Pipe):
+    """
+    Basic use::
+
+        >>> from naming import PipeFile
+        >>> p = PipeFile('wipfile.7.ext')
+        >>> p.get_values()
+        {'base': 'wipfile', 'version': '7', 'extension': 'ext'}
+        >>> [p.get_name(frame=x, output='render') for x in range(10)]
+        ['wipfile_render.7.0.ext',
+        'wipfile_render.7.1.ext',
+        'wipfile_render.7.2.ext',
+        'wipfile_render.7.3.ext',
+        'wipfile_render.7.4.ext',
+        'wipfile_render.7.5.ext',
+        'wipfile_render.7.6.ext',
+        'wipfile_render.7.7.ext',
+        'wipfile_render.7.8.ext',
+        'wipfile_render.7.9.ext']
+
+    """
     pass
