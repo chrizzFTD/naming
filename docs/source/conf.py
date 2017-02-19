@@ -42,9 +42,7 @@ extensions = ['sphinx.ext.autodoc',
               # 'sphinx.ext.githubpages',
               'sphinx.ext.graphviz',
               'sphinx.ext.inheritance_diagram',
-              # 'sphinx_autodoc_typehints',
-              'sphinx.ext.napoleon']
-              # 'sphinx_pyreverse']
+              'sphinx_autodoc_typehints']
 
 # graphviz_dot = r'B:\__appdata__\graphviz\bin\dot.exe'
 
@@ -92,6 +90,9 @@ exclude_patterns = []
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
+# highlight_options = {'language': 'pycon'}
+# highlight_language = 'pycon'
+highlight_language = 'python3'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
@@ -103,8 +104,9 @@ todo_include_todos = True
 # a list of builtin themes.
 #
 # html_theme = 'nature'
+# html_theme = 'pydoctheme'
 html_theme = 'sphinx_rtd_theme'
-
+# html_theme = 'classic'
 # import sphinx_py3doc_enhanced_theme
 # html_theme = "sphinx_py3doc_enhanced_theme"
 # html_theme_path = [sphinx_py3doc_enhanced_theme.get_html_theme_path()]
@@ -192,4 +194,4 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {'https://docs.python.org/3': None}

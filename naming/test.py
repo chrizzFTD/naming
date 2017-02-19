@@ -3,7 +3,9 @@
 Names testing module.
 """
 # standard
+import os
 import unittest
+from pathlib import Path
 # package
 from naming import *
 
@@ -26,6 +28,23 @@ class TestName(unittest.TestCase):
         n = Name()
         n.set_name('setname')
         self.assertEqual('setname', n.get_name())
+        extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
+        ProjectFile = type('ProjectFile', (EasyName, PipeFile), dict(config=extra_fields))
+        pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast_base.17.abc')
+        self.assertEqual('project_data_name_2017_christianl_constant_iamlast', pf.nice_name)
+        self.assertEqual('project_data_name_2017_christianl_constant_iamlast_base.17', pf.pipe_name)
+        self.assertEqual('2017', pf.year)
+        self.assertEqual('iamlast', pf.lastfield)
+        self.assertEqual('abc', pf.extension)
+
+
+class TestEasyName(unittest.TestCase):
+
+    def test_empty_name(self):
+        n = EasyName()
+        self.assertEqual('[base]', n.get_name())
+        self.assertEqual({}, n.get_values())
+
 
 
 class TestPipe(unittest.TestCase):
@@ -101,6 +120,7 @@ class TestFile(unittest.TestCase):
         self.assertEqual('ext', f.extension)
         self.assertEqual('myfile', f.base)
         self.assertEqual(f.get_name(), str(f.path))
+        self.assertEqual(os.path.join(Path.home(), f.get_name()), str(f.full_path))
 
 
 class TestPipeFile(unittest.TestCase):

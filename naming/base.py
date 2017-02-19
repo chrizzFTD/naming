@@ -17,9 +17,17 @@ def __regex_pattern(pattern_name: str) -> typing.Dict[str, typing.Callable]:
 class _AbstractBase(object):
     __metaclass__ = abc.ABCMeta
     """This is the base abstract class for Name objects.
-    All subclasses should inherit from Name or EasyName instead of this one."""
+    All subclasses are encouraged to inherit from Name or EasyName instead of this one."""
 
-    def __init__(self, name: str=None, separator: str='_'):
+    def __init__(self, name: str='', separator: str='_'):
+        """Initialisation of the object sets the patterns defined by the _set_patterns method and
+        calls _init_name_core. If any extra work is to be done by the class init it should be implemented on the
+        _init_name_core method.
+
+        :param name: Name to initialize the object with. Defaults to an empty string and it can later be set
+                     by calling the :func:`~naming.Name.set_name` method.
+        :param separator: Separator for the name fields. Defaults to an underscore.
+        """
         super(_AbstractBase, self).__init__()
         self.__values = {}
         self._set_separator(separator)
@@ -28,7 +36,6 @@ class _AbstractBase(object):
 
     def _init_name_core(self, name: str):
         """Runs whenever a Name object is initialized or its name is set."""
-
         self.__set_name(name)
         self._set_values()
         self.__set_regex()
@@ -63,7 +70,7 @@ class _AbstractBase(object):
         self.__name = rf'{name}' if name else None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """The name string set on the object."""
         return self.__name
 
@@ -82,8 +89,8 @@ class _AbstractBase(object):
     def set_name(self, name: str):
         """Set this object's name to the provided string.
 
-        Raises:
-            NameError: If an invalid string is provided.
+        :param name: The name to be set on this object.
+        :raises NameError: If an invalid string is provided.
         """
         match = self.__regex.match(name)
         if not match:
@@ -139,8 +146,8 @@ class _AbstractBase(object):
     def get_name(self, **values) -> str:
         """Get a new name string from this object's name values.
 
-        Args:
-            **values: Arbitrary field values to replace and build the new name.
+        :param values: Variable keyword arguments where the **key** should refer to a field on this object that will
+                       use the provided value to build the new name.
         """
         if not values and self.name:
             return self.name
