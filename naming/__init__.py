@@ -35,15 +35,15 @@ class Name(_BaseName):
 
     """
     def _set_values(self):
-        super(Name, self)._set_values()
+        super()._set_values()
         self._base = '[\w]+?'
 
     def _set_patterns(self):
-        super(Name, self)._set_patterns()
+        super()._set_patterns()
         self._set_pattern('base')
 
     def _get_pattern_list(self):
-        super(Name, self)._get_pattern_list()
+        super()._get_pattern_list()
         return ['_base']
 
 
@@ -99,21 +99,21 @@ class EasyName(Name):
             self.config = {}
         self.__keys = self.config.keys()
         self.__items = self.config.items()
-        super(EasyName, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _set_values(self):
-        super(EasyName, self)._set_values()
+        super()._set_values()
         for k, v in self.__items:
             setattr(self, rf'_{k}', v)
 
     def _set_patterns(self):
-        super(EasyName, self)._set_patterns()
+        super()._set_patterns()
         for k in self.__keys:
             self._set_pattern(k)
 
     def _get_pattern_list(self):
-        result = super(EasyName, self)._get_pattern_list()
-        result.extend([rf'_{k}' for k in self.__keys])
+        result = super()._get_pattern_list()
+        result.extend(rf'_{k}' for k in self.__keys)
         return result
 
 
@@ -143,20 +143,20 @@ class File(Name):
     """
 
     def _set_values(self):
-        super(File, self)._set_values()
+        super()._set_values()
         self._extension = '[.](?P<extension>[a-zA-Z0-9]+)'
 
     def _get_joined_pattern(self) -> str:
-        return rf'{super(File, self)._get_joined_pattern()}{self._extension}'
+        return rf'{super()._get_joined_pattern()}{self._extension}'
 
     def get_name(self, **values) -> str:
         if not values and self.name:
-            return super(File, self).get_name(**values)
+            return super().get_name(**values)
         try:
             extension = values.get('extension') or self.extension or '[extension]'
         except AttributeError:
             extension = '[extension]'
-        return rf'{super(File, self).get_name(**values)}.{extension}'
+        return rf'{super().get_name(**values)}.{extension}'
 
     def _get_path_pattern_list(self):
         return []
@@ -213,18 +213,18 @@ class Pipe(Name):
     _pipe_fields = ('output', 'version', 'frame')
 
     def _set_values(self):
-        super(Pipe, self)._set_values()
+        super()._set_values()
         self._version = '\d+'
         self._output = '[a-zA-Z0-9]+'
         self._frame = '\d+'
         self._pipe = rf'(({self._pipe_separator_pattern}{self._output})?[.]{self._version}([.]{self._frame})?)'
 
     def _set_patterns(self):
-        super(Pipe, self)._set_patterns()
+        super()._set_patterns()
         self._set_pattern('pipe', *self._pipe_fields)
 
     def _get_joined_pattern(self):
-        return rf'{super(Pipe, self)._get_joined_pattern()}{self._pipe}'
+        return rf'{super()._get_joined_pattern()}{self._pipe}'
 
     @property
     def pipe_separator(self) -> str:
@@ -262,18 +262,18 @@ class Pipe(Name):
         if not fields['output'] and fields['frame'] is None:  # optional fields
             return rf'.{fields["version"] or 0}'
 
-        return ''.join([self._format_pipe_field(k, v) for k, v in fields.items()])
+        return ''.join(self._format_pipe_field(k, v) for k, v in fields.items())
 
     def get_name(self, **values) -> str:
         if not values and self.name:
-            return super(Pipe, self).get_name(**values)
+            return super().get_name(**values)
         try:
             # allow for getting name without pipe field in subclasses e.g. .File
             pipe = values['pipe'] or ''
         except KeyError:
             kwargs = {k: values.get(k) for k in self._pipe_fields}
             pipe = self._get_pipe_field(**kwargs)
-        return rf'{super(Pipe, self).get_name(**values)}{pipe}'
+        return rf'{super().get_name(**values)}{pipe}'
 
 
 class PipeFile(File, Pipe):
