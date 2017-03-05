@@ -26,7 +26,7 @@ class Name(_BaseName):
         >>> from naming import Name
         >>> n = Name()
         >>> n.get_name()
-        '[basse]'
+        '[base]'
         >>> n.get_values()
         {}
         >>> n.set_name('hello_world')
@@ -251,7 +251,7 @@ class Pipe(Name):
         return rf'{self.pipe_separator}{v if v is not None else rf"[{k}]"}'
 
     def _get_pipe_field(self, version=None, output=None, frame=None) -> str:
-        fields = dict(output=output, version=version, frame=frame)
+        fields = dict(output=output or None, version=version, frame=frame)
         # comparisons to None due to 0 being a valid value
         fields = {k: v if v is not None else getattr(self, k, None) for k, v in fields.items()}
 
@@ -260,7 +260,7 @@ class Pipe(Name):
             return self.pipe or suffix if self.name else suffix
 
         if not fields['output'] and fields['frame'] is None:  # optional fields
-            return rf'.{fields["version"]}'
+            return rf'.{fields["version"] or 0}'
 
         return ''.join([self._format_pipe_field(k, v) for k, v in fields.items()])
 
