@@ -5,3 +5,5 @@
 [![PyPI](https://img.shields.io/pypi/pyversions/naming.svg)](https://pypi.python.org/pypi/naming)
 
 Object-oriented names for the digital era.
+
+[Read the Docs](http://naming.readthedocs.io/en/latest/)
