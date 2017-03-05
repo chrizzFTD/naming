@@ -1,5 +1,4 @@
 # standard
-import os
 from pathlib import Path
 # package
 from .base import _BaseName
@@ -166,7 +165,7 @@ class File(Name):
         """The Path representing this object on the filesystem."""
         args = self._get_translated_pattern_list('_get_path_pattern_list')
         args.append(self.get_name())
-        return Path(os.path.join(*args))
+        return Path(*args)
 
     @property
     def full_path(self) -> Path:
@@ -250,7 +249,7 @@ class Pipe(Name):
             return ''
         return rf'{self.pipe_separator}{v if v is not None else rf"[{k}]"}'
 
-    def _get_pipe_field(self, version=None, output=None, frame=None) -> str:
+    def _get_pipe_field(self, output=None, version=None, frame=None) -> str:
         fields = dict(output=output or None, version=version, frame=frame)
         # comparisons to None due to 0 being a valid value
         fields = {k: v if v is not None else getattr(self, k, None) for k, v in fields.items()}
