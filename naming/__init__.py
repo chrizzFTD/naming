@@ -107,8 +107,7 @@ class EasyName(Name):
 
     def _set_patterns(self):
         super()._set_patterns()
-        for k in self.__keys:
-            self._set_pattern(k)
+        self._set_pattern(*self.__keys)
 
     def _get_pattern_list(self):
         result = super()._get_pattern_list()

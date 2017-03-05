@@ -29,6 +29,7 @@ class _BaseName(object, metaclass=abc.ABCMeta):
         """
         super().__init__()
         self.__values = {}
+        self.__items = self.__values.items()
         self._set_separator(separator)
         self._set_patterns()
         self._init_name_core(name)
@@ -122,7 +123,7 @@ class _BaseName(object, metaclass=abc.ABCMeta):
     # def get_values(self) -> typing.Dict[str, str]:
     def get_values(self) -> dict:
         """Get the field values of this object's name as a dictionary in the form of {field: value}."""
-        return {k: v for k, v in self._values.items() if not self._filter_kv(k, v)}
+        return {k: v for k, v in self.__items if not self._filter_kv(k, v)}
 
     def _filter_kv(self, k: str, v) -> bool:
         if self._filter_k(k) or self._filter_v(v):
