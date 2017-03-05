@@ -14,7 +14,7 @@ def __regex_pattern(pattern_name: str) -> typing.Dict[str, typing.Callable]:
     return {'fget': getter, 'fset': setter}
 
 
-class _AbstractBase(object):
+class _BaseName(object):
     __metaclass__ = abc.ABCMeta
     """This is the base abstract class for Name objects.
     All subclasses are encouraged to inherit from Name or EasyName instead of this one."""
@@ -28,7 +28,7 @@ class _AbstractBase(object):
                      by calling the :func:`~naming.Name.set_name` method.
         :param separator: Separator for the name fields. Defaults to an underscore.
         """
-        super(_AbstractBase, self).__init__()
+        super(_BaseName, self).__init__()
         self.__values = {}
         self._set_separator(separator)
         self._set_patterns()

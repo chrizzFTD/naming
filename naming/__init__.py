@@ -2,7 +2,7 @@
 import os
 from pathlib import Path
 # package
-from .base import _AbstractBase
+from .base import _BaseName
 
 __all__ = ['Name', 'EasyName', 'File', 'Pipe', 'PipeFile']
 
@@ -10,7 +10,7 @@ __all__ = ['Name', 'EasyName', 'File', 'Pipe', 'PipeFile']
 CWD = None
 
 
-class Name(_AbstractBase):
+class Name(_BaseName):
     """Inherited by: :class:`naming.EasyName` :class:`naming.File` :class:`naming.Pipe`
 
     Base class for name objects.
@@ -80,16 +80,16 @@ class EasyName(Name):
         >>> pf.extension
         'abc'
         >>> [pf.get_name(frame=x, output='render', year=2018) for x in range(10)]
-        ['project_data_name_2018_christianl_constant_iamlast_render.17.0.abc',
-        'project_data_name_2018_christianl_constant_iamlast_render.17.1.abc',
-        'project_data_name_2018_christianl_constant_iamlast_render.17.2.abc',
-        'project_data_name_2018_christianl_constant_iamlast_render.17.3.abc',
-        'project_data_name_2018_christianl_constant_iamlast_render.17.4.abc',
-        'project_data_name_2018_christianl_constant_iamlast_render.17.5.abc',
-        'project_data_name_2018_christianl_constant_iamlast_render.17.6.abc',
-        'project_data_name_2018_christianl_constant_iamlast_render.17.7.abc',
-        'project_data_name_2018_christianl_constant_iamlast_render.17.8.abc',
-        'project_data_name_2018_christianl_constant_iamlast_render.17.9.abc']
+        ['project_data_name_2018_christianl_constant_iamlast.render.17.0.abc',
+        'project_data_name_2018_christianl_constant_iamlast.render.17.1.abc',
+        'project_data_name_2018_christianl_constant_iamlast.render.17.2.abc',
+        'project_data_name_2018_christianl_constant_iamlast.render.17.3.abc',
+        'project_data_name_2018_christianl_constant_iamlast.render.17.4.abc',
+        'project_data_name_2018_christianl_constant_iamlast.render.17.5.abc',
+        'project_data_name_2018_christianl_constant_iamlast.render.17.6.abc',
+        'project_data_name_2018_christianl_constant_iamlast.render.17.7.abc',
+        'project_data_name_2018_christianl_constant_iamlast.render.17.8.abc',
+        'project_data_name_2018_christianl_constant_iamlast.render.17.9.abc']
 
     """
     config = None
@@ -192,21 +192,22 @@ class Pipe(Name):
     ======  ============
     **Composed Fields:**
     --------------------
-    *pipe*  Combination of unique fields in the form of: ({separator}{output})\*.{version}.{frame}**
-    ======  ============
+    *pipe*  Combination of unique fields in the form of: (.{output})\*.{version}.{frame}**
+    \* optional field. ** exists only when *output* is there as well.
+    ====================
 
     Basic use::
 
         >>> from naming import Pipe
         >>> p = Pipe()
         >>> p.get_name()
-        '[base]_[pipe]'
+        '[base].[pipe]'
         >>> p.get_name(version=10)
         '[base].10'
         >>> p.get_name(output='data')
-        '[base]_data.[version]'
+        '[base].data.[version]'
         >>> p.get_name(output='cache', version=7, frame=24)
-        '[base]_cache.7.24'
+        '[base].cache.7.24'
 
     """
     _pipe_fields = ('output', 'version', 'frame')
@@ -216,7 +217,7 @@ class Pipe(Name):
         self._version = '\d+'
         self._output = '[a-zA-Z0-9]+'
         self._frame = '\d+'
-        self._pipe = rf'(({self._separator_pattern}{self._output})?[.]{self._version}([.]{self._frame})?)'
+        self._pipe = rf'(({self._pipe_separator_pattern}{self._output})?[.]{self._version}([.]{self._frame})?)'
 
     def _set_patterns(self):
         super(Pipe, self)._set_patterns()
@@ -226,21 +227,29 @@ class Pipe(Name):
         return rf'{super(Pipe, self)._get_joined_pattern()}{self._pipe}'
 
     @property
+    def pipe_separator(self) -> str:
+        return '.'
+
+    @property
+    def _pipe_separator_pattern(self):
+        return rf'\{self.pipe_separator}'
+
+    @property
     def pipe_name(self) -> str:
         """The pipe name string of this object."""
         try:
             return rf'{self.nice_name}{self.pipe}'
         except AttributeError:
-            return rf'{self.nice_name}{self.separator}[pipe]'
+            return rf'{self.nice_name}{self.pipe_separator}[pipe]'
 
     def _filter_k(self, k):
         return k == 'pipe'
 
-    def _format_pipe_field(self, k, v):
+    @staticmethod
+    def _format_pipe_field(k, v):
         if k == 'frame' and v is None:
             return ''
-        joiner = self.separator if k == 'output' else '.'
-        return rf'{joiner}{v if v is not None else rf"[{k}]"}'
+        return rf'{self.pipe_separator}{v if v is not None else rf"[{k}]"}'
 
     def _get_pipe_field(self, version=None, output=None, frame=None) -> str:
         fields = dict(output=output, version=version, frame=frame)
@@ -248,7 +257,7 @@ class Pipe(Name):
         fields = {k: v if v is not None else getattr(self, k, None) for k, v in fields.items()}
 
         if all(v is None for v in fields.values()):
-            suffix = rf'{self.separator}[pipe]'
+            suffix = rf'{self.pipe_separator}[pipe]'
             return self.pipe or suffix if self.name else suffix
 
         if not fields['output'] and fields['frame'] is None:  # optional fields
@@ -277,16 +286,16 @@ class PipeFile(File, Pipe):
         >>> p.get_values()
         {'base': 'wipfile', 'version': '7', 'extension': 'ext'}
         >>> [p.get_name(frame=x, output='render') for x in range(10)]
-        ['wipfile_render.7.0.ext',
-        'wipfile_render.7.1.ext',
-        'wipfile_render.7.2.ext',
-        'wipfile_render.7.3.ext',
-        'wipfile_render.7.4.ext',
-        'wipfile_render.7.5.ext',
-        'wipfile_render.7.6.ext',
-        'wipfile_render.7.7.ext',
-        'wipfile_render.7.8.ext',
-        'wipfile_render.7.9.ext']
+        ['wipfile.render.7.0.ext',
+        'wipfile.render.7.1.ext',
+        'wipfile.render.7.2.ext',
+        'wipfile.render.7.3.ext',
+        'wipfile.render.7.4.ext',
+        'wipfile.render.7.5.ext',
+        'wipfile.render.7.6.ext',
+        'wipfile.render.7.7.ext',
+        'wipfile.render.7.8.ext',
+        'wipfile.render.7.9.ext']
 
     """
     pass
