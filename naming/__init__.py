@@ -245,8 +245,7 @@ class Pipe(Name):
     def _filter_k(self, k):
         return k == 'pipe'
 
-    @staticmethod
-    def _format_pipe_field(k, v):
+    def _format_pipe_field(self, k, v):
         if k == 'frame' and v is None:
             return ''
         return rf'{self.pipe_separator}{v if v is not None else rf"[{k}]"}'
