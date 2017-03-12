@@ -173,3 +173,33 @@ class TestPipeFile(unittest.TestCase):
         self.assertEqual('.data.0', f.pipe)
         self.assertEqual('0', f.version)
         self.assertEqual(f.get_name(), str(f.path))
+
+
+class TestDrops(unittest.TestCase):
+
+    def test_empty_name(self):
+        d = Dropper()
+        self.assertEqual('[without]_[basename].[pipe].[extension]', d.get_name())
+        self.assertEqual('awesome_[basename].[pipe].[extension]', d.get_name(without='awesome'))
+        self.assertEqual('[without]_replaced.[output].[version].101.[extension]',
+                         d.get_name(basename='replaced', frame=101))
+
+
+class TestCompound(unittest.TestCase):
+
+    def test_empty_name(self):
+        c = Compound()
+        self.assertEqual('[base].[pipe].[extension]', c.get_name())
+        self.assertEqual('50abc.[pipe].[extension]', c.get_name(first=50, second='abc'))
+        c.set_name(c.get_name(base='101dalmatians', version=1, extension='png'))
+        self.assertEqual(
+            {'base': '101dalmatians', 'first': '101', 'second': 'dalmatians', 'version': '1', 'extension': 'png'},
+            c.get_values())
+        self.assertEqual('200dalmatians.1.png', c.get_name(first=200))
+
+
+Dropper = type('Dropper', (PipeFile,), dict(config=dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+'),
+                                            drops=('base',)))
+
+Compound = type('Compound', (PipeFile,), dict(config=dict(first=r'[\d]+', second=r'[a-zA-Z]+'),
+                                              compounds=dict(base=('first', 'second'))))
