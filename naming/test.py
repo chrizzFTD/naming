@@ -187,6 +187,13 @@ class TestDrops(unittest.TestCase):
         self.assertEqual('[without]_replaced.[output].[version].101.[extension]',
                          d.get_name(basename='replaced', frame=101))
 
+        Subdropper = type('Dropper', (Dropper,), dict(config=dict(subdrop='[\w]')))
+        s = Subdropper()
+        self.assertEqual('[without]_[basename]_[subdrop].[pipe].[extension]', s.get_name())
+        self.assertEqual('awesome_[basename]_[subdrop].[pipe].[extension]', s.get_name(without='awesome'))
+        self.assertEqual('[without]_replaced_[subdrop].[output].[version].101.[extension]',
+                         s.get_name(basename='replaced', frame=101))
+
 
 class TestCompound(unittest.TestCase):
 
@@ -195,9 +202,35 @@ class TestCompound(unittest.TestCase):
                                                       compounds=dict(base=('first', 'second'))))
         c = Compound()
         self.assertEqual('[base].[pipe].[extension]', c.get_name())
+        self.assertEqual('[base].[pipe].[extension]', c.get_name(first=50))
         self.assertEqual('50abc.[pipe].[extension]', c.get_name(first=50, second='abc'))
         c.set_name(c.get_name(base='101dalmatians', version=1, extension='png'))
+        self.assertEqual('101dalmatians', c.nice_name)
         self.assertEqual(
             {'base': '101dalmatians', 'first': '101', 'second': 'dalmatians', 'version': '1', 'extension': 'png'},
             c.get_values())
         self.assertEqual('200dalmatians.1.png', c.get_name(first=200))
+
+
+class TestPropertyField(unittest.TestCase):
+
+    def test_empty_name(self):
+        class PropertyField(PipeFile):
+            config = dict(extrafield='[a-z0-9]+')
+
+            @property
+            def prop(self):
+                return 'propertyfield'
+
+            def _get_path_pattern_list(self):
+                result = super()._get_pattern_list()
+                result.append('prop')
+                return result
+
+        pf = PropertyField()
+        self.assertEqual(Path('[base]/[extrafield]/[prop]/[base]_[extrafield].[pipe].[extension]'), pf.path)
+        pf.set_name(pf.get_name(base='simple', extrafield='property', version=1, extension='abc'))
+        self.assertEqual({'base': 'simple', 'extrafield': 'property', 'version': '1', 'extension': 'abc'},
+                         pf.get_values())
+        self.assertEqual('simple_property', pf.nice_name)
+        self.assertEqual(Path('simple/property/propertyfield/simple_property.1.abc'), pf.path)
