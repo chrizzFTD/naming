@@ -4,19 +4,49 @@ import abc
 import typing
 
 
-def __regex_pattern(pattern_name: str) -> typing.Dict[str, typing.Callable]:
+def _regex_property(pattern_name: str) -> property:
     def getter(self):
         pattern = getattr(self, rf'__{pattern_name}')
         return rf'(?P<{pattern_name}>{pattern})'
 
     def setter(self, value):
         setattr(self, rf'__{pattern_name}', value)
-    return {'fget': getter, 'fset': setter}
+    return property(getter, setter)
 
 
-class _BaseName(object, metaclass=abc.ABCMeta):
+class _ABCName(abc.ABCMeta):
+    def __new__(mcs, name, bases, args):
+        new_cls = super().__new__(mcs, name, bases, args)
+        mcs._merge_bases_dict('config', new_cls, bases)
+        mcs._merge_bases_dict('compounds', new_cls, bases)
+        new_cls._compounds_fields = set().union(*[v for v in new_cls.compounds.values()])
+        mcs._merge_bases_drops(new_cls, bases)
+        return new_cls
+
+    @staticmethod
+    def _merge_bases_dict(name, new_cls, bases):
+        base_maps = [getattr(b, name, {}) for b in bases]
+        base_maps.append(getattr(new_cls, name, {}))
+        new_map = {}
+        for dic in base_maps:
+            new_map.update(dic)
+        setattr(new_cls, name, new_map)
+
+    @staticmethod
+    def _merge_bases_drops(new_cls, bases):
+        new_drops = set(getattr(new_cls, 'drops', tuple()))
+        for b in bases:
+            for drop in getattr(b, 'drops', tuple()):
+                new_drops.add(drop)
+                new_cls.config.pop(drop, None)
+        new_cls.drops = new_drops
+
+
+class _BaseName(object, metaclass=_ABCName):
     """This is the base abstract class for Name objects.
     All subclasses are encouraged to inherit from Name or EasyName instead of this one."""
+
+    _regex_property_name = r'[a-zA-Z][\w]+'
 
     def __init__(self, name: str='', separator: str='_'):
         """Initialisation of the object sets the patterns defined by the _set_patterns method and
@@ -63,8 +93,7 @@ class _BaseName(object, metaclass=abc.ABCMeta):
 
     def _set_pattern(self, *patterns):
         for p in patterns:
-            string = rf"self.__class__._{p} = property(**__regex_pattern('{p}'))"  # please fix this hack
-            exec(string)
+            setattr(self.__class__, rf'_{p}', _regex_property(p))
 
     def __set_name(self, name: str):
         self.__name = rf'{name}' if name else None
@@ -107,8 +136,8 @@ class _BaseName(object, metaclass=abc.ABCMeta):
     def __getattr__(self, attr):
         try:
             return self._values[attr]
-        except (KeyError, TypeError):
-            raise AttributeError("{} object has no attribute '{}'".format(self.__class__, attr))
+        except KeyError:
+            raise AttributeError(rf"{self.__class__} object has no attribute '{attr}'")
 
     @abc.abstractmethod
     def _get_pattern_list(self) -> typing.List[str]:
@@ -141,7 +170,7 @@ class _BaseName(object, metaclass=abc.ABCMeta):
         return self._get_nice_name()
 
     def _get_nice_name(self, **values) -> str:
-        return self._separator.join(self._get_translated_pattern_list('_get_pattern_list', **values))
+        return self._separator.join(self._iter_translated_pattern_list('_get_pattern_list', **values))
 
     def get_name(self, **values) -> str:
         """Get a new name string from this object's name values.
@@ -151,21 +180,31 @@ class _BaseName(object, metaclass=abc.ABCMeta):
         """
         if not values and self.name:
             return self.name
+        if values:
+            for ck, cv in getattr(self, 'compounds', {}).items():
+                if ck not in values:
+                    compounds = []
+                    for c in cv:
+                        try:
+                            value = values.get(c) or getattr(self, c)
+                        except AttributeError:
+                            break
+                        compounds.append(rf'{value}')
+                    else:
+                        values[ck] = ''.join(compounds)
         return self._get_nice_name(**values)
 
-    def _get_translated_pattern_list(self, pattern: str, **values) -> typing.List[str]:
+    def _iter_translated_pattern_list(self, pattern: str, **values) -> typing.Generator:
         self_values = self._values
-        _values = []
         for p in getattr(self, pattern)():
-            nice_name = p.replace('_', '')
+            nice_name = re.search(self._regex_property_name, p).group(0)
             if nice_name in values:
-                _values.append(str(values[nice_name]))
+                value = str(values[nice_name])
             elif self_values:
                 try:
                     value = str(self_values[nice_name])
                 except KeyError:
                     value = getattr(self, p)  # must be a valid property
-                _values.append(value)
             else:
-                _values.append(rf'[{nice_name}]')
-        return _values
+                value = rf'[{nice_name}]'
+            yield value

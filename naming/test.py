@@ -28,24 +28,40 @@ class TestName(unittest.TestCase):
         n = Name()
         n.set_name('setname')
         self.assertEqual('setname', n.get_name())
-        extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
-        ProjectFile = type('ProjectFile', (EasyName, PipeFile), dict(config=extra_fields))
-        pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast.base.17.abc')
-        self.assertEqual('project_data_name_2017_christianl_constant_iamlast', pf.nice_name)
-        self.assertEqual('project_data_name_2017_christianl_constant_iamlast.base.17', pf.pipe_name)
-        self.assertEqual('2017', pf.year)
-        self.assertEqual('iamlast', pf.lastfield)
-        self.assertEqual('abc', pf.extension)
 
 
 class TestEasyName(unittest.TestCase):
 
     def test_empty_name(self):
-        n = EasyName()
+        n = Name()
         self.assertEqual('[base]', n.get_name())
         self.assertEqual({}, n.get_values())
 
+    def test_new_empty_name(self):
+        extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
+        Project = type('Project', (Name,), dict(config=extra_fields))
+        p = Project()
+        self.assertEqual('[base]_[year]_[username]_[anotherfield]_[lastfield]', p.get_name())
+        p.set_name('this_is_my_base_name_2017_christianl_constant_iamlast')
+        self.assertEqual('2017', p.year)
 
+    def test_set_name(self):
+        extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
+        ProjectFile = type('ProjectFile', (PipeFile,), dict(config=extra_fields))
+        pf = ProjectFile('this_is_my_base_name_2017_christianl_constant_iamlast.base.17.abc')
+        self.assertEqual('this_is_my_base_name_2017_christianl_constant_iamlast', pf.nice_name)
+        self.assertEqual('this_is_my_base_name_2017_christianl_constant_iamlast.base.17', pf.pipe_name)
+        self.assertEqual('2017', pf.year)
+        self.assertEqual('iamlast', pf.lastfield)
+        self.assertEqual('abc', pf.extension)
+
+    def test_separator(self):
+        extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
+        Project = type('Project', (Name,), dict(config=extra_fields))
+        p = Project('this_is_my_base_name_2017_christianl_constant_iamlast')
+        self.assertEqual('_', p.separator)
+        p.separator = '  '
+        self.assertEqual('this_is_my_base_name  2017  christianl  constant  iamlast', p.name)
 
 class TestPipe(unittest.TestCase):
 
@@ -105,6 +121,25 @@ class TestPipe(unittest.TestCase):
         p.set_name('setname.pipeline.0.5')
         self.assertEqual('5', p.frame)
         self.assertEqual('setname', p.nice_name)
+
+    def test_values(self):
+        p = Pipe()
+        p.set_name('my_pipe_file.1')
+        self.assertEqual({'base': 'my_pipe_file', 'version': '1'}, p.get_values())
+
+    def test_get_empty_name(self):
+        p = Pipe()
+        self.assertEqual('[base].[pipe]', p.get_name())
+        self.assertEqual('[base].out.7', p.get_name(pipe='.out.7'))
+        self.assertEqual('[base].out.[version]', p.get_name(output='out'))
+        self.assertEqual('[base].7', p.get_name(version=7))
+        self.assertEqual('[base].[output].[version].101', p.get_name(frame=101))
+
+    def test_get_init_name(self):
+        p = Pipe('my_pipe_file.7')
+        self.assertEqual('my_pipe_file.[output].7.101', p.get_name(frame=101))
+        self.assertEqual('my_pipe_file.cache.7', p.get_name(output='cache'))
+        self.assertEqual('my_pipe_file.8', p.get_name(version=int(p.version) + 1))
 
 
 class TestFile(unittest.TestCase):

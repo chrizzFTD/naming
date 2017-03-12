@@ -3,14 +3,14 @@ from pathlib import Path
 # package
 from .base import _BaseName
 
-__all__ = ['Name', 'EasyName', 'File', 'Pipe', 'PipeFile']
+__all__ = ['Name', 'File', 'Pipe', 'PipeFile']
 
 
 CWD = None
 
 
 class Name(_BaseName):
-    """Inherited by: :class:`naming.EasyName` :class:`naming.File` :class:`naming.Pipe`
+    """Inherited by: :class:`naming.File` :class:`naming.Pipe`
 
     Base class for name objects.
 
@@ -19,6 +19,12 @@ class Name(_BaseName):
     ------------------
     *base*  Accepts any amount of word characters
     ======  ==========
+
+    ========  ============
+    **Unique attributes:**
+    ----------------------
+    *config*  Dictionary with the fields that will compose this name object.
+    ========  ============
 
     Basic use::
 
@@ -32,34 +38,9 @@ class Name(_BaseName):
         >>> n.get_values()
         {'base': 'hello_world'}
 
-    """
-    def _set_values(self):
-        super()._set_values()
-        self._base = '[\w]+?'
-
-    def _set_patterns(self):
-        super()._set_patterns()
-        self._set_pattern('base')
-
-    def _get_pattern_list(self):
-        super()._get_pattern_list()
-        return ['_base']
-
-
-class EasyName(Name):
-    """Class that allows the easy creation of new Name objects.
-
-    ========  ============
-    **Unique attributes:**
-    ----------------------
-    *config*  Dictionary with the fields that will compose this name object.
-    ========  ============
-
-    Example::
-
-        >>> from naming import EasyName, PipeFile
+        >>> from naming import PipeFile
         >>> extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
-        >>> ProjectFile = type('ProjectFile', (EasyName, PipeFile), dict(config=extra_fields))
+        >>> ProjectFile = type('ProjectFile', (PipeFile,), dict(config=extra_fields))
         >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast_base.17.abc')
         >>> pf.get_values()
         {'base': 'project_data_name',
@@ -90,20 +71,25 @@ class EasyName(Name):
         'project_data_name_2018_christianl_constant_iamlast.render.17.8.abc',
         'project_data_name_2018_christianl_constant_iamlast.render.17.9.abc']
 
-    """
-    config = None
 
-    def __init__(self, *args, **kwargs):
-        if self.config is None:
-            self.config = {}
+    Class that allows the easy creation of new Name objects.
+
+    """
+    config = dict(base=r'[\w]+')
+    drops = tuple()
+    compounds = dict()
+
+    def __init__(self, *args):
         self.__keys = self.config.keys()
         self.__items = self.config.items()
-        super().__init__(*args, **kwargs)
+        super().__init__(*args)
 
     def _set_values(self):
         super()._set_values()
         for k, v in self.__items:
             setattr(self, rf'_{k}', v)
+        for ck, cv in self.compounds.items():
+            setattr(self, rf'_{ck}', ''.join(getattr(self, rf'_{v}') for v in cv))
 
     def _set_patterns(self):
         super()._set_patterns()
@@ -111,7 +97,7 @@ class EasyName(Name):
 
     def _get_pattern_list(self):
         result = super()._get_pattern_list()
-        result.extend(rf'_{k}' for k in self.__keys)
+        result.extend(rf'_{k}' for k in self.__keys if not (k in self.drops or k in self._compounds_fields))
         return result
 
 
@@ -162,7 +148,7 @@ class File(Name):
     @property
     def path(self) -> Path:
         """The Path representing this object on the filesystem."""
-        args = self._get_translated_pattern_list('_get_path_pattern_list')
+        args = list(self._iter_translated_pattern_list('_get_path_pattern_list'))
         args.append(self.get_name())
         return Path(*args)
 
