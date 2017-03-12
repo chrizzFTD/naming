@@ -129,6 +129,7 @@ class TestPipe(unittest.TestCase):
 
     def test_get_empty_name(self):
         p = Pipe()
+        self.assertEqual('[base].[pipe]', p.pipe_name)
         self.assertEqual('[base].[pipe]', p.get_name())
         self.assertEqual('[base].out.7', p.get_name(pipe='.out.7'))
         self.assertEqual('[base].out.[version]', p.get_name(output='out'))
@@ -178,6 +179,8 @@ class TestPipeFile(unittest.TestCase):
 class TestDrops(unittest.TestCase):
 
     def test_empty_name(self):
+        Dropper = type('Dropper', (PipeFile,), dict(config=dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+'),
+                                                    drops=('base',)))
         d = Dropper()
         self.assertEqual('[without]_[basename].[pipe].[extension]', d.get_name())
         self.assertEqual('awesome_[basename].[pipe].[extension]', d.get_name(without='awesome'))
@@ -188,6 +191,8 @@ class TestDrops(unittest.TestCase):
 class TestCompound(unittest.TestCase):
 
     def test_empty_name(self):
+        Compound = type('Compound', (PipeFile,), dict(config=dict(first=r'[\d]+', second=r'[a-zA-Z]+'),
+                                                      compounds=dict(base=('first', 'second'))))
         c = Compound()
         self.assertEqual('[base].[pipe].[extension]', c.get_name())
         self.assertEqual('50abc.[pipe].[extension]', c.get_name(first=50, second='abc'))
@@ -196,10 +201,3 @@ class TestCompound(unittest.TestCase):
             {'base': '101dalmatians', 'first': '101', 'second': 'dalmatians', 'version': '1', 'extension': 'png'},
             c.get_values())
         self.assertEqual('200dalmatians.1.png', c.get_name(first=200))
-
-
-Dropper = type('Dropper', (PipeFile,), dict(config=dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+'),
-                                            drops=('base',)))
-
-Compound = type('Compound', (PipeFile,), dict(config=dict(first=r'[\d]+', second=r'[a-zA-Z]+'),
-                                              compounds=dict(base=('first', 'second'))))
