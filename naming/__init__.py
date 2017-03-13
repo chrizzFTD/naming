@@ -14,17 +14,19 @@ class Name(_BaseName):
 
     Base class for name objects.
 
+    Each subclass may have its own `config` attribute that should be a dictionary in the form of {field: pattern}
+    where pattern is a valid regular expression.
+
+    Classes may as well have a `drops` iterable attribute representing the fileds they want to ignore from their bases
+    and a `compounds` dictionary attribute for nesting existing fields into multiple new ones.
+
+    All fields should be unique. No duplicates are allowed.
+
     ======  ==========
-    **Unique Fields:**
+    **Config:**
     ------------------
     *base*  Accepts any amount of word characters
     ======  ==========
-
-    ========  ============
-    **Unique attributes:**
-    ----------------------
-    *config*  Dictionary with the fields that will compose this name object.
-    ========  ============
 
     Basic use::
 
@@ -37,52 +39,22 @@ class Name(_BaseName):
         >>> n.set_name('hello_world')
         >>> n.get_values()
         {'base': 'hello_world'}
-
-        >>> from naming import PipeFile
-        >>> extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
-        >>> ProjectFile = type('ProjectFile', (PipeFile,), dict(config=extra_fields))
-        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast_base.17.abc')
-        >>> pf.get_values()
-        {'base': 'project_data_name',
-        'year': '2017',
-        'username': 'christianl',
-        'anotherfield': 'constant',
-        'lastfield': 'iamlast',
-        'output': 'base',
-        'version': '17',
-        'extension': 'abc'}
-        >>> pf.nice_name
-        'project_data_name_2017_christianl_constant_iamlast'
-        >>> pf.year
-        '2017'
-        >>> pf.lastfield
-        'iamlast'
-        >>> pf.extension
-        'abc'
-        >>> [pf.get_name(frame=x, output='render', year=2018) for x in range(10)]
-        ['project_data_name_2018_christianl_constant_iamlast.render.17.0.abc',
-        'project_data_name_2018_christianl_constant_iamlast.render.17.1.abc',
-        'project_data_name_2018_christianl_constant_iamlast.render.17.2.abc',
-        'project_data_name_2018_christianl_constant_iamlast.render.17.3.abc',
-        'project_data_name_2018_christianl_constant_iamlast.render.17.4.abc',
-        'project_data_name_2018_christianl_constant_iamlast.render.17.5.abc',
-        'project_data_name_2018_christianl_constant_iamlast.render.17.6.abc',
-        'project_data_name_2018_christianl_constant_iamlast.render.17.7.abc',
-        'project_data_name_2018_christianl_constant_iamlast.render.17.8.abc',
-        'project_data_name_2018_christianl_constant_iamlast.render.17.9.abc']
-
-
-    Class that allows the easy creation of new Name objects.
-
     """
     config = dict(base=r'[\w]+')
     drops = tuple()
     compounds = dict()
 
-    def __init__(self, *args):
+    def __init__(self, name: str='', separator: str='_'):
+        """Sets the patterns defined by the `config` attribute. If any extra work is to be done by the class init
+        it should be implemented on the `_init_name_core` method.
+
+        :param name: Name to initialize the object with. Defaults to an empty string and it can later be set
+                     by calling the :func:`~naming.Name.set_name` method.
+        :param separator: Separator for the name fields. Defaults to an underscore.
+        """
         self.__keys = self.config.keys()
         self.__items = self.config.items()
-        super().__init__(*args)
+        super().__init__(name, separator)
 
     def _set_values(self):
         super()._set_values()
@@ -123,7 +95,6 @@ class File(Name):
         >>> f.set_name('hello.world')
         >>> f.get_values()
         {'base': 'hello', 'extension': 'world'}
-
     """
 
     def _set_values(self):
@@ -279,6 +250,25 @@ class PipeFile(File, Pipe):
         'wipfile.render.7.7.ext',
         'wipfile.render.7.8.ext',
         'wipfile.render.7.9.ext']
-
+        >>> extra_fields = dict(year='[0-9]{4}', user='[a-z]+', another='(constant)', last='[a-zA-Z0-9]+')
+        >>> ProjectFile = type('ProjectFile', (PipeFile,), dict(config=extra_fields))
+        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast_base.17.abc')
+        >>> pf.get_values()
+        {'base': 'project_data_name',
+        'year': '2017',
+        'user': 'christianl',
+        'another': 'constant',
+        'last': 'iamlast',
+        'output': 'base',
+        'version': '17',
+        'extension': 'abc'}
+        >>> pf.nice_name
+        'project_data_name_2017_christianl_constant_iamlast'
+        >>> pf.year
+        '2017'
+        >>> pf.lastfield
+        'iamlast'
+        >>> pf.extension
+        'abc'
     """
     pass

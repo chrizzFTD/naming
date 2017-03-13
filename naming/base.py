@@ -43,20 +43,12 @@ class _ABCName(abc.ABCMeta):
 
 
 class _BaseName(object, metaclass=_ABCName):
-    """This is the base abstract class for Name objects.
-    All subclasses are encouraged to inherit from Name or EasyName instead of this one."""
+    """This is the base abstract class for Name objects. You should not need to subclass directly from this object.
+    All subclasses are encouraged to inherit from Name instead of this one."""
 
     _regex_property_name = r'[a-zA-Z][\w]+'
 
     def __init__(self, name: str='', separator: str='_'):
-        """Initialisation of the object sets the patterns defined by the _set_patterns method and
-        calls _init_name_core. If any extra work is to be done by the class init it should be implemented on the
-        _init_name_core method.
-
-        :param name: Name to initialize the object with. Defaults to an empty string and it can later be set
-                     by calling the :func:`~naming.Name.set_name` method.
-        :param separator: Separator for the name fields. Defaults to an underscore.
-        """
         super().__init__()
         self.__values = {}
         self.__items = self.__values.items()
@@ -82,7 +74,6 @@ class _BaseName(object, metaclass=_ABCName):
 
     @separator.setter
     def separator(self, value: str):
-        """The string that acts as a separator of all the fields in the name."""
         self._set_separator(value)
         name = self.get_name(**self.get_values()) if self.name else None
         self._init_name_core(name)
@@ -129,8 +120,7 @@ class _BaseName(object, metaclass=_ABCName):
         self.__values.update(match.groupdict())
 
     @property
-    # def _values(self) -> typing.Dict[str, str]:
-    def _values(self) -> dict:
+    def _values(self) -> typing.Dict[str, str]:
         return self.__values
 
     def __getattr__(self, attr):
@@ -149,7 +139,6 @@ class _BaseName(object, metaclass=_ABCName):
     def _get_joined_pattern(self) -> str:
         return self._separator_pattern.join(self._get_values_pattern())
 
-    # def get_values(self) -> typing.Dict[str, str]:
     def get_values(self) -> dict:
         """Get the field values of this object's name as a dictionary in the form of {field: value}."""
         return {k: v for k, v in self.__items if not self._filter_kv(k, v)}
