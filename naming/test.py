@@ -63,6 +63,7 @@ class TestEasyName(unittest.TestCase):
         p.separator = '  '
         self.assertEqual('this_is_my_base_name  2017  christianl  constant  iamlast', p.name)
 
+
 class TestPipe(unittest.TestCase):
 
     def test_empty_name(self):
@@ -150,8 +151,7 @@ class TestFile(unittest.TestCase):
         self.assertEqual('[base].[extension]', f.get_name())
         self.assertEqual('[base].abc', f.get_name(extension='abc'))
         self.assertEqual('[base].[extension]', f.get_name(extension=''))
-        with self.assertRaises(AttributeError):
-            f.extension
+
         f.set_name('myfile.ext')
         self.assertEqual('ext', f.extension)
         self.assertEqual('myfile', f.base)
@@ -166,8 +166,6 @@ class TestPipeFile(unittest.TestCase):
         self.assertEqual('[base].[pipe].[extension]', f.get_name())
         self.assertEqual('[base].[pipe].abc', f.get_name(extension='abc'))
         self.assertEqual('[base].[pipe].[extension]', f.get_name(extension=''))
-        with self.assertRaises(AttributeError):
-            f.extension
         f.set_name('myfile.data.0.ext')
         self.assertEqual('ext', f.extension)
         self.assertEqual('myfile', f.base)
@@ -184,6 +182,19 @@ class TestPipeFile(unittest.TestCase):
         pf.base = 'awesome'
         self.assertEqual('awesome', pf.nice_name)
         self.assertEqual({'base': 'awesome', 'version': '1', 'extension': 'png'}, pf.get_values())
+
+        p = PipeFile('my_pipe_file.1.png')
+        self.assertEqual({'base': 'my_pipe_file', 'version': '1', 'extension': 'png'}, p.get_values())
+        p.extension = 'abc'
+        self.assertEqual('my_pipe_file.1.abc', p.name)
+        p.output = 'geometry'
+        self.assertEqual('my_pipe_file.geometry.1.abc', p.name)
+        p.version = 17
+        self.assertEqual('my_pipe_file.geometry.17.abc', p.name)
+        p.output = None
+        self.assertEqual('my_pipe_file.geometry.17.abc', p.name)
+        p.version = 0
+        self.assertEqual('my_pipe_file.geometry.0.abc', p.name)
 
 
 class TestDrops(unittest.TestCase):

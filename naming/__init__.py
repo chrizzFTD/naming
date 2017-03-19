@@ -100,6 +100,7 @@ class File(Name):
     def _set_values(self):
         super()._set_values()
         self._extension = '[.](?P<extension>[a-zA-Z0-9]+)'
+        self._add_field_property('extension')
 
     def _get_joined_pattern(self) -> str:
         return rf'{super()._get_joined_pattern()}{self._extension}'

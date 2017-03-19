@@ -95,7 +95,10 @@ class _BaseName(object, metaclass=_ABCName):
     def _set_pattern(self, *patterns):
         for p in patterns:
             setattr(self.__class__, rf'_{p}', _regex_property(p))
-            setattr(self.__class__, p, _field_property(p))
+            self._add_field_property(p)
+
+    def _add_field_property(self, field_name):
+        setattr(self.__class__, field_name, _field_property(field_name))
 
     def __set_name(self, name: str):
         self.__name = rf'{name}' if name else None
@@ -133,12 +136,6 @@ class _BaseName(object, metaclass=_ABCName):
     @property
     def _values(self) -> typing.Dict[str, str]:
         return self.__values
-
-    def __getattr__(self, attr):
-        try:
-            return self._values[attr]
-        except KeyError:
-            raise AttributeError(rf"{self.__class__} object has no attribute '{attr}'")
 
     @abc.abstractmethod
     def _get_pattern_list(self) -> typing.List[str]:
