@@ -39,6 +39,9 @@ class Name(_BaseName):
         >>> n.set_name('hello_world')
         >>> n.get_values()
         {'base': 'hello_world'}
+        >>> n.base = 'fields_as_properties'
+        >>> n.get_values()
+        {'base': 'fields_as_properties'}
     """
     config = dict(base=r'[\w]+')
     drops = tuple()
@@ -95,6 +98,13 @@ class File(Name):
         >>> f.set_name('hello.world')
         >>> f.get_values()
         {'base': 'hello', 'extension': 'world'}
+        >>> f.extension
+        'world'
+        >>> f.extension = 'abc'
+        >>> f.name
+        'hello.abc'
+        >>> f.get_values()
+        {'base': 'hello', 'extension': 'abc'}
     """
 
     def _set_values(self):
@@ -108,10 +118,7 @@ class File(Name):
     def get_name(self, **values) -> str:
         if not values and self.name:
             return super().get_name(**values)
-        try:
-            extension = values.get('extension') or self.extension or '[extension]'
-        except AttributeError:
-            extension = '[extension]'
+        extension = values.get('extension') or self.extension or "[extension]"
         return rf'{super().get_name(**values)}.{extension}'
 
     def _get_path_pattern_list(self):
@@ -164,7 +171,24 @@ class Pipe(Name):
         '[base].data.[version]'
         >>> p.get_name(output='cache', version=7, frame=24)
         '[base].cache.7.24'
-
+        >>> p = Pipe('my_wip_data.1')
+        >>> p.version
+        '1'
+        >>> p.get_values()
+        {'base': 'my_wip_data', 'version': '1'}
+        >>> p.get_name(output='exchange')  # returns a new string name
+        'my_wip_data.exchange.1'
+        >>> p.name
+        'my_wip_data.1'
+        >>> p.output = 'exchange'  # mutates the object
+        >>> p.name
+        'my_wip_data.exchange.1'
+        >>> p.frame = 101
+        >>> p.version = 7
+        >>> p.name
+        'my_wip_data.exchange.7.101'
+        >>> p.get_values()
+        {'base': 'my_wip_data', 'output': 'exchange', 'version': '7', 'frame': '101'}
     """
     _pipe_fields = ('output', 'version', 'frame')
 
