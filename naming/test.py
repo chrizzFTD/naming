@@ -175,6 +175,16 @@ class TestPipeFile(unittest.TestCase):
         self.assertEqual('0', f.version)
         self.assertEqual(f.get_name(), str(f.path))
 
+    def test_set_property(self):
+        pf = PipeFile()
+        self.assertEqual('[base].[pipe].[extension]', pf.get_name())
+        with self.assertRaises(NameError):
+            pf.base = 'awesome'
+        pf.set_name('hello_world.1.png')
+        pf.base = 'awesome'
+        self.assertEqual('awesome', pf.nice_name)
+        self.assertEqual({'base': 'awesome', 'version': '1', 'extension': 'png'}, pf.get_values())
+
 
 class TestDrops(unittest.TestCase):
 

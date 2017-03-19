@@ -4,13 +4,23 @@ import abc
 import typing
 
 
-def _regex_property(pattern_name: str) -> property:
+def _regex_property(field_name: str) -> property:
     def getter(self):
-        pattern = getattr(self, rf'__{pattern_name}')
-        return rf'(?P<{pattern_name}>{pattern})'
+        pattern = getattr(self, rf'__{field_name}')
+        return rf'(?P<{field_name}>{pattern})'
 
     def setter(self, value):
-        setattr(self, rf'__{pattern_name}', value)
+        setattr(self, rf'__{field_name}', value)
+    return property(getter, setter)
+
+
+def _field_property(field_name: str) -> property:
+    def getter(self):
+        return self._values.get(field_name)
+
+    def setter(self, value):
+        new_name = self.get_name(**{field_name: value})
+        self.set_name(new_name)
     return property(getter, setter)
 
 
@@ -85,6 +95,7 @@ class _BaseName(object, metaclass=_ABCName):
     def _set_pattern(self, *patterns):
         for p in patterns:
             setattr(self.__class__, rf'_{p}', _regex_property(p))
+            setattr(self.__class__, p, _field_property(p))
 
     def __set_name(self, name: str):
         self.__name = rf'{name}' if name else None
@@ -174,9 +185,8 @@ class _BaseName(object, metaclass=_ABCName):
                 if ck not in values:
                     compounds = []
                     for c in cv:
-                        try:
-                            value = values.get(c) or getattr(self, c)
-                        except AttributeError:
+                        value = values.get(c) or getattr(self, c)
+                        if value is None:  # 0 is a valid value
                             break
                         compounds.append(rf'{value}')
                     else:

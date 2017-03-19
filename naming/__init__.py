@@ -192,10 +192,8 @@ class Pipe(Name):
     @property
     def pipe_name(self) -> str:
         """The pipe name string of this object."""
-        try:
-            return rf'{self.nice_name}{self.pipe}'
-        except AttributeError:
-            return rf'{self.nice_name}{self.pipe_separator}[pipe]'
+        pipe_suffix = self.pipe or rf"{self.pipe_separator}[pipe]"
+        return rf'{self.nice_name}{pipe_suffix}'
 
     def _filter_k(self, k):
         return k == 'pipe'
