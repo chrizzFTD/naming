@@ -15,6 +15,7 @@ class TestName(unittest.TestCase):
     def test_empty_name(self):
         n = Name()
         self.assertEqual('[base]', n.get_name())
+        self.assertEqual('[base]', str(n))
 
     def test_init_name(self):
         n = Name('initname')

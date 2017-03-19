@@ -231,7 +231,7 @@ class Pipe(Name):
     def _get_pipe_field(self, output=None, version=None, frame=None) -> str:
         fields = dict(output=output or None, version=version, frame=frame)
         # comparisons to None due to 0 being a valid value
-        fields = {k: v if v is not None else getattr(self, k, None) for k, v in fields.items()}
+        fields = {k: v if v is not None else getattr(self, k) for k, v in fields.items()}
 
         if all(v is None for v in fields.values()):
             suffix = rf'{self.pipe_separator}[pipe]'

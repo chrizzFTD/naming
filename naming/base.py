@@ -128,7 +128,7 @@ class _BaseName(object, metaclass=_ABCName):
         """
         match = self.__regex.match(name)
         if not match:
-            msg = rf'Can not set invalid name "{name}".'
+            msg = rf'Can not create new "{self.__class__.__name__}" instance with [missing] fields: "{name}".'
             raise NameError(msg)
         self.__set_name(name)
         self.__values.update(match.groupdict())
@@ -204,3 +204,6 @@ class _BaseName(object, metaclass=_ABCName):
             else:
                 value = rf'[{nice_name}]'
             yield value
+
+    def __str__(self):
+        return self._get_nice_name()
