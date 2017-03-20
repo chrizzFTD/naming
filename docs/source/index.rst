@@ -10,7 +10,7 @@ Welcome to naming's documentation!
     :maxdepth: 2
     :caption: Contents:
 
-    API Reference
+    Class List
 
 Indices and tables
 ==================
