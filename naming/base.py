@@ -4,32 +4,64 @@ import abc
 import typing
 
 
-def __regex_pattern(pattern_name: str) -> typing.Dict[str, typing.Callable]:
+def _regex_property(field_name: str) -> property:
     def getter(self):
-        pattern = getattr(self, rf'__{pattern_name}')
-        return rf'(?P<{pattern_name}>{pattern})'
+        pattern = getattr(self, rf'__{field_name}')
+        return rf'(?P<{field_name}>{pattern})'
 
     def setter(self, value):
-        setattr(self, rf'__{pattern_name}', value)
-    return {'fget': getter, 'fset': setter}
+        setattr(self, rf'__{field_name}', value)
+    return property(getter, setter)
 
 
-class _AbstractBase(object):
-    __metaclass__ = abc.ABCMeta
-    """This is the base abstract class for Name objects.
-    All subclasses are encouraged to inherit from Name or EasyName instead of this one."""
+def _field_property(field_name: str) -> property:
+    def getter(self):
+        return self._values.get(field_name)
+
+    def setter(self, value):
+        new_name = self.get_name(**{field_name: value})
+        self.set_name(new_name)
+    return property(getter, setter)
+
+
+class _ABCName(abc.ABCMeta):
+    def __new__(mcs, name, bases, args):
+        new_cls = super().__new__(mcs, name, bases, args)
+        mcs._merge_bases_dict('config', new_cls, bases)
+        mcs._merge_bases_dict('compounds', new_cls, bases)
+        new_cls._compounds_fields = set().union(*[v for v in new_cls.compounds.values()])
+        mcs._merge_bases_drops(new_cls, bases)
+        return new_cls
+
+    @staticmethod
+    def _merge_bases_dict(name, new_cls, bases):
+        base_maps = [getattr(b, name, {}) for b in bases]
+        base_maps.append(getattr(new_cls, name, {}))
+        new_map = {}
+        for dic in base_maps:
+            new_map.update(dic)
+        setattr(new_cls, name, new_map)
+
+    @staticmethod
+    def _merge_bases_drops(new_cls, bases):
+        new_drops = set(getattr(new_cls, 'drops', tuple()))
+        for b in bases:
+            for drop in getattr(b, 'drops', tuple()):
+                new_drops.add(drop)
+                new_cls.config.pop(drop, None)
+        new_cls.drops = new_drops
+
+
+class _BaseName(object, metaclass=_ABCName):
+    """This is the base abstract class for Name objects. You should not need to subclass directly from this object.
+    All subclasses are encouraged to inherit from Name instead of this one."""
+
+    _regex_property_name = r'[a-zA-Z][\w]+'
 
     def __init__(self, name: str='', separator: str='_'):
-        """Initialisation of the object sets the patterns defined by the _set_patterns method and
-        calls _init_name_core. If any extra work is to be done by the class init it should be implemented on the
-        _init_name_core method.
-
-        :param name: Name to initialize the object with. Defaults to an empty string and it can later be set
-                     by calling the :func:`~naming.Name.set_name` method.
-        :param separator: Separator for the name fields. Defaults to an underscore.
-        """
-        super(_AbstractBase, self).__init__()
+        super().__init__()
         self.__values = {}
+        self.__items = self.__values.items()
         self._set_separator(separator)
         self._set_patterns()
         self._init_name_core(name)
@@ -52,7 +84,6 @@ class _AbstractBase(object):
 
     @separator.setter
     def separator(self, value: str):
-        """The string that acts as a separator of all the fields in the name."""
         self._set_separator(value)
         name = self.get_name(**self.get_values()) if self.name else None
         self._init_name_core(name)
@@ -63,8 +94,11 @@ class _AbstractBase(object):
 
     def _set_pattern(self, *patterns):
         for p in patterns:
-            string = rf"self.__class__._{p} = property(**__regex_pattern('{p}'))"  # please fix this hack
-            exec(string)
+            setattr(self.__class__, rf'_{p}', _regex_property(p))
+            self._add_field_property(p)
+
+    def _add_field_property(self, field_name):
+        setattr(self.__class__, field_name, _field_property(field_name))
 
     def __set_name(self, name: str):
         self.__name = rf'{name}' if name else None
@@ -94,21 +128,14 @@ class _AbstractBase(object):
         """
         match = self.__regex.match(name)
         if not match:
-            msg = rf'Can not set invalid name "{name}".'
+            msg = rf'Can not create new "{self.__class__.__name__}" instance with [missing] fields: "{name}".'
             raise NameError(msg)
         self.__set_name(name)
         self.__values.update(match.groupdict())
 
     @property
-    # def _values(self) -> typing.Dict[str, str]:
-    def _values(self) -> dict:
+    def _values(self) -> typing.Dict[str, str]:
         return self.__values
-
-    def __getattr__(self, attr):
-        try:
-            return self._values[attr]
-        except (KeyError, TypeError):
-            raise AttributeError("{} object has no attribute '{}'".format(self.__class__, attr))
 
     @abc.abstractmethod
     def _get_pattern_list(self) -> typing.List[str]:
@@ -120,10 +147,9 @@ class _AbstractBase(object):
     def _get_joined_pattern(self) -> str:
         return self._separator_pattern.join(self._get_values_pattern())
 
-    # def get_values(self) -> typing.Dict[str, str]:
     def get_values(self) -> dict:
         """Get the field values of this object's name as a dictionary in the form of {field: value}."""
-        return {k: v for k, v in self._values.items() if not self._filter_kv(k, v)}
+        return {k: v for k, v in self.__items if not self._filter_kv(k, v)}
 
     def _filter_kv(self, k: str, v) -> bool:
         if self._filter_k(k) or self._filter_v(v):
@@ -141,7 +167,7 @@ class _AbstractBase(object):
         return self._get_nice_name()
 
     def _get_nice_name(self, **values) -> str:
-        return self._separator.join(self._get_translated_pattern_list('_get_pattern_list', **values))
+        return self._separator.join(self._iter_translated_pattern_list('_get_pattern_list', **values))
 
     def get_name(self, **values) -> str:
         """Get a new name string from this object's name values.
@@ -151,21 +177,33 @@ class _AbstractBase(object):
         """
         if not values and self.name:
             return self.name
+        if values:
+            for ck, cv in getattr(self, 'compounds', {}).items():
+                if ck not in values:
+                    compounds = []
+                    for c in cv:
+                        value = values.get(c) or getattr(self, c)
+                        if value is None:  # 0 is a valid value
+                            break
+                        compounds.append(rf'{value}')
+                    else:
+                        values[ck] = ''.join(compounds)
         return self._get_nice_name(**values)
 
-    def _get_translated_pattern_list(self, pattern: str, **values) -> typing.List[str]:
+    def _iter_translated_pattern_list(self, pattern: str, **values) -> typing.Generator:
         self_values = self._values
-        _values = []
         for p in getattr(self, pattern)():
-            nice_name = p.replace('_', '')
+            nice_name = re.search(self._regex_property_name, p).group(0)
             if nice_name in values:
-                _values.append(str(values[nice_name]))
+                value = str(values[nice_name])
             elif self_values:
                 try:
                     value = str(self_values[nice_name])
                 except KeyError:
                     value = getattr(self, p)  # must be a valid property
-                _values.append(value)
             else:
-                _values.append(rf'[{nice_name}]')
-        return _values
+                value = rf'[{nice_name}]'
+            yield value
+
+    def __str__(self):
+        return self._get_nice_name()
