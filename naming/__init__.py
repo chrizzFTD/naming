@@ -43,7 +43,7 @@ class Name(_BaseName):
         >>> n.get_values()
         {'base': 'fields_as_properties'}
     """
-    config = dict(base=r'[\w]+')
+    config = dict(base=r'\w+')
     drops = tuple()
     compounds = dict()
 
@@ -84,7 +84,7 @@ class File(Name):
     ===========  ===========
     **Unique Fields:**
     ------------------------
-    *extension*  Any amount of characters in the class [a-zA-Z0-9]
+    *extension*  Any amount of word characters
     ===========  ===========
 
     Basic use::
@@ -112,7 +112,7 @@ class File(Name):
 
     def _set_values(self):
         super()._set_values()
-        self._extension = '[.](?P<extension>[a-zA-Z0-9]+)'
+        self._extension = '[.](?P<extension>\w+)'
         self._add_field_property('extension')
 
     def _get_joined_pattern(self) -> str:
@@ -157,7 +157,7 @@ class Pipe(Name):
     =========  =========
     **Unique Fields:**
     --------------------
-    *output**  Any amount of characters in the class [a-zA-Z0-9]
+    *output**  Any amount of word characters
     *version*  Any amount of digits
     *frame***  Any amount of digits
     \* optional field. ** exists only when *output* is there as well.
@@ -206,7 +206,7 @@ class Pipe(Name):
     def _set_values(self):
         super()._set_values()
         self._version = '\d+'
-        self._output = '[a-zA-Z0-9]+'
+        self._output = '\w+'
         self._frame = '\d+'
         self._pipe = rf'(({self._pipe_separator_pattern}{self._output})?[.]{self._version}([.]{self._frame})?)'
 
