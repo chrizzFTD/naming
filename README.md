@@ -6,4 +6,18 @@
 
 Object-oriented names for the digital era.
 
-[Read the Docs](http://naming.readthedocs.io/en/latest/)
+<div class="footer">
+        <img src="https://docs.google.com/drawings/d/1wU-T04kgE7O_uVr4XRNIxGsnZP-TJmVxG5mqQE6mMNM/pub?w=968&amp;h=690">
+    </div>
+    
+### Installation
+
+naming is available for Python 3.5 onwards via PyPI.
+
+```bash
+$ pip install naming
+```
+
+### Usage
+
+Refer to the [documentation](http://naming.readthedocs.io/en/latest/) for details on contents and usage.

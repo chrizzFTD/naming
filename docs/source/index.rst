@@ -10,6 +10,7 @@ Welcome to naming's documentation!
     :maxdepth: 2
     :caption: Contents:
 
+    Overview
     Class List
 
 Indices and tables
