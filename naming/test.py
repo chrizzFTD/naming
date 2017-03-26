@@ -159,6 +159,11 @@ class TestFile(unittest.TestCase):
         self.assertEqual(f.get_name(), str(f.path))
         self.assertEqual(os.path.join(Path.home(), f.get_name()), str(f.full_path))
 
+    def test_cwd(self):
+        f = File()
+        f.full_path
+        f.cwd = 'some/absolute/path'
+        self.assertEqual(os.path.join('some', 'absolute', 'path', f.get_name()), str(f.full_path))
 
 class TestPipeFile(unittest.TestCase):
 
@@ -241,18 +246,27 @@ class TestPropertyField(unittest.TestCase):
             config = dict(extrafield='[a-z0-9]+')
 
             @property
-            def prop(self):
+            def nameprop(self):
+                return 'staticvalue'
+
+            @property
+            def pathprop(self):
                 return 'propertyfield'
 
-            def _get_path_pattern_list(self):
-                result = super()._get_pattern_list()
-                result.append('prop')
+            def get_path_pattern_list(self):
+                result = super().get_pattern_list()
+                result.append('pathprop')
+                return result
+
+            def get_pattern_list(self):
+                result = super().get_pattern_list()
+                result.append('nameprop')
                 return result
 
         pf = PropertyField()
-        self.assertEqual(Path('[base]/[extrafield]/[prop]/[base]_[extrafield].[pipe].[extension]'), pf.path)
-        pf.set_name(pf.get_name(base='simple', extrafield='property', version=1, extension='abc'))
+        self.assertEqual(Path('[base]/[extrafield]/[pathprop]/[base]_[extrafield]_[nameprop].[pipe].[extension]'), pf.path)
+        pf.set_name('simple_property_staticvalue.1.abc')
         self.assertEqual({'base': 'simple', 'extrafield': 'property', 'version': '1', 'extension': 'abc'},
                          pf.get_values())
-        self.assertEqual('simple_property', pf.nice_name)
-        self.assertEqual(Path('simple/property/propertyfield/simple_property.1.abc'), pf.path)
+        self.assertEqual('simple_property_staticvalue', pf.nice_name)
+        self.assertEqual(Path('simple/property/propertyfield/simple_property_staticvalue.1.abc'), pf.path)
