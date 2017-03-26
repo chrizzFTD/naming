@@ -12,7 +12,7 @@ Object-oriented names for the digital era.
     
 ### Installation
 
-naming is available for Python 3.5 onwards via PyPI.
+naming is available for Python 3.6 onwards via PyPI.
 
 ```bash
 $ pip install naming

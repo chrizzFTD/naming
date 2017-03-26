@@ -7,7 +7,7 @@ setup(
     packages=find_packages(),
     description='Object-oriented names for the digital era.',
     author='Christian López Barrón',
-    author_email='christianlb.vfx@outlook.com',
+    author_email='chris.gfz@gmail.com',
     url='https://github.com/chrizzFTD/naming',
     download_url='https://github.com/chrizzFTD/naming/releases/tag/0.1.0',
     classifiers=['Programming Language :: Python :: 3.6'],
