@@ -3,9 +3,9 @@ Overview
 
 .. topic:: Name Objects
 
-    This package offers classes representing names as strings that follow a certain pattern convention.
-    New Name objects can subclass from the provided classes in a simple manner. Each Name object has a **config**
-    attribute that contains the fields and patterns of the convention to follow. Names can also drop fields from their
+    This package offers classes representing names as strings that follow a certain pattern convention. New Name
+    objects can subclass from the provided classes in a simple manner. Each Name object has a **config** attribute
+    that contains the fields and regex patterns of the convention to follow. Names can also drop fields from their
     parent classes with the **drops** attribute, or they can merge / split fields with the **compounds** attribute.
 
 Class Flow

@@ -6,6 +6,9 @@
 
 Object-oriented names for the digital era.
 
+naming provides a simple yet flexible and scalable interface for naming conventions.
+It follows the UNIX tradition of single-purpose tools that do one thing well.
+
 <div class="footer">
         <img src="https://docs.google.com/drawings/d/1wU-T04kgE7O_uVr4XRNIxGsnZP-TJmVxG5mqQE6mMNM/pub?w=1290&amp;h=920">
     </div>
