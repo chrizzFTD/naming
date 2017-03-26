@@ -4,9 +4,9 @@ Overview
 .. topic:: Name Objects
 
     This package offers classes representing names as strings that follow a certain pattern convention.
-    New Name objects can subclass from the provided classes in a simple manner. Each Name object has a config attribute
-    that contains the fields and patterns of the convention to follow. Names can also drop fields from their parent
-    classes with the drops attribute, or they can merge / split fields with the compounds attribute.
+    New Name objects can subclass from the provided classes in a simple manner. Each Name object has a **config**
+    attribute that contains the fields and patterns of the convention to follow. Names can also drop fields from their
+    parent classes with the **drops** attribute, or they can merge / split fields with the **compounds** attribute.
 
 Class Flow
 ==========
@@ -17,6 +17,8 @@ Class Flow
 
 Basic Use
 =========
+
+.. topic:: Built-ins
 
     Name::
 
@@ -38,9 +40,9 @@ Basic Use
         '1'
         >>> p.get_values()
         {'base': 'my_wip_data', 'version': '1'}
-        >>> p.get_name(output='exchange')  # returns a new string name
-        'my_wip_data.exchange.1'
-        >>> p.name
+        >>> p.get_name(output='exchange', version=2)  # returns a new string name
+        'my_wip_data.exchange.2'
+        >>> p.name  # did not change
         'my_wip_data.1'
         >>> p.output = 'exchange'  # mutates the object
         >>> p.name
@@ -87,19 +89,20 @@ Basic Use
         'wipfile.render.7.8.ext',
         'wipfile.render.7.9.ext']
 
-Advanced Use
-============
-
 .. topic:: Creating New Names
 
-    Define custom new fields::
+    The **config**, **drops** and **compounds** attributes are merged on the subclasses to provide a simple but flexible
+    and scalable system that can help rule all names in a project.
 
-        >>> extra_fields = dict(year='[0-9]{4}', user='[a-z]+', another='(constant)', last='[a-zA-Z0-9]+')
-
-    Define the new type::
+    Inheriting from a built-in Name::
 
         >>> from naming import PipeFile
-        >>> ProjectFile = type('ProjectFile', (PipeFile,), dict(config=extra_fields))
+        >>> class ProjectFile(PipeFile):
+        ...     config = dict(year='[0-9]{4}',
+        ...                   user='[a-z]+',
+        ...                   another='(constant)',
+        ...                   last='[a-zA-Z0-9]+')
+        ...
         >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast_base.17.abc')
         >>> pf.get_values()
         {'base': 'project_data_name',
@@ -122,13 +125,16 @@ Advanced Use
     Dropping fields from bases::
 
         >>> from naming import PipeFile
-        >>> Dropper = type('Dropper', (PipeFile,), dict(config=dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+'),
-        ...                                             drops=('base',)))
+        >>> class Dropper(PipeFile):
+        ...     config = dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+')
+        ...     drops=('base',)
+        ...
         >>> d = Dropper()
         >>> d.get_name()
         '[without]_[basename].[pipe].[extension]'
         >>> # New subclasses will drop the 'base' field as well
         >>> Subdropper = type('Dropper', (Dropper,), dict(config=dict(subdrop='[\w]')))
+        >>> s = Subdropper()
         >>> s.get_name()
         '[without]_[basename]_[subdrop].[pipe].[extension]'
 
@@ -136,10 +142,12 @@ Advanced Use
 
         >>> from naming import PipeFile
         >>> # splitting the 'base' field into multiple joined fields
-        >>> Compound = type('Compound', (PipeFile,), dict(config=dict(first=r'[\d]+', second=r'[a-zA-Z]+'),
-        ...                                               compounds=dict(base=('first', 'second'))))
+        >>> class Compound(PipeFile)
+        ...     config=dict(first=r'[\d]+', second=r'[a-zA-Z]+')
+        ...     compounds=dict(base=('first', 'second'))
+        ...
         >>> c = Compound()
-        >>> c.get_name()  # we will see the original field
+        >>> c.get_name()  # we see the original field 'base'
         '[base].[pipe].[extension]'
         >>> c.get_name(first=50, second='abc')  # providing the compounds will work
         '50abc.[pipe].[extension]'
@@ -157,14 +165,13 @@ Advanced Use
         ...     def get_path_pattern_list(self):
         ...         # As an example we are returning the pattern list from the name object (base, extrafield)
         ...         return super().get_pattern_list()
+        ...
         >>> fp = FilePath()
         >>> fp.get_name()
         '[base]_[extrafield].[extension]'
         >>> # path attribute will vary depending on the OS
         >>> fp.path
         WindowsPath('[base]/[extrafield]/[base]_[extrafield].[extension]')
-        >>> print(fp.path)
-        [base]\[extrafield]\[base]_[extrafield].[extension]
         >>> # File names have a cwd attribute that helps locate it on the file system. defaults to None
         >>> print(fp.cwd)
         None
@@ -172,39 +179,42 @@ Advanced Use
         >>> # if cwd is None, the full_path will resolve to the users home directory
         >>> f.full_path
         WindowsPath('C:/Users/Christian/[base]/[extrafield]/[base]_[extrafield].[extension]')
+        >>> f.cwd = 'A:/tempdir'
+        >>> f.full_path
+        WindowsPath('A:/tempdir/[base]/[extrafield]/[base]_[extrafield].[extension]')
+        >>> f.set_name('wip_file.abc')
+        >>> f.full_path
+        WindowsPath('A:/tempdir/wip/file/wip_file.abc')
 
     It is also possible to use properties as fields while solving names::
 
         >>> from naming import PipeFile
         >>> class PropertyField(PipeFile):
         ...     config = dict(extrafield='[a-z0-9]+')
+        ...
         ...     @property
-        ...     def nameprop(self):
+        ...     def nameproperty(self):
         ...         return 'staticvalue'
+        ...
         ...     @property
-        ...     def pathprop(self):
+        ...     def pathproperty(self):
         ...         return 'path_field'
+        ...
         ...     def get_path_pattern_list(self):
         ...         result = super().get_pattern_list()
-        ...         result.append('pathprop')
+        ...         result.append('pathproperty')
         ...         return result
+        ...
         ...     def get_pattern_list(self):
         ...         result = super().get_pattern_list()
-        ...         result.append('nameprop')
+        ...         result.append('nameproperty')
         ...         return result
         ...
         >>> pf = PropertyField()
         >>> pf.get_name()
-        '[base]_[extrafield]_[nameprop].[pipe].[extension]'
-        >>> pf.set_name('simple_property_staticvalue.1.abc')
+        '[base]_[extrafield]_[nameproperty].[pipe].[extension]'
+        >>> pf.set_name('simple_props_staticvalue.1.abc')
         >>> pf.get_values()
-        {'base': 'simple', 'extrafield': 'property', 'version': '1', 'extension': 'abc'}
+        {'base': 'simple', 'extrafield': 'props', 'version': '1', 'extension': 'abc'}
         >>> pf.path
-        WindowsPath('simple/property/path_field/simple_property_staticvalue.1.abc')
-
-.. note:: This is a note admonition.
-   This is the second line of the first paragraph.
-
-   - The note contains all indented body elements
-     following.
-   - It includes this bullet list.
+        WindowsPath('simple/props/path_field/simple_props_staticvalue.1.abc')
