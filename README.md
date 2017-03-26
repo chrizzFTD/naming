@@ -7,7 +7,7 @@
 Object-oriented names for the digital era.
 
 <div class="footer">
-        <img src="https://docs.google.com/drawings/d/1wU-T04kgE7O_uVr4XRNIxGsnZP-TJmVxG5mqQE6mMNM/pub?w=968&amp;h=690">
+        <img src="https://docs.google.com/drawings/d/1wU-T04kgE7O_uVr4XRNIxGsnZP-TJmVxG5mqQE6mMNM/pub?w=1290&amp;h=920">
     </div>
     
 ### Installation
