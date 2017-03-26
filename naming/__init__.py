@@ -70,8 +70,8 @@ class Name(_BaseName):
         super()._set_patterns()
         self._set_pattern(*self.__keys)
 
-    def _get_pattern_list(self):
-        result = super()._get_pattern_list()
+    def get_pattern_list(self):
+        result = super().get_pattern_list()
         result.extend(rf'_{k}' for k in self.__keys if not (k in self.drops or k in self._compounds_fields))
         return result
 
@@ -106,6 +106,9 @@ class File(Name):
         >>> f.get_values()
         {'base': 'hello', 'extension': 'abc'}
     """
+    def __init__(self, *args, **kwargs):
+        self._cwd = kwargs.pop('cwd', None)
+        super().__init__(*args, **kwargs)
 
     def _set_values(self):
         super()._set_values()
@@ -121,20 +124,28 @@ class File(Name):
         extension = values.get('extension') or self.extension or "[extension]"
         return rf'{super().get_name(**values)}.{extension}'
 
-    def _get_path_pattern_list(self):
+    def get_path_pattern_list(self):
         return []
+
+    @property
+    def cwd(self):
+        return self._cwd
+
+    @cwd.setter
+    def cwd(self, value):
+        self._cwd = value
 
     @property
     def path(self) -> Path:
         """The Path representing this object on the filesystem."""
-        args = list(self._iter_translated_pattern_list('_get_path_pattern_list'))
+        args = list(self._iter_translated_pattern_list('get_path_pattern_list'))
         args.append(self.get_name())
         return Path(*args)
 
     @property
     def full_path(self) -> Path:
         """The resolved full Path representing this object on the filesystem."""
-        cwd = Path.home() if not CWD else Path(CWD)
+        cwd = Path.home() if not self.cwd else Path(self.cwd)
         return Path.joinpath(cwd, self.path)
 
 

@@ -138,11 +138,11 @@ class _BaseName(object, metaclass=_ABCName):
         return self.__values
 
     @abc.abstractmethod
-    def _get_pattern_list(self) -> typing.List[str]:
+    def get_pattern_list(self) -> typing.List[str]:
         return []
 
     def _get_values_pattern(self) -> typing.List[str]:
-        return [getattr(self, p) for p in self._get_pattern_list()]
+        return [getattr(self, p) for p in self.get_pattern_list()]
 
     def _get_joined_pattern(self) -> str:
         return self._separator_pattern.join(self._get_values_pattern())
@@ -167,7 +167,7 @@ class _BaseName(object, metaclass=_ABCName):
         return self._get_nice_name()
 
     def _get_nice_name(self, **values) -> str:
-        return self._separator.join(self._iter_translated_pattern_list('_get_pattern_list', **values))
+        return self._separator.join(self._iter_translated_pattern_list('get_pattern_list', **values))
 
     def get_name(self, **values) -> str:
         """Get a new name string from this object's name values.
