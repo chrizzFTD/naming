@@ -313,5 +313,8 @@ class PipeFile(File, Pipe):
         'project_data_name_1907_christianl_constant_iamlast.data.17.abc'
         >>> pf.extension
         'abc'
+        >>> pf.separator = '  '  # you can set the separator to a different set of characters
+        >>> pf.name
+        'project_data_name  1907  christianl  constant  iamlast.data.17.abc'
     """
     pass

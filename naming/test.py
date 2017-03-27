@@ -201,6 +201,7 @@ class TestPipeFile(unittest.TestCase):
         self.assertEqual('my_pipe_file.geometry.17.abc', p.name)
         p.version = 0
         self.assertEqual('my_pipe_file.geometry.0.abc', p.name)
+        self.assertEqual('PipeFile("my_pipe_file.geometry.0.abc")', repr(p))
 
 
 class TestDrops(unittest.TestCase):

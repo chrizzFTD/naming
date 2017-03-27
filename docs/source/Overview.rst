@@ -91,7 +91,7 @@ Basic Use
         'wipfile.render.7.8.ext',
         'wipfile.render.7.9.ext']
 
-.. topic:: Creating New Names
+.. topic:: Custom Names
 
     The **config**, **drops** and **compounds** attributes are merged on the subclasses to provide a simple but flexible
     and scalable system that can help rule all names in a project.
@@ -128,6 +128,9 @@ Basic Use
         'project_data_name_1907_christianl_constant_iamlast.data.17.abc'
         >>> pf.extension
         'abc'
+        >>> pf.separator = '  '  # you can set the separator to a different set of characters
+        >>> pf.name
+        'project_data_name  1907  christianl  constant  iamlast.data.17.abc'
 
     Dropping fields from bases::
 
