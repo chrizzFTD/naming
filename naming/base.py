@@ -85,7 +85,7 @@ class _BaseName(object, metaclass=_ABCName):
     @separator.setter
     def separator(self, value: str):
         self._set_separator(value)
-        name = self.get_name(**self.get_values()) if self.name else None
+        name = self.get_name(**self.values) if self.name else None
         self._init_name_core(name)
 
     @abc.abstractmethod
@@ -128,7 +128,8 @@ class _BaseName(object, metaclass=_ABCName):
         """
         match = self.__regex.match(name)
         if not match:
-            msg = rf'Can not create new "{self.__class__.__name__}" instance with [missing] fields: "{name}".'
+            msg = ' '.join([rf"Can't set invalid name '{name}' on {self.__class__.__name__} instance.",
+                            rf"Valid convention is: {self.__class__().get_name()}"])
             raise NameError(msg)
         self.__set_name(name)
         self.__values.update(match.groupdict())
@@ -147,8 +148,9 @@ class _BaseName(object, metaclass=_ABCName):
     def _get_joined_pattern(self) -> str:
         return self._separator_pattern.join(self._get_values_pattern())
 
-    def get_values(self) -> dict:
-        """Get the field values of this object's name as a dictionary in the form of {field: value}."""
+    @property
+    def values(self) -> dict:
+        """The field values of this object's name as a dictionary in the form of {field: value}."""
         return {k: v for k, v in self.__items if not self._filter_kv(k, v)}
 
     def _filter_kv(self, k: str, v) -> bool:
@@ -206,4 +208,8 @@ class _BaseName(object, metaclass=_ABCName):
             yield value
 
     def __str__(self):
-        return self._get_nice_name()
+        return self.get_name()
+
+    def __repr__(self):
+        name = self.name or ''
+        return rf'{self.__class__.__name__}("{name}")'

@@ -36,7 +36,7 @@ class TestEasyName(unittest.TestCase):
     def test_empty_name(self):
         n = Name()
         self.assertEqual('[base]', n.get_name())
-        self.assertEqual({}, n.get_values())
+        self.assertEqual({}, n.values)
 
     def test_new_empty_name(self):
         extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
@@ -127,7 +127,7 @@ class TestPipe(unittest.TestCase):
     def test_values(self):
         p = Pipe()
         p.set_name('my_pipe_file.1')
-        self.assertEqual({'base': 'my_pipe_file', 'version': '1'}, p.get_values())
+        self.assertEqual({'base': 'my_pipe_file', 'version': '1'}, p.values)
 
     def test_get_empty_name(self):
         p = Pipe()
@@ -187,10 +187,10 @@ class TestPipeFile(unittest.TestCase):
         pf.set_name('hello_world.1.png')
         pf.base = 'awesome'
         self.assertEqual('awesome', pf.nice_name)
-        self.assertEqual({'base': 'awesome', 'version': '1', 'extension': 'png'}, pf.get_values())
+        self.assertEqual({'base': 'awesome', 'version': '1', 'extension': 'png'}, pf.values)
 
         p = PipeFile('my_pipe_file.1.png')
-        self.assertEqual({'base': 'my_pipe_file', 'version': '1', 'extension': 'png'}, p.get_values())
+        self.assertEqual({'base': 'my_pipe_file', 'version': '1', 'extension': 'png'}, p.values)
         p.extension = 'abc'
         self.assertEqual('my_pipe_file.1.abc', p.name)
         p.output = 'geometry'
@@ -201,6 +201,7 @@ class TestPipeFile(unittest.TestCase):
         self.assertEqual('my_pipe_file.geometry.17.abc', p.name)
         p.version = 0
         self.assertEqual('my_pipe_file.geometry.0.abc', p.name)
+        self.assertEqual('PipeFile("my_pipe_file.geometry.0.abc")', repr(p))
 
 
 class TestDrops(unittest.TestCase):
@@ -235,7 +236,7 @@ class TestCompound(unittest.TestCase):
         self.assertEqual('101dalmatians', c.nice_name)
         self.assertEqual(
             {'base': '101dalmatians', 'first': '101', 'second': 'dalmatians', 'version': '1', 'extension': 'png'},
-            c.get_values())
+            c.values)
         self.assertEqual('200dalmatians.1.png', c.get_name(first=200))
 
 
@@ -267,6 +268,6 @@ class TestPropertyField(unittest.TestCase):
         self.assertEqual(Path('[base]/[extrafield]/[pathprop]/[base]_[extrafield]_[nameprop].[pipe].[extension]'), pf.path)
         pf.set_name('simple_property_staticvalue.1.abc')
         self.assertEqual({'base': 'simple', 'extrafield': 'property', 'version': '1', 'extension': 'abc'},
-                         pf.get_values())
+                         pf.values)
         self.assertEqual('simple_property_staticvalue', pf.nice_name)
         self.assertEqual(Path('simple/property/propertyfield/simple_property_staticvalue.1.abc'), pf.path)
