@@ -32,15 +32,15 @@ class Name(_BaseName):
 
         >>> from naming import Name
         >>> n = Name()
-        >>> n.get_name()
+        >>> n.get_name()  # no name has been set on the object, convention is solved with [missing] fields
         '[base]'
-        >>> n.get_values()
+        >>> n.values
         {}
         >>> n.set_name('hello_world')
-        >>> n.get_values()
+        >>> n.values
         {'base': 'hello_world'}
         >>> n.base = 'fields_as_properties'
-        >>> n.get_values()
+        >>> n.values
         {'base': 'fields_as_properties'}
     """
     config = dict(base=r'\w+')
@@ -96,14 +96,14 @@ class File(Name):
         >>> f.get_name(extension='png')
         '[base].png'
         >>> f.set_name('hello.world')
-        >>> f.get_values()
+        >>> f.values
         {'base': 'hello', 'extension': 'world'}
         >>> f.extension
         'world'
         >>> f.extension = 'abc'
         >>> f.name
         'hello.abc'
-        >>> f.get_values()
+        >>> f.values
         {'base': 'hello', 'extension': 'abc'}
     """
     def __init__(self, *args, **kwargs):
@@ -185,9 +185,9 @@ class Pipe(Name):
         >>> p = Pipe('my_wip_data.1')
         >>> p.version
         '1'
-        >>> p.get_values()
+        >>> p.values
         {'base': 'my_wip_data', 'version': '1'}
-        >>> p.get_name(output='exchange')  # returns a new string name
+        >>> p.get_name(output='exchange')  # returns a new string
         'my_wip_data.exchange.1'
         >>> p.name
         'my_wip_data.1'
@@ -198,7 +198,7 @@ class Pipe(Name):
         >>> p.version = 7
         >>> p.name
         'my_wip_data.exchange.7.101'
-        >>> p.get_values()
+        >>> p.values
         {'base': 'my_wip_data', 'output': 'exchange', 'version': '7', 'frame': '101'}
     """
     _pipe_fields = ('output', 'version', 'frame')
@@ -271,7 +271,7 @@ class PipeFile(File, Pipe):
 
         >>> from naming import PipeFile
         >>> p = PipeFile('wipfile.7.ext')
-        >>> p.get_values()
+        >>> p.values
         {'base': 'wipfile', 'version': '7', 'extension': 'ext'}
         >>> [p.get_name(frame=x, output='render') for x in range(10)]
         ['wipfile.render.7.0.ext',
@@ -284,24 +284,33 @@ class PipeFile(File, Pipe):
         'wipfile.render.7.7.ext',
         'wipfile.render.7.8.ext',
         'wipfile.render.7.9.ext']
-        >>> extra_fields = dict(year='[0-9]{4}', user='[a-z]+', another='(constant)', last='[a-zA-Z0-9]+')
-        >>> ProjectFile = type('ProjectFile', (PipeFile,), dict(config=extra_fields))
-        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast_base.17.abc')
-        >>> pf.get_values()
+        >>> class ProjectFile(PipeFile):
+        ...     config = dict(year='[0-9]{4}',
+        ...                   user='[a-z]+',
+        ...                   another='(constant)',
+        ...                   last='[a-zA-Z0-9]+')
+        ...
+        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast.data.17.abc')
+        >>> pf.values
         {'base': 'project_data_name',
         'year': '2017',
         'user': 'christianl',
         'another': 'constant',
         'last': 'iamlast',
-        'output': 'base',
+        'output': 'data',
         'version': '17',
         'extension': 'abc'}
-        >>> pf.nice_name
+        >>> pf.nice_name  # no pipe & extension fields
         'project_data_name_2017_christianl_constant_iamlast'
         >>> pf.year
         '2017'
-        >>> pf.lastfield
-        'iamlast'
+        >>> pf.year = 'nondigits'  # mutating with invalid fields raises a NameError
+        Traceback (most recent call last):
+        ...
+        NameError: Can't set invalid name 'project_data_name_nondigits_christianl_constant_iamlast.data.17.abc' on ProjectFile instance. Valid convention is: [base]_[year]_[user]_[another]_[last].[pipe].[extension]
+        >>> pf.year = 1907
+        >>> pf.name
+        'project_data_name_1907_christianl_constant_iamlast.data.17.abc'
         >>> pf.extension
         'abc'
     """
