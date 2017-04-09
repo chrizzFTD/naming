@@ -6,9 +6,6 @@ from .base import _BaseName
 __all__ = ['Name', 'File', 'Pipe', 'PipeFile']
 
 
-CWD = None
-
-
 class Name(_BaseName):
     """Inherited by: :class:`naming.File` :class:`naming.Pipe`
 
