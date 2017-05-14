@@ -205,7 +205,8 @@ class Pipe(Name):
         self._version = '\d+'
         self._output = '\w+'
         self._frame = '\d+'
-        self._pipe = rf'(({self._pipe_separator_pattern}{self._output})?[.]{self._version}([.]{self._frame})?)'
+        sep = self._pipe_separator_pattern
+        self._pipe = rf'(({sep}{self._output})?{sep}{self._version}({sep}{self._frame})?)'
 
     def _set_patterns(self):
         super()._set_patterns()
