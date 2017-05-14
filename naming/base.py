@@ -1,4 +1,3 @@
-# standard
 import re
 import abc
 import typing
@@ -52,11 +51,11 @@ class _ABCName(abc.ABCMeta):
         new_cls.drops = new_drops
 
 
-class _BaseName(object, metaclass=_ABCName):
+class _BaseName(metaclass=_ABCName):
     """This is the base abstract class for Name objects. You should not need to subclass directly from this object.
     All subclasses are encouraged to inherit from Name instead of this one."""
 
-    _regex_property_name = r'[a-zA-Z][\w]+'
+    _regex_property_name = re.compile(r'[a-zA-Z]\w+')
 
     def __init__(self, name: str='', separator: str='_'):
         super().__init__()
@@ -195,7 +194,7 @@ class _BaseName(object, metaclass=_ABCName):
     def _iter_translated_pattern_list(self, pattern: str, **values) -> typing.Generator:
         self_values = self._values
         for p in getattr(self, pattern)():
-            nice_name = re.search(self._regex_property_name, p).group(0)
+            nice_name = self._regex_property_name.search(p).group(0)
             if nice_name in values:
                 value = str(values[nice_name])
             elif self_values:
