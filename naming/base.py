@@ -18,6 +18,8 @@ def _field_property(field_name: str) -> property:
         return self._values.get(field_name)
 
     def setter(self, value):
+        if value and str(value) == self._values.get(field_name):
+            return
         new_name = self.get_name(**{field_name: value})
         self.set_name(new_name)
     return property(getter, setter)
@@ -124,6 +126,7 @@ class _BaseName(metaclass=_ABCName):
 
         :param name: The name to be set on this object.
         :raises NameError: If an invalid string is provided.
+        :returns: Reference to self.
         """
         match = self.__regex.match(name)
         if not match:
@@ -132,6 +135,7 @@ class _BaseName(metaclass=_ABCName):
             raise NameError(msg)
         self.__set_name(name)
         self.__values.update(match.groupdict())
+        return self
 
     @property
     def _values(self) -> typing.Dict[str, str]:

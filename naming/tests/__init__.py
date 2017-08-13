@@ -29,6 +29,8 @@ class TestName(unittest.TestCase):
         n = Name()
         n.set_name('setname')
         self.assertEqual('setname', n.get_name())
+        self.assertEqual(n, n.set_name('setname'))
+        self.assertTrue(isinstance(n.set_name('setname'), n.__class__))
 
 
 class TestEasyName(unittest.TestCase):

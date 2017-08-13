@@ -12,5 +12,5 @@ setup(
     url='https://github.com/chrizzFTD/naming',
     download_url='https://github.com/chrizzFTD/naming/releases/tag/0.1.3',
     classifiers=['Programming Language :: Python :: 3.6'],
-    extras_require={'docs': ['sphinx_autodoc_typehints']}
+    extras_require={'docs': ['sphinx_autodoc_typehints', 'sphinx_rtd_theme']}
 )
