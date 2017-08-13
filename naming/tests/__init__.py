@@ -54,6 +54,8 @@ class TestEasyName(unittest.TestCase):
         pf = ProjectFile('this_is_my_base_name_2017_christianl_constant_iamlast.base.17.abc')
         self.assertEqual('this_is_my_base_name_2017_christianl_constant_iamlast', pf.nice_name)
         self.assertEqual('this_is_my_base_name_2017_christianl_constant_iamlast.base.17', pf.pipe_name)
+        # setting same fields should be returning early
+        pf.year = 2017
         self.assertEqual('2017', pf.year)
         self.assertEqual('iamlast', pf.lastfield)
         self.assertEqual('abc', pf.extension)
