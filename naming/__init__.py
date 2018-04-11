@@ -1,9 +1,8 @@
-# standard
 from pathlib import Path
-# package
-from .base import _BaseName
 
-__all__ = ['Name', 'File', 'Pipe', 'PipeFile']
+from .base import _BaseName, NameConfig
+
+__all__ = ['Name', 'File', 'Pipe', 'PipeFile', 'NameConfig']
 
 
 class Name(_BaseName):
@@ -30,7 +29,7 @@ class Name(_BaseName):
         >>> from naming import Name
         >>> n = Name()
         >>> n.get_name()  # no name has been set on the object, convention is solved with [missing] fields
-        '[base]'
+        '{base}'
         >>> n.values
         {}
         >>> n.set_name('hello_world')
@@ -41,36 +40,6 @@ class Name(_BaseName):
         {'base': 'fields_as_properties'}
     """
     config = dict(base=r'\w+')
-    drops = tuple()
-    compounds = dict()
-
-    def __init__(self, name: str='', separator: str='_'):
-        """Sets the patterns defined by the `config` attribute. If any extra work is to be done by the class init
-        it should be implemented on the `_init_name_core` method.
-
-        :param name: Name to initialize the object with. Defaults to an empty string and it can later be set
-                     by calling the :func:`~naming.Name.set_name` method.
-        :param separator: Separator for the name fields. Defaults to an underscore.
-        """
-        self.__keys = self.config.keys()
-        self.__items = self.config.items()
-        super().__init__(name, separator)
-
-    def _set_values(self):
-        super()._set_values()
-        for k, v in self.__items:
-            setattr(self, rf'_{k}', v)
-        for ck, cv in self.compounds.items():
-            setattr(self, rf'_{ck}', ''.join(getattr(self, rf'_{v}') for v in cv))
-
-    def _set_patterns(self):
-        super()._set_patterns()
-        self._set_pattern(*self.__keys)
-
-    def get_pattern_list(self):
-        result = super().get_pattern_list()
-        result.extend(rf'_{k}' for k in self.__keys if not (k in self.drops or k in self._compounds_fields))
-        return result
 
 
 class File(Name):
@@ -89,9 +58,9 @@ class File(Name):
         >>> from naming import File
         >>> f = File()
         >>> f.get_name()
-        '[basse].[extension]'
+        '{basse}.{extension}'
         >>> f.get_name(extension='png')
-        '[base].png'
+        '{base}.png'
         >>> f.set_name('hello.world')
         >>> f.values
         {'base': 'hello', 'extension': 'world'}
@@ -103,22 +72,23 @@ class File(Name):
         >>> f.values
         {'base': 'hello', 'extension': 'abc'}
     """
-    def __init__(self, *args, **kwargs):
-        self._cwd = kwargs.pop('cwd', None)
+    file_config = NameConfig(dict(extension='\w+'))
+
+    def __init__(self, *args, cwd=None, **kwargs):
+        self._cwd = cwd
         super().__init__(*args, **kwargs)
 
-    def _set_values(self):
-        super()._set_values()
-        self._extension = '[.](?P<extension>\w+)'
-        self._add_field_property('extension')
-
-    def _get_joined_pattern(self) -> str:
-        return rf'{super()._get_joined_pattern()}{self._extension}'
+    @property
+    def _pattern(self):
+        sep = '\.'
+        pcfg = {k: self.cast(v, k) for k, v in self.file_config.items()}
+        pipe_pattern = r'(\.{extension})'.format(sep=sep, **pcfg)
+        return rf'{super()._pattern}{pipe_pattern}'
 
     def get_name(self, **values) -> str:
         if not values and self.name:
             return super().get_name(**values)
-        extension = values.get('extension') or self.extension or "[extension]"
+        extension = values.get('extension') or self.extension or '{extension}'
         return rf'{super().get_name(**values)}.{extension}'
 
     def get_path_pattern_list(self):
@@ -172,13 +142,13 @@ class Pipe(Name):
         >>> from naming import Pipe
         >>> p = Pipe()
         >>> p.get_name()
-        '[base].[pipe]'
+        '{base}.{pipe}'
         >>> p.get_name(version=10)
-        '[base].10'
+        '{base}.10'
         >>> p.get_name(output='data')
-        '[base].data.[version]'
+        '{base}.data.{version}'
         >>> p.get_name(output='cache', version=7, frame=24)
-        '[base].cache.7.24'
+        '{base}.cache.7.24'
         >>> p = Pipe('my_wip_data.1')
         >>> p.version
         '1'
@@ -198,67 +168,51 @@ class Pipe(Name):
         >>> p.values
         {'base': 'my_wip_data', 'output': 'exchange', 'version': '7', 'frame': '101'}
     """
-    _pipe_fields = ('output', 'version', 'frame')
+    pipe_config = NameConfig(dict(pipe='\w+', output='\w+', version='\d+', frame='\d+'))
 
-    def _set_values(self):
-        super()._set_values()
-        self._version = '\d+'
-        self._output = '\w+'
-        self._frame = '\d+'
-        sep = self._pipe_separator_pattern
-        self._pipe = rf'(({sep}{self._output})?{sep}{self._version}({sep}{self._frame})?)'
-
-    def _set_patterns(self):
-        super()._set_patterns()
-        self._set_pattern('pipe', *self._pipe_fields)
-
-    def _get_joined_pattern(self):
-        return rf'{super()._get_joined_pattern()}{self._pipe}'
+    @property
+    def _pattern(self):
+        sep = rf'\{self.pipe_separator}'
+        pcfg = {k: self.cast(v, k) for k, v in self.pipe_config.items()}
+        pipe_pattern = r'(?P<pipe>({sep}{output})?{sep}{version}({sep}{frame})?)'.format(sep=sep, **pcfg)
+        return rf'{super()._pattern}{pipe_pattern}'
 
     @property
     def pipe_separator(self) -> str:
         return '.'
 
     @property
-    def _pipe_separator_pattern(self):
-        return rf'\{self.pipe_separator}'
-
-    @property
     def pipe_name(self) -> str:
         """The pipe name string of this object."""
-        pipe_suffix = self.pipe or rf"{self.pipe_separator}[pipe]"
+        pipe_suffix = self.pipe or rf"{self.pipe_separator}{{pipe}}"
         return rf'{self.nice_name}{pipe_suffix}'
-
-    def _filter_k(self, k):
-        return k == 'pipe'
 
     def _format_pipe_field(self, k, v):
         if k == 'frame' and v is None:
             return ''
-        return rf'{self.pipe_separator}{v if v is not None else rf"[{k}]"}'
+        return rf'{self.pipe_separator}{v if v is not None else rf"{{{k}}}"}'
 
     def _get_pipe_field(self, output=None, version=None, frame=None) -> str:
         fields = dict(output=output or None, version=version, frame=frame)
         # comparisons to None due to 0 being a valid value
-        fields = {k: v if v is not None else getattr(self, k) for k, v in fields.items()}
-
+        fields = {k: v if v is not None else self._values.get(k) for k, v in fields.items()}
         if all(v is None for v in fields.values()):
-            suffix = rf'{self.pipe_separator}[pipe]'
+            pipe = '{pipe}'
+            suffix = rf'{self.pipe_separator}{pipe}'
             return self.pipe or suffix if self.name else suffix
-
         if not fields['output'] and fields['frame'] is None:  # optional fields
-            return rf'.{fields["version"] or 0}'
-
+            return rf'{self.pipe_separator}{fields["version"]}'
         return ''.join(self._format_pipe_field(k, v) for k, v in fields.items())
 
     def get_name(self, **values) -> str:
         if not values and self.name:
             return super().get_name(**values)
         try:
-            # allow for getting name without pipe field in subclasses e.g. .File
+            # allow for getting name without pipe field in subclasses
             pipe = values['pipe'] or ''
         except KeyError:
-            kwargs = {k: values.get(k) for k in self._pipe_fields}
+            kwargs = {k: values.get(k) for k in self.pipe_config}
+            kwargs.pop('pipe')
             pipe = self._get_pipe_field(**kwargs)
         return rf'{super().get_name(**values)}{pipe}'
 
@@ -288,7 +242,7 @@ class PipeFile(File, Pipe):
         ...                   another='(constant)',
         ...                   last='[a-zA-Z0-9]+')
         ...
-        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast.data.17.abc')
+        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast.data.17.abc', sep='_')
         >>> pf.values
         {'base': 'project_data_name',
         'year': '2017',
@@ -305,7 +259,7 @@ class PipeFile(File, Pipe):
         >>> pf.year = 'nondigits'  # mutating with invalid fields raises a NameError
         Traceback (most recent call last):
         ...
-        NameError: Can't set invalid name 'project_data_name_nondigits_christianl_constant_iamlast.data.17.abc' on ProjectFile instance. Valid convention is: [base]_[year]_[user]_[another]_[last].[pipe].[extension]
+        NameError: Can't set invalid name 'project_data_name_nondigits_christianl_constant_iamlast.data.17.abc' on ProjectFile instance. Valid convention is: {base}_{year}_{user}_{another}_{last}.{pipe}.{extension}
         >>> pf.year = 1907
         >>> pf.name
         'project_data_name_1907_christianl_constant_iamlast.data.17.abc'

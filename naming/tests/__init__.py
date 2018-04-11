@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Names testing module.
-"""
-# standard
 import os
 import unittest
 from pathlib import Path
-# package
+
 from naming import *
 
 
@@ -14,8 +9,8 @@ class TestName(unittest.TestCase):
 
     def test_empty_name(self):
         n = Name()
-        self.assertEqual('[base]', n.get_name())
-        self.assertEqual('[base]', str(n))
+        self.assertEqual('{base}', n.get_name())
+        self.assertEqual('{base}', str(n))
 
     def test_init_name(self):
         n = Name('initname')
@@ -27,45 +22,43 @@ class TestName(unittest.TestCase):
 
     def test_set_name(self):
         n = Name()
-        n.set_name('setname')
+        n.name = 'setname'
         self.assertEqual('setname', n.get_name())
-        self.assertEqual(n, n.set_name('setname'))
-        self.assertTrue(isinstance(n.set_name('setname'), n.__class__))
+
+
+class TestConfig(unittest.TestCase):
+
+    def test_assignment(self):
+        n = Name()
+        with self.assertRaises(AttributeError):
+            n.config = 'foo'
+        cfg = n.config
+        cfg['base'] = 10
+        # check immutability
+        self.assertFalse(cfg == n.config)
 
 
 class TestEasyName(unittest.TestCase):
 
     def test_empty_name(self):
         n = Name()
-        self.assertEqual('[base]', n.get_name())
+        self.assertEqual('{base}', n.get_name())
         self.assertEqual({}, n.values)
 
     def test_new_empty_name(self):
         extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
         Project = type('Project', (Name,), dict(config=extra_fields))
-        p = Project()
-        self.assertEqual('[base]_[year]_[username]_[anotherfield]_[lastfield]', p.get_name())
-        p.set_name('this_is_my_base_name_2017_christianl_constant_iamlast')
+        p = Project(sep='_')
+        self.assertEqual('{base}_{year}_{username}_{anotherfield}_{lastfield}', p.get_name())
+        p.name = 'this_is_my_base_name_2017_christianl_constant_iamlast'
         self.assertEqual('2017', p.year)
-
-    def test_set_name(self):
-        extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
-        ProjectFile = type('ProjectFile', (PipeFile,), dict(config=extra_fields))
-        pf = ProjectFile('this_is_my_base_name_2017_christianl_constant_iamlast.base.17.abc')
-        self.assertEqual('this_is_my_base_name_2017_christianl_constant_iamlast', pf.nice_name)
-        self.assertEqual('this_is_my_base_name_2017_christianl_constant_iamlast.base.17', pf.pipe_name)
-        # setting same fields should be returning early
-        pf.year = 2017
-        self.assertEqual('2017', pf.year)
-        self.assertEqual('iamlast', pf.lastfield)
-        self.assertEqual('abc', pf.extension)
 
     def test_separator(self):
         extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
         Project = type('Project', (Name,), dict(config=extra_fields))
-        p = Project('this_is_my_base_name_2017_christianl_constant_iamlast')
-        self.assertEqual('_', p.separator)
-        p.separator = '  '
+        p = Project('this_is_my_base_name_2017_christianl_constant_iamlast', sep='_')
+        self.assertEqual('_', p.sep)
+        p.sep = '  '
         self.assertEqual('this_is_my_base_name  2017  christianl  constant  iamlast', p.name)
 
 
@@ -73,27 +66,27 @@ class TestPipe(unittest.TestCase):
 
     def test_empty_name(self):
         p = Pipe()
-        self.assertEqual('[base].[pipe]', p.get_name())
-        self.assertEqual('[base].10', p.get_name(version=10))
-        self.assertEqual('[base].geo.10', p.get_name(version=10, output='geo'))
-        self.assertEqual('[base].geo.10.25', p.get_name(version=10, output='geo', frame=25))
-        self.assertEqual('[base].[output].10.25', p.get_name(version=10, frame=25))
-        self.assertEqual('[base].[output].[version].101', p.get_name(frame=101))
-        self.assertEqual('[base].cache.[version]', p.get_name(output='cache'))
-        self.assertEqual('[base]', p.get_name(pipe=None))
+        self.assertEqual('{base}.{pipe}', p.get_name())
+        self.assertEqual('{base}.10', p.get_name(version=10))
+        self.assertEqual('{base}.geo.10', p.get_name(version=10, output='geo'))
+        self.assertEqual('{base}.geo.10.25', p.get_name(version=10, output='geo', frame=25))
+        self.assertEqual('{base}.{output}.10.25', p.get_name(version=10, frame=25))
+        self.assertEqual('{base}.{output}.{version}.101', p.get_name(frame=101))
+        self.assertEqual('{base}.cache.{version}', p.get_name(output='cache'))
+        self.assertEqual('{base}', p.get_name(pipe=None))
 
     def test_empty_name_separator(self):
         p = Pipe()
         for sep in ' ', '.', '/', '/ .':
-            p.separator = sep
-            self.assertEqual(f'[base].[pipe]', p.get_name())
-            self.assertEqual('[base].10', p.get_name(version=10))
-            self.assertEqual(f'[base].geo.10', p.get_name(version=10, output='geo'))
-            self.assertEqual(f'[base].geo.10.25', p.get_name(version=10, output='geo', frame=25))
-            self.assertEqual(f'[base].[output].10.25', p.get_name(version=10, frame=25))
-            self.assertEqual(f'[base].[output].[version].101', p.get_name(frame=101))
-            self.assertEqual(f'[base].cache.[version]', p.get_name(output='cache'))
-            self.assertEqual('[base]', p.get_name(pipe=None))
+            p.sep = sep
+            self.assertEqual('{base}.{pipe}', p.get_name())
+            self.assertEqual('{base}.10', p.get_name(version=10))
+            self.assertEqual('{base}.geo.10', p.get_name(version=10, output='geo'))
+            self.assertEqual('{base}.geo.10.25', p.get_name(version=10, output='geo', frame=25))
+            self.assertEqual('{base}.{output}.10.25', p.get_name(version=10, frame=25))
+            self.assertEqual('{base}.{output}.{version}.101', p.get_name(frame=101))
+            self.assertEqual('{base}.cache.{version}', p.get_name(output='cache'))
+            self.assertEqual('{base}', p.get_name(pipe=None))
 
     def test_init_name(self):
         p = Pipe('initname.pipeline.0')
@@ -120,31 +113,31 @@ class TestPipe(unittest.TestCase):
 
     def test_set_name(self):
         p = Pipe()
-        p.set_name('setname.pipeline.0')
+        p.name = 'setname.pipeline.0'
         self.assertEqual('.pipeline.0', p.pipe)
         self.assertEqual('pipeline', p.output)
         self.assertEqual('0', p.version)
-        p.set_name('setname.pipeline.0.5')
+        p.name = 'setname.pipeline.0.5'
         self.assertEqual('5', p.frame)
         self.assertEqual('setname', p.nice_name)
 
     def test_values(self):
         p = Pipe()
-        p.set_name('my_pipe_file.1')
-        self.assertEqual({'base': 'my_pipe_file', 'version': '1'}, p.values)
+        p.name = 'my_pipe_file.1'
+        self.assertEqual({'base': 'my_pipe_file', 'version': '1', 'pipe': '.1'}, p.values)
 
     def test_get_empty_name(self):
         p = Pipe()
-        self.assertEqual('[base].[pipe]', p.pipe_name)
-        self.assertEqual('[base].[pipe]', p.get_name())
-        self.assertEqual('[base].out.7', p.get_name(pipe='.out.7'))
-        self.assertEqual('[base].out.[version]', p.get_name(output='out'))
-        self.assertEqual('[base].7', p.get_name(version=7))
-        self.assertEqual('[base].[output].[version].101', p.get_name(frame=101))
+        self.assertEqual('{base}.{pipe}', p.pipe_name)
+        self.assertEqual('{base}.{pipe}', p.get_name())
+        self.assertEqual('{base}.out.7', p.get_name(pipe='.out.7'))
+        self.assertEqual('{base}.out.{version}', p.get_name(output='out'))
+        self.assertEqual('{base}.7', p.get_name(version=7))
+        self.assertEqual('{base}.{output}.{version}.101', p.get_name(frame=101))
 
     def test_get_init_name(self):
         p = Pipe('my_pipe_file.7')
-        self.assertEqual('my_pipe_file.[output].7.101', p.get_name(frame=101))
+        self.assertEqual('my_pipe_file.{output}.7.101', p.get_name(frame=101))
         self.assertEqual('my_pipe_file.cache.7', p.get_name(output='cache'))
         self.assertEqual('my_pipe_file.8', p.get_name(version=int(p.version) + 1))
 
@@ -153,11 +146,11 @@ class TestFile(unittest.TestCase):
 
     def test_empty_name(self):
         f = File()
-        self.assertEqual('[base].[extension]', f.get_name())
-        self.assertEqual('[base].abc', f.get_name(extension='abc'))
-        self.assertEqual('[base].[extension]', f.get_name(extension=''))
+        self.assertEqual('{base}.{extension}', f.get_name())
+        self.assertEqual('{base}.abc', f.get_name(extension='abc'))
+        self.assertEqual('{base}.{extension}', f.get_name(extension=''))
 
-        f.set_name('myfile.ext')
+        f.name = 'myfile.ext'
         self.assertEqual('ext', f.extension)
         self.assertEqual('myfile', f.base)
         self.assertEqual(f.get_name(), str(f.path))
@@ -165,7 +158,6 @@ class TestFile(unittest.TestCase):
 
     def test_cwd(self):
         f = File()
-        f.full_path
         f.cwd = 'some/absolute/path'
         self.assertEqual(os.path.join('some', 'absolute', 'path', f.get_name()), str(f.full_path))
 
@@ -173,10 +165,10 @@ class TestPipeFile(unittest.TestCase):
 
     def test_empty_name(self):
         f = PipeFile()
-        self.assertEqual('[base].[pipe].[extension]', f.get_name())
-        self.assertEqual('[base].[pipe].abc', f.get_name(extension='abc'))
-        self.assertEqual('[base].[pipe].[extension]', f.get_name(extension=''))
-        f.set_name('myfile.data.0.ext')
+        self.assertEqual('{base}.{pipe}.{extension}', f.get_name())
+        self.assertEqual('{base}.{pipe}.abc', f.get_name(extension='abc'))
+        self.assertEqual('{base}.{pipe}.{extension}', f.get_name(extension=''))
+        f.name = 'myfile.data.0.ext'
         self.assertEqual('ext', f.extension)
         self.assertEqual('myfile', f.base)
         self.assertEqual('.data.0', f.pipe)
@@ -185,16 +177,16 @@ class TestPipeFile(unittest.TestCase):
 
     def test_set_property(self):
         pf = PipeFile()
-        self.assertEqual('[base].[pipe].[extension]', pf.get_name())
+        self.assertEqual('{base}.{pipe}.{extension}', pf.get_name())
         with self.assertRaises(NameError):
-            pf.base = 'awesome'
-        pf.set_name('hello_world.1.png')
+            pf.name = 'awesome'
+        pf.name = 'hello_world.1.png'
         pf.base = 'awesome'
         self.assertEqual('awesome', pf.nice_name)
-        self.assertEqual({'base': 'awesome', 'version': '1', 'extension': 'png'}, pf.values)
+        self.assertEqual({'base': 'awesome', 'version': '1', 'pipe': '.1', 'extension': 'png'}, pf.values)
 
         p = PipeFile('my_pipe_file.1.png')
-        self.assertEqual({'base': 'my_pipe_file', 'version': '1', 'extension': 'png'}, p.values)
+        self.assertEqual({'base': 'my_pipe_file', 'version': '1', 'extension': 'png', 'pipe': '.1'}, p.values)
         p.extension = 'abc'
         self.assertEqual('my_pipe_file.1.abc', p.name)
         p.output = 'geometry'
@@ -207,23 +199,35 @@ class TestPipeFile(unittest.TestCase):
         self.assertEqual('my_pipe_file.geometry.0.abc', p.name)
         self.assertEqual('PipeFile("my_pipe_file.geometry.0.abc")', repr(p))
 
+    def test_set_name(self):
+        extra_fields = dict(year='[0-9]{4}', username='[a-z]+', anotherfield='(constant)', lastfield='[a-zA-Z0-9]+')
+        ProjectFile = type('ProjectFile', (PipeFile,), dict(config=extra_fields))
+        pf = ProjectFile('this_is_my_base_name_2017_christianl_constant_iamlast.base.17.abc', sep='_')
+        self.assertEqual('this_is_my_base_name_2017_christianl_constant_iamlast', pf.nice_name)
+        self.assertEqual('this_is_my_base_name_2017_christianl_constant_iamlast.base.17', pf.pipe_name)
+        # setting same fields should be returning early
+        pf.year = 2017
+        self.assertEqual('2017', pf.year)
+        self.assertEqual('iamlast', pf.lastfield)
+        self.assertEqual('abc', pf.extension)
+
 
 class TestDrops(unittest.TestCase):
 
     def test_empty_name(self):
         Dropper = type('Dropper', (PipeFile,), dict(config=dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+'),
                                                     drops=('base',)))
-        d = Dropper()
-        self.assertEqual('[without]_[basename].[pipe].[extension]', d.get_name())
-        self.assertEqual('awesome_[basename].[pipe].[extension]', d.get_name(without='awesome'))
-        self.assertEqual('[without]_replaced.[output].[version].101.[extension]',
+        d = Dropper(sep='_')
+        self.assertEqual('{without}_{basename}.{pipe}.{extension}', d.get_name())
+        self.assertEqual('awesome_{basename}.{pipe}.{extension}', d.get_name(without='awesome'))
+        self.assertEqual('{without}_replaced.{output}.{version}.101.{extension}',
                          d.get_name(basename='replaced', frame=101))
 
         Subdropper = type('Dropper', (Dropper,), dict(config=dict(subdrop='[\w]')))
-        s = Subdropper()
-        self.assertEqual('[without]_[basename]_[subdrop].[pipe].[extension]', s.get_name())
-        self.assertEqual('awesome_[basename]_[subdrop].[pipe].[extension]', s.get_name(without='awesome'))
-        self.assertEqual('[without]_replaced_[subdrop].[output].[version].101.[extension]',
+        s = Subdropper(sep='_')
+        self.assertEqual('{without}_{basename}_{subdrop}.{pipe}.{extension}', s.get_name())
+        self.assertEqual('awesome_{basename}_{subdrop}.{pipe}.{extension}', s.get_name(without='awesome'))
+        self.assertEqual('{without}_replaced_{subdrop}.{output}.{version}.101.{extension}',
                          s.get_name(basename='replaced', frame=101))
 
 
@@ -232,14 +236,15 @@ class TestCompound(unittest.TestCase):
     def test_empty_name(self):
         Compound = type('Compound', (PipeFile,), dict(config=dict(first=r'[\d]+', second=r'[a-zA-Z]+'),
                                                       compounds=dict(base=('first', 'second'))))
-        c = Compound()
-        self.assertEqual('[base].[pipe].[extension]', c.get_name())
-        self.assertEqual('[base].[pipe].[extension]', c.get_name(first=50))
-        self.assertEqual('50abc.[pipe].[extension]', c.get_name(first=50, second='abc'))
-        c.set_name(c.get_name(base='101dalmatians', version=1, extension='png'))
+        c = Compound(sep='_')
+        self.assertEqual('{base}.{pipe}.{extension}', c.get_name())
+        self.assertEqual('{base}.{pipe}.{extension}', c.get_name(first=50))
+        self.assertEqual('50abc.{pipe}.{extension}', c.get_name(first=50, second='abc'))
+        c.name = c.get_name(base='101dalmatians', version=1, extension='png')
         self.assertEqual('101dalmatians', c.nice_name)
         self.assertEqual(
-            {'base': '101dalmatians', 'first': '101', 'second': 'dalmatians', 'version': '1', 'extension': 'png'},
+            {'base': '101dalmatians', 'first': '101', 'second': 'dalmatians', 'version': '1', 'extension': 'png',
+             'pipe': '.1'},
             c.values)
         self.assertEqual('200dalmatians.1.png', c.get_name(first=200))
 
@@ -268,10 +273,126 @@ class TestPropertyField(unittest.TestCase):
                 result.append('nameprop')
                 return result
 
-        pf = PropertyField()
-        self.assertEqual(Path('[base]/[extrafield]/[pathprop]/[base]_[extrafield]_[nameprop].[pipe].[extension]'), pf.path)
-        pf.set_name('simple_property_staticvalue.1.abc')
-        self.assertEqual({'base': 'simple', 'extrafield': 'property', 'version': '1', 'extension': 'abc'},
+        pf = PropertyField(sep='_')
+        self.assertEqual(Path('{base}/{extrafield}/propertyfield/{base}_{extrafield}_staticvalue.{pipe}.{extension}'),
+                         pf.path)
+        pf.name = 'simple_property_staticvalue.1.abc'
+        self.assertEqual({'base': 'simple', 'extrafield': 'property', 'version': '1', 'extension': 'abc', 'pipe': '.1',
+                          'nameprop': 'staticvalue'},
                          pf.values)
         self.assertEqual('simple_property_staticvalue', pf.nice_name)
         self.assertEqual(Path('simple/property/propertyfield/simple_property_staticvalue.1.abc'), pf.path)
+
+
+class TestSubclassing(unittest.TestCase):
+    SubName = type('SubName', (Name,), dict(config=dict(base=r'\w+', second_field='(2nd)', third_field='(3rd)')))
+    SubName2 = type('SubName2', (SubName,), dict(config=dict(second_field='(notsec)')))
+    Replace = type('Replace', (SubName2,), dict(config=dict(base='(repl)', fourth_field='(4th)', fifth_field='(5th)')))
+    SubName3 = type('SubName3', (SubName2,), dict(config=dict(base='(mrb)', second_field='(dos)')))
+    Drop = type('Drop', (Replace,), dict(drops=('fourth_field',)))
+
+    class Compounds(Drop):
+        config = dict(subfirst='(s1st)', subscnd='(s2nd)', f1='(f1)', f2='(f2)', lastfield='(last)')
+        compounds = dict(second_field=('subfirst', 'subscnd'), fifth_field=('f1', 'f2'))
+
+    class Subcoms(Compounds):
+        compounds = dict(base=('second_field', 'third_field'), fifth_field=('fifth_field', 'lastfield'))
+
+    class Subcoms2(Compounds):
+        config = dict(another='(another)', nested='(nested)')
+        compounds = dict(base=('second_field', 'third_field'), fifth_field=('f1', 'f2', 'lastfield'))
+
+    class Subcoms3(Subcoms2):
+        config = dict(nombre='(nombre)', apellido='(apellido)', middlename='(medio)')
+
+    class SS5(Subcoms3):
+        config = dict(morename='(masnombres)')
+        compounds = dict(nombre=('nombre', 'middlename', 'another'), apellido=('morename', 'apellido'))
+
+    def test_config_only(self):
+        n = self.SubName()
+        self.assertEqual('{base} {second_field} {third_field}', n.get_name())
+        n.name = 'word 2nd 3rd'
+        self.assertEqual('2nd', n.second_field)
+        with self.assertRaises(NameError):
+            n.second_field = 'notsec'
+        n = self.SubName2(n.get_name(second_field='notsec'))
+        self.assertEqual('word notsec 3rd', n.name)
+        values = n.values
+        n = self.Replace()
+        with self.assertRaises(NameError):
+            n.base = 'repl'
+        values.update(base='repl', fourth_field='4th', fifth_field='5th')
+        n.name = n.get_name(**values)
+        self.assertEqual('repl notsec 3rd 4th 5th', n.name)
+        with self.assertRaises(NameError):
+            self.SubName3('mrb dos 3r')
+        n = self.SubName3('mrb dos 3rd')
+        self.assertEqual('mrb', n.base)
+
+    def test_drops(self):
+        n = self.Drop()
+        self.assertEqual('{base} {second_field} {third_field} {fifth_field}', n.get_name())
+        n.name = 'repl notsec 3rd 5th'
+        self.assertEqual('notsec', n.second_field)
+        with self.assertRaises(NameError):
+            n.third_field = 'tres'
+        n = self.Compounds()
+        self.assertEqual('{base} {second_field} {third_field} {fifth_field} {lastfield}', n.get_name())
+        n.name = 'repl s1sts2nd 3rd f1f2 last'
+        self.assertEqual('s1st', n.subfirst)
+        values = n.values
+        n = self.Subcoms()
+        self.assertEqual('{base} {fifth_field} {f1} {f2}', n.get_name())
+        values.update(base=rf'{values["second_field"]}{values["third_field"]}',
+                      fifth_field=rf'5th{values["lastfield"]}')
+        n.name = n.get_name(**values)
+        self.assertEqual('s1sts2nd3rd 5thlast f1 f2', n.name)
+        self.assertEqual('s1sts2nd3rd', n.base)
+        self.assertEqual('3rd', n.third_field)
+        self.assertEqual('5thlast', n.fifth_field)
+        self.assertEqual('last', n.lastfield)
+        with self.assertRaises(NameError):
+            n.base = 'repls'
+        n = self.Subcoms2()
+        self.assertEqual('{base} {fifth_field} {another} {nested}', n.get_name())
+        self.assertEqual('s1sts2nd3rd {fifth_field} {another} {nested}', n.get_name(f1='f1', f2='f2',
+                                                                                    second_field=values['second_field'],
+                                                                                    third_field=values['third_field']))
+        n = self.SS5()
+        self.assertEqual('{base} {fifth_field} {nested} {nombre} {apellido}', n.get_name())
+        values['fifth_field'] = None
+        # compounds that were redeclared with a nested name should have precedence
+        values.update(nombre='nombremedioanother', apellido='masnombresapellido', middlename='medio',
+                      morename='masnombres', another='another', nested='nested', f1='f1', f2='f2')
+        n.name = n.get_name(**values)
+        self.assertEqual('s1sts2nd3rd f1f2last nested nombremedioanother masnombresapellido', n.name)
+        with self.assertRaises(NameError):
+            self.SubName3('mrb dos 3r')
+        self.assertEqual('masnombres', n.morename)
+
+
+    def test_compounds(self):
+        class ComplicatedCompound(Name):
+            config = dict(one='1st', two='2nd', three='3rd', four='4th', five='5th', six='6th', seven='7th',
+                          eight='8th', nine='9th', zero='0')
+            compounds = dict(two=('two', 'one', 'base'),
+                             one=('seven', 'six', 'five'),
+                             six=('three', 'four'),
+                             base=('nine', 'eight')
+                             )
+
+        n = ComplicatedCompound('2nd7th3rd4th5th9th8th 0')
+        self.assertEqual('7th3rd4th5th', n.one)
+        self.assertEqual('2nd7th3rd4th5th9th8th', n.two)
+        self.assertEqual('3rd', n.three)
+        self.assertEqual('4th', n.four)
+        self.assertEqual('5th', n.five)
+        self.assertEqual('3rd4th', n.six)
+        self.assertEqual('7th', n.seven)
+        self.assertEqual('8th', n.eight)
+        self.assertEqual('9th', n.nine)
+        self.assertEqual('0', n.zero)
+        self.assertEqual('9th8th', n.base)
+        with self.assertRaises(NameError):
+            n.six = 'madman'
