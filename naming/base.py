@@ -57,7 +57,7 @@ class NameConfig:
         cmps_fields = set().union(*(v for v in cmps.values()))
 
         # solve compound fields
-        solved = dict()
+        solved = dict()  # will not preserve order
         for ck, cvs in _sorted_items(cmps):
             solved[ck] = ''.join(obj.cast(solved.pop(cv, cfg[cv]), cv, cv != ck) for cv in cvs)
 
@@ -222,6 +222,10 @@ class _BaseName:
     @staticmethod
     def cast(value, name, named=True):
         return rf'(?P<{name}>{value})' if named else rf'{value}'
+
+    @classmethod
+    def cast_config(cls, config):
+        return {k: cls.cast(v, k) for k, v in config.items()}
 
     def __str__(self):
         return self.get_name()

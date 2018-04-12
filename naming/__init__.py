@@ -81,9 +81,9 @@ class File(Name):
     @property
     def _pattern(self):
         sep = '\.'
-        pcfg = {k: self.cast(v, k) for k, v in self.file_config.items()}
-        pipe_pattern = r'(\.{suffix})'.format(sep=sep, **pcfg)
-        return rf'{super()._pattern}{pipe_pattern}'
+        casted = self.cast_config(self.file_config)
+        pat = r'(\.{suffix})'.format(sep=sep, **casted)
+        return rf'{super()._pattern}{pat}'
 
     def get_name(self, **values) -> str:
         if not values and self.name:
@@ -173,9 +173,9 @@ class Pipe(Name):
     @property
     def _pattern(self):
         sep = rf'\{self.pipe_separator}'
-        pcfg = {k: self.cast(v, k) for k, v in self.pipe_config.items()}
-        pipe_pattern = r'(?P<pipe>({sep}{output})?{sep}{version}({sep}{frame})?)'.format(sep=sep, **pcfg)
-        return rf'{super()._pattern}{pipe_pattern}'
+        casted = self.cast_config(self.pipe_config)
+        pat = r'(?P<pipe>({sep}{output})?{sep}{version}({sep}{frame})?)'.format(sep=sep, **casted)
+        return rf'{super()._pattern}{pat}'
 
     @property
     def pipe_separator(self) -> str:
