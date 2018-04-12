@@ -146,12 +146,12 @@ class TestFile(unittest.TestCase):
 
     def test_empty_name(self):
         f = File()
-        self.assertEqual('{base}.{extension}', f.get_name())
-        self.assertEqual('{base}.abc', f.get_name(extension='abc'))
-        self.assertEqual('{base}.{extension}', f.get_name(extension=''))
+        self.assertEqual('{base}.{suffix}', f.get_name())
+        self.assertEqual('{base}.abc', f.get_name(suffix='abc'))
+        self.assertEqual('{base}.{suffix}', f.get_name(suffix=''))
 
         f.name = 'myfile.ext'
-        self.assertEqual('ext', f.extension)
+        self.assertEqual('ext', f.suffix)
         self.assertEqual('myfile', f.base)
         self.assertEqual(f.get_name(), str(f.path))
         self.assertEqual(os.path.join(Path.home(), f.get_name()), str(f.full_path))
@@ -166,11 +166,11 @@ class TestPipeFile(unittest.TestCase):
 
     def test_empty_name(self):
         f = PipeFile()
-        self.assertEqual('{base}.{pipe}.{extension}', f.get_name())
-        self.assertEqual('{base}.{pipe}.abc', f.get_name(extension='abc'))
-        self.assertEqual('{base}.{pipe}.{extension}', f.get_name(extension=''))
+        self.assertEqual('{base}.{pipe}.{suffix}', f.get_name())
+        self.assertEqual('{base}.{pipe}.abc', f.get_name(suffix='abc'))
+        self.assertEqual('{base}.{pipe}.{suffix}', f.get_name(suffix=''))
         f.name = 'myfile.data.0.ext'
-        self.assertEqual('ext', f.extension)
+        self.assertEqual('ext', f.suffix)
         self.assertEqual('myfile', f.base)
         self.assertEqual('.data.0', f.pipe)
         self.assertEqual('0', f.version)
@@ -178,17 +178,17 @@ class TestPipeFile(unittest.TestCase):
 
     def test_set_property(self):
         pf = PipeFile()
-        self.assertEqual('{base}.{pipe}.{extension}', pf.get_name())
+        self.assertEqual('{base}.{pipe}.{suffix}', pf.get_name())
         with self.assertRaises(NameError):
             pf.name = 'awesome'
         pf.name = 'hello_world.1.png'
         pf.base = 'awesome'
         self.assertEqual('awesome', pf.nice_name)
-        self.assertEqual({'base': 'awesome', 'version': '1', 'pipe': '.1', 'extension': 'png'}, pf.values)
+        self.assertEqual({'base': 'awesome', 'version': '1', 'pipe': '.1', 'suffix': 'png'}, pf.values)
 
         p = PipeFile('my_pipe_file.1.png')
-        self.assertEqual({'base': 'my_pipe_file', 'version': '1', 'extension': 'png', 'pipe': '.1'}, p.values)
-        p.extension = 'abc'
+        self.assertEqual({'base': 'my_pipe_file', 'version': '1', 'suffix': 'png', 'pipe': '.1'}, p.values)
+        p.suffix = 'abc'
         self.assertEqual('my_pipe_file.1.abc', p.name)
         p.output = 'geometry'
         self.assertEqual('my_pipe_file.geometry.1.abc', p.name)
@@ -210,7 +210,7 @@ class TestPipeFile(unittest.TestCase):
         pf.year = 2017
         self.assertEqual('2017', pf.year)
         self.assertEqual('iamlast', pf.lastfield)
-        self.assertEqual('abc', pf.extension)
+        self.assertEqual('abc', pf.suffix)
 
 
 class TestDrops(unittest.TestCase):
@@ -219,16 +219,16 @@ class TestDrops(unittest.TestCase):
         Dropper = type('Dropper', (PipeFile,), dict(config=dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+'),
                                                     drops=('base',)))
         d = Dropper(sep='_')
-        self.assertEqual('{without}_{basename}.{pipe}.{extension}', d.get_name())
-        self.assertEqual('awesome_{basename}.{pipe}.{extension}', d.get_name(without='awesome'))
-        self.assertEqual('{without}_replaced.{output}.{version}.101.{extension}',
+        self.assertEqual('{without}_{basename}.{pipe}.{suffix}', d.get_name())
+        self.assertEqual('awesome_{basename}.{pipe}.{suffix}', d.get_name(without='awesome'))
+        self.assertEqual('{without}_replaced.{output}.{version}.101.{suffix}',
                          d.get_name(basename='replaced', frame=101))
 
         Subdropper = type('Dropper', (Dropper,), dict(config=dict(subdrop='[\w]')))
         s = Subdropper(sep='_')
-        self.assertEqual('{without}_{basename}_{subdrop}.{pipe}.{extension}', s.get_name())
-        self.assertEqual('awesome_{basename}_{subdrop}.{pipe}.{extension}', s.get_name(without='awesome'))
-        self.assertEqual('{without}_replaced_{subdrop}.{output}.{version}.101.{extension}',
+        self.assertEqual('{without}_{basename}_{subdrop}.{pipe}.{suffix}', s.get_name())
+        self.assertEqual('awesome_{basename}_{subdrop}.{pipe}.{suffix}', s.get_name(without='awesome'))
+        self.assertEqual('{without}_replaced_{subdrop}.{output}.{version}.101.{suffix}',
                          s.get_name(basename='replaced', frame=101))
 
 
@@ -238,13 +238,13 @@ class TestCompound(unittest.TestCase):
         Compound = type('Compound', (PipeFile,), dict(config=dict(first=r'[\d]+', second=r'[a-zA-Z]+'),
                                                       compounds=dict(base=('first', 'second'))))
         c = Compound(sep='_')
-        self.assertEqual('{base}.{pipe}.{extension}', c.get_name())
-        self.assertEqual('{base}.{pipe}.{extension}', c.get_name(first=50))
-        self.assertEqual('50abc.{pipe}.{extension}', c.get_name(first=50, second='abc'))
-        c.name = c.get_name(base='101dalmatians', version=1, extension='png')
+        self.assertEqual('{base}.{pipe}.{suffix}', c.get_name())
+        self.assertEqual('{base}.{pipe}.{suffix}', c.get_name(first=50))
+        self.assertEqual('50abc.{pipe}.{suffix}', c.get_name(first=50, second='abc'))
+        c.name = c.get_name(base='101dalmatians', version=1, suffix='png')
         self.assertEqual('101dalmatians', c.nice_name)
         self.assertEqual(
-            {'base': '101dalmatians', 'first': '101', 'second': 'dalmatians', 'version': '1', 'extension': 'png',
+            {'base': '101dalmatians', 'first': '101', 'second': 'dalmatians', 'version': '1', 'suffix': 'png',
              'pipe': '.1'},
             c.values)
         self.assertEqual('200dalmatians.1.png', c.get_name(first=200))
@@ -275,10 +275,10 @@ class TestPropertyField(unittest.TestCase):
                 return result
 
         pf = PropertyField(sep='_')
-        self.assertEqual(Path('{base}/{extrafield}/propertyfield/{base}_{extrafield}_staticvalue.{pipe}.{extension}'),
+        self.assertEqual(Path('{base}/{extrafield}/propertyfield/{base}_{extrafield}_staticvalue.{pipe}.{suffix}'),
                          pf.path)
         pf.name = 'simple_property_staticvalue.1.abc'
-        self.assertEqual({'base': 'simple', 'extrafield': 'property', 'version': '1', 'extension': 'abc', 'pipe': '.1',
+        self.assertEqual({'base': 'simple', 'extrafield': 'property', 'version': '1', 'suffix': 'abc', 'pipe': '.1',
                           'nameprop': 'staticvalue'},
                          pf.values)
         self.assertEqual('simple_property_staticvalue', pf.nice_name)
@@ -323,7 +323,7 @@ class TestSubclassing(unittest.TestCase):
         SubNamePF = type('SubNamePF', (self.SubName, PipeFile), {})
         n = SubNamePF()
         n.sep = ' - '
-        n.name = n.get_name(base='word', second_field='2nd', third_field='3rd', version=11, extension='png')
+        n.name = n.get_name(base='word', second_field='2nd', third_field='3rd', version=11, suffix='png')
         self.assertEqual('word - 2nd - 3rd.11.png', n.name)
         self.assertEqual('3rd', n.third_field)
         self.assertEqual('11', n.version)

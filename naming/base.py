@@ -82,7 +82,7 @@ class NameConfig:
 
 
 class FieldValue:
-    def __init__(self, name='var'):
+    def __init__(self, name):
         self.name = name
 
     def __get__(self, obj, objtype):
@@ -98,6 +98,7 @@ class FieldValue:
 class _BaseName:
     """This is the base abstract class for Name objects. You should not need to subclass directly from this object.
     All subclasses are encouraged to inherit from Name instead of this one."""
+
     config = dict()
     compounds = dict()
     drops = tuple()
@@ -123,7 +124,7 @@ class _BaseName:
         self._set_separator(sep)
         self._init_name_core(name)
 
-    def _init_name_core(self, name):
+    def _init_name_core(self, name: str):
         """Runs whenever a Name object is initialized or its name is set."""
         self._name = rf'{name}' if name else ''
         self.__set_regex()
@@ -145,7 +146,7 @@ class _BaseName:
         self._init_name_core(name)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @name.setter
@@ -154,13 +155,11 @@ class _BaseName:
 
         :param name: The name to be set on this object.
         :raises NameError: If an invalid string is provided.
-        :returns: Reference to self.
         """
         match = self.__regex.match(name)
         if not match:
-            cls = self.__class__
-            msg = ' '.join([rf"Can't set invalid name '{name}' on {cls.__name__} instance.",
-                            rf"Valid convention is: '{cls().get_name()}' with pattern: {self._pattern}'"])
+            msg = (rf"Can't set invalid name '{name}' on {self.__class__.__name__} instance. "
+                   rf"Valid convention is: '{self.__class__().get_name()}' with pattern: {self._pattern}'")
             raise NameError(msg)
 
         self._name = rf'{name}'
@@ -170,9 +169,9 @@ class _BaseName:
         self.__regex = re.compile(rf'^{self._pattern}$')
 
     @property
-    def _pattern(self):
-        pairs = (self.cast(self.config.get(p, getattr(self, p)), p) for p in self.get_pattern_list())
-        return self._separator_pattern.join(pairs)
+    def _pattern(self) -> str:
+        casted = (self.cast(self.config.get(p, getattr(self, p)), p) for p in self.get_pattern_list())
+        return self._separator_pattern.join(casted)
 
     def __validate(self):
         if not self._name:
@@ -193,7 +192,7 @@ class _BaseName:
         return self._get_nice_name()
 
     def _get_nice_name(self, **values) -> str:
-        return self._separator.join(self._iter_translated_pattern_list('get_pattern_list', **values))
+        return self._separator.join(self._iter_translated_field_names(self.get_pattern_list(), **values))
 
     def get_name(self, **values) -> str:
         """Get a new name string from this object's name values.
@@ -205,19 +204,16 @@ class _BaseName:
             return self.name
         if values:
             # if values are provided, solve compounds that may be affected
-            solved = dict()
             for ck, cvs in _sorted_items(self.compounds):
-                if values.get(ck):
-                    solved[ck] = rf'{values.pop(ck)}'
-                else:
-                    gen = [solved.pop(cv, values.get(cv) or getattr(self, cv)) for cv in cvs]
-                    if None not in gen:
-                        solved[ck] = ''.join(rf'{v}' for v in gen)
-            values.update(solved)
+                if ck in cvs and ck in values:  # redefined compound name to outer scope e.g. fifth = (fifth, sixth)
+                    continue
+                comp_values = [values.pop(cv, getattr(self, cv)) for cv in cvs]
+                if None not in comp_values:
+                    values[ck] = ''.join(rf'{v}' for v in comp_values)
         return self._get_nice_name(**values)
 
-    def _iter_translated_pattern_list(self, pattern: str, **values) -> typing.Generator:
-        for field_name in getattr(self, pattern)():
+    def _iter_translated_field_names(self, pattern: typing.Iterable[str], **values) -> typing.Generator:
+        for field_name in pattern:
             if field_name in values:
                 yield rf'{values[field_name]}'
             else:

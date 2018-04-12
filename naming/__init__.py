@@ -50,7 +50,7 @@ class File(Name):
     ===========  ===========
     **Unique Fields:**
     ------------------------
-    *extension*  Any amount of word characters
+    *suffix*  Any amount of word characters
     ===========  ===========
 
     Basic use::
@@ -58,21 +58,21 @@ class File(Name):
         >>> from naming import File
         >>> f = File()
         >>> f.get_name()
-        '{basse}.{extension}'
-        >>> f.get_name(extension='png')
+        '{basse}.{suffix}'
+        >>> f.get_name(suffix='png')
         '{base}.png'
         >>> f.set_name('hello.world')
         >>> f.values
-        {'base': 'hello', 'extension': 'world'}
-        >>> f.extension
+        {'base': 'hello', 'suffix': 'world'}
+        >>> f.suffix
         'world'
-        >>> f.extension = 'abc'
+        >>> f.suffix = 'abc'
         >>> f.name
         'hello.abc'
         >>> f.values
-        {'base': 'hello', 'extension': 'abc'}
+        {'base': 'hello', 'suffix': 'abc'}
     """
-    file_config = NameConfig(dict(extension='\w+'))
+    file_config = NameConfig(dict(suffix='\w+'))
 
     def __init__(self, *args, cwd=None, **kwargs):
         self._cwd = cwd
@@ -82,14 +82,14 @@ class File(Name):
     def _pattern(self):
         sep = '\.'
         pcfg = {k: self.cast(v, k) for k, v in self.file_config.items()}
-        pipe_pattern = r'(\.{extension})'.format(sep=sep, **pcfg)
+        pipe_pattern = r'(\.{suffix})'.format(sep=sep, **pcfg)
         return rf'{super()._pattern}{pipe_pattern}'
 
     def get_name(self, **values) -> str:
         if not values and self.name:
             return super().get_name(**values)
-        extension = values.get('extension') or self.extension or '{extension}'
-        return rf'{super().get_name(**values)}.{extension}'
+        suffix = values.get('suffix') or self.suffix or '{suffix}'
+        return rf'{super().get_name(**values)}.{suffix}'
 
     def get_path_pattern_list(self):
         return []
@@ -105,7 +105,7 @@ class File(Name):
     @property
     def path(self) -> Path:
         """The Path representing this object on the filesystem."""
-        args = list(self._iter_translated_pattern_list('get_path_pattern_list'))
+        args = list(self._iter_translated_field_names(self.get_path_pattern_list()))
         args.append(self.get_name())
         return Path(*args)
 
@@ -197,8 +197,7 @@ class Pipe(Name):
         # comparisons to None due to 0 being a valid value
         fields = {k: v if v is not None else self._values.get(k) for k, v in fields.items()}
         if all(v is None for v in fields.values()):
-            pipe = '{pipe}'
-            suffix = rf'{self.pipe_separator}{pipe}'
+            suffix = rf'{self.pipe_separator}{{pipe}}'
             return self.pipe or suffix if self.name else suffix
         if not fields['output'] and fields['frame'] is None:  # optional fields
             return rf'{self.pipe_separator}{fields["version"]}'
@@ -224,7 +223,7 @@ class PipeFile(File, Pipe):
         >>> from naming import PipeFile
         >>> p = PipeFile('wipfile.7.ext')
         >>> p.values
-        {'base': 'wipfile', 'version': '7', 'extension': 'ext'}
+        {'base': 'wipfile', 'version': '7', 'suffix': 'ext'}
         >>> [p.get_name(frame=x, output='render') for x in range(10)]
         ['wipfile.render.7.0.ext',
         'wipfile.render.7.1.ext',
@@ -251,19 +250,19 @@ class PipeFile(File, Pipe):
         'last': 'iamlast',
         'output': 'data',
         'version': '17',
-        'extension': 'abc'}
-        >>> pf.nice_name  # no pipe & extension fields
+        'suffix': 'abc'}
+        >>> pf.nice_name  # no pipe & suffix fields
         'project_data_name_2017_christianl_constant_iamlast'
         >>> pf.year
         '2017'
         >>> pf.year = 'nondigits'  # mutating with invalid fields raises a NameError
         Traceback (most recent call last):
         ...
-        NameError: Can't set invalid name 'project_data_name_nondigits_christianl_constant_iamlast.data.17.abc' on ProjectFile instance. Valid convention is: {base}_{year}_{user}_{another}_{last}.{pipe}.{extension}
+        NameError: Can't set invalid name 'project_data_name_nondigits_christianl_constant_iamlast.data.17.abc' on ProjectFile instance. Valid convention is: {base}_{year}_{user}_{another}_{last}.{pipe}.{suffix}
         >>> pf.year = 1907
         >>> pf.name
         'project_data_name_1907_christianl_constant_iamlast.data.17.abc'
-        >>> pf.extension
+        >>> pf.suffix
         'abc'
         >>> pf.separator = '  '  # you can set the separator to a different set of characters
         >>> pf.name
