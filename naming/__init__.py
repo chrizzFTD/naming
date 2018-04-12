@@ -87,7 +87,7 @@ class File(Name):
 
     def get_name(self, **values) -> str:
         if not values and self.name:
-            return super().get_name(**values)
+            return super().get_name()
         suffix = values.get('suffix') or self.suffix or '{suffix}'
         return rf'{super().get_name(**values)}.{suffix}'
 
@@ -205,7 +205,7 @@ class Pipe(Name):
 
     def get_name(self, **values) -> str:
         if not values and self.name:
-            return super().get_name(**values)
+            return super().get_name()
         try:
             # allow for getting name without pipe field in subclasses
             pipe = values['pipe'] or ''
