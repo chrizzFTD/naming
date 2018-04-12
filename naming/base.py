@@ -5,39 +5,61 @@ from types import MappingProxyType
 
 
 def dct_from_mro(cls, attr_name):
-    # TODO: replace with collections.ChainMap on py37+
+    # TODO: replace with collections.ChainMap on py37+ (not now because 3.6 does not respect order)
     d = {}
     for mapping in filter(None, (getattr(c, attr_name, None) for c in reversed(cls.mro()))):
         d.update(mapping)
     return d
 
 
+def _sorted_items(dct):
+    """Given a mapping where values are iterables, iterate over the values whose contained references are not used as
+    keys first:
+
+    Example:
+        >>> dct = {'two': ('two', 'one', 'foo'), 'one': ('hi', 'six', 'net'), 'six': ('three', 'four'), 'foo': ['bar']}
+        >>> for k, v in _sorted_items(dct):
+        ...     print(k, v)
+        ...
+        six ('three', 'four')
+        foo ['bar']
+        one ('hi', 'six', 'net')
+        two ('two', 'one', 'foo')
+    """
+    to_solve = set(dct)
+    while to_solve:
+        for ck, cvs in dct.items():
+            if ck not in to_solve or (to_solve - {ck}).intersection(cvs):  # other fields left to solve before this one
+                continue
+            yield ck, cvs
+            to_solve.remove(ck)
+
+
 class NameConfig:
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None, name=None):
         if not isinstance(cfg, MappingProxyType):
             cfg = MappingProxyType(cfg or {})
         self.cfg = cfg
+        self.name = name
+        self.memcache = {}
 
     def __get__(self, obj, objtype):
         cfg = self.cfg
         if obj is None:
             return cfg
+        # configs are immutable, so can cache here
+        result = self.memcache.get(self.name)
+        if self.name and isinstance(result, MappingProxyType):
+            return result
 
         result = {}
-        cmps = objtype.compounds
+        cmps = {k: v for k, v in objtype.compounds.items() if k in cfg}
         cmps_fields = set().union(*(v for v in cmps.values()))
 
         # solve compound fields
-        to_solve = set(cmps).intersection(cfg)
         solved = dict()
-        while to_solve:
-            for ck, cvs in cmps.items():
-                if ck in solved or ck not in to_solve:  # don't solve keys that are not in cfg map
-                    continue
-                if (to_solve - {ck}).intersection(cvs):  # there are other fields left to solve before this one
-                    continue
-                solved[ck] = ''.join(obj.cast(solved.pop(cv, cfg[cv]), cv, cv != ck) for cv in cvs)
-                to_solve.remove(ck)
+        for ck, cvs in _sorted_items(cmps):
+            solved[ck] = ''.join(obj.cast(solved.pop(cv, cfg[cv]), cv, cv != ck) for cv in cvs)
 
         for k, v in cfg.items():
             if k in cmps and k in solved:  # a compound may be nested. ensure it's also in the solved dict
@@ -46,10 +68,17 @@ class NameConfig:
                 continue
             else:
                 result[k] = v
+
+        result = MappingProxyType(result)
+        self.memcache[self.name] = result
         return result
 
     def __set__(self, obj, val):
         raise AttributeError("Can't set read-only attribute")
+
+    def __set_name__(self, owner, name):
+        if not self.name:
+            self.name = name
 
 
 class FieldValue:
@@ -75,16 +104,17 @@ class _BaseName:
 
     def __init_subclass__(cls, **kwargs):
         cls.drops = set().union(*(getattr(c, 'drops', tuple()) for c in cls.mro()))
-        setattr(cls, 'compounds', MappingProxyType(dct_from_mro(cls, 'compounds')))
+        cls.compounds = MappingProxyType(dct_from_mro(cls, 'compounds'))
 
         cfg = dct_from_mro(cls, 'config')
         for drop in cls.drops:
             cfg.pop(drop, None)
             setattr(cls, drop, None)
 
-        for k in ChainMap(cfg, *(vv.cfg for vv in vars(cls).values() if isinstance(vv, NameConfig))):
+        for k in ChainMap(cfg, *(nc.cfg for nc in vars(cls).values() if isinstance(nc, NameConfig))):
             setattr(cls, k, FieldValue(k))
-        setattr(cls, 'config', NameConfig(MappingProxyType(cfg)))
+
+        cls.config = NameConfig(MappingProxyType(cfg), 'config')
 
     def __init__(self, name: str = '', sep: str = ' '):
         super().__init__()
@@ -155,17 +185,7 @@ class _BaseName:
     @property
     def values(self) -> dict:
         """The field values of this object's name as a dictionary in the form of {field: value}."""
-        return {k: v for k, v in self._items if not self._filter_kv(k, v)}
-
-    def _filter_kv(self, k: str, v) -> bool:
-        if self._filter_k(k) or self._filter_v(v):
-            return True
-
-    def _filter_k(self, k: str):
-        pass
-
-    def _filter_v(self, v):
-        return v is None
+        return {k: v for k, v in self._items if v is not None}
 
     @property
     def nice_name(self) -> str:
@@ -185,22 +205,14 @@ class _BaseName:
             return self.name
         if values:
             # if values are provided, solve compounds that may be affected
-            cmps = self.compounds
-            to_solve = set(cmps)
             solved = dict()
-            while to_solve:
-                for ck, cvs in cmps.items():
-                    if ck in solved or ck not in to_solve:
-                        continue
-                    elif (to_solve - {ck}).intersection(cvs):  # there are other fields left to solve before this one
-                        continue
-                    if values.get(ck):
-                        solved[ck] = rf'{values.pop(ck)}'
-                    else:
-                        gen = [solved.pop(cv, values.get(cv) or getattr(self, cv)) for cv in cvs]
-                        if None not in gen:
-                            solved[ck] = ''.join(rf'{v}' for v in gen)
-                    to_solve.remove(ck)
+            for ck, cvs in _sorted_items(self.compounds):
+                if values.get(ck):
+                    solved[ck] = rf'{values.pop(ck)}'
+                else:
+                    gen = [solved.pop(cv, values.get(cv) or getattr(self, cv)) for cv in cvs]
+                    if None not in gen:
+                        solved[ck] = ''.join(rf'{v}' for v in gen)
             values.update(solved)
         return self._get_nice_name(**values)
 

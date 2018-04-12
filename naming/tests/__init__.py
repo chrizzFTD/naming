@@ -33,9 +33,9 @@ class TestConfig(unittest.TestCase):
         with self.assertRaises(AttributeError):
             n.config = 'foo'
         cfg = n.config
-        cfg['base'] = 10
-        # check immutability
-        self.assertFalse(cfg == n.config)
+        with self.assertRaises(TypeError):
+            cfg['base'] = 10
+        self.assertTrue(cfg == n.config)
 
 
 class TestEasyName(unittest.TestCase):
@@ -160,6 +160,7 @@ class TestFile(unittest.TestCase):
         f = File()
         f.cwd = 'some/absolute/path'
         self.assertEqual(os.path.join('some', 'absolute', 'path', f.get_name()), str(f.full_path))
+
 
 class TestPipeFile(unittest.TestCase):
 
@@ -319,6 +320,13 @@ class TestSubclassing(unittest.TestCase):
         n = self.SubName2(n.get_name(second_field='notsec'))
         self.assertEqual('word notsec 3rd', n.name)
         values = n.values
+        SubNamePF = type('SubNamePF', (self.SubName, PipeFile), {})
+        n = SubNamePF()
+        n.sep = ' - '
+        n.name = n.get_name(base='word', second_field='2nd', third_field='3rd', version=11, extension='png')
+        self.assertEqual('word - 2nd - 3rd.11.png', n.name)
+        self.assertEqual('3rd', n.third_field)
+        self.assertEqual('11', n.version)
         n = self.Replace()
         with self.assertRaises(NameError):
             n.base = 'repl'
