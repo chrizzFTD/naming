@@ -32,12 +32,12 @@ class Name(_BaseName):
         '{base}'
         >>> n.values
         {}
-        >>> n.set_name('hello_world')
+        >>> n.name = 'hello_world'
         >>> n.values
         {'base': 'hello_world'}
-        >>> n.base = 'fields_as_properties'
+        >>> n.base = 'through_field_name'
         >>> n.values
-        {'base': 'fields_as_properties'}
+        {'base': 'through_field_name'}
     """
     config = dict(base=r'\w+')
 
@@ -47,11 +47,11 @@ class File(Name):
 
     File Name objects.
 
-    ===========  ===========
+    ========  ========
     **Unique Fields:**
     ------------------------
     *suffix*  Any amount of word characters
-    ===========  ===========
+    ========  ========
 
     Basic use::
 
@@ -61,7 +61,7 @@ class File(Name):
         '{basse}.{suffix}'
         >>> f.get_name(suffix='png')
         '{base}.png'
-        >>> f.set_name('hello.world')
+        >>> f.name = 'hello.world'
         >>> f.values
         {'base': 'hello', 'suffix': 'world'}
         >>> f.suffix
@@ -71,15 +71,18 @@ class File(Name):
         'hello.abc'
         >>> f.values
         {'base': 'hello', 'suffix': 'abc'}
+        >>> f = File(cwd='some/path')
+        >>> f.fullpath
+        WindowsPath('some/path/{base}.{suffix}')
     """
     file_config = NameConfig(dict(suffix='\w+'))
 
     def __init__(self, *args, cwd=None, **kwargs):
-        self._cwd = cwd
+        self.cwd = cwd
         super().__init__(*args, **kwargs)
 
     @property
-    def _pattern(self):
+    def _pattern(self) -> str:
         sep = '\.'
         casted = self.cast_config(self.file_config)
         pat = r'(\.{suffix})'.format(sep=sep, **casted)
@@ -91,16 +94,18 @@ class File(Name):
         suffix = values.get('suffix') or self.suffix or '{suffix}'
         return rf'{super().get_name(**values)}.{suffix}'
 
-    def get_path_pattern_list(self):
+    def get_path_pattern_list(self) -> list:
+        """Fields / properties names (sorted) to concatenate and use when solving `path` and `fullpath` attributes"""
         return []
 
     @property
-    def cwd(self):
+    def cwd(self) -> Path:
+        """Path used as the current working directory when solving the `fullpath` attribute. Defaults to Path.home()"""
         return self._cwd
 
     @cwd.setter
-    def cwd(self, value):
-        self._cwd = value
+    def cwd(self, value: str):
+        self._cwd = Path(value or Path.home())
 
     @property
     def path(self) -> Path:
@@ -110,10 +115,9 @@ class File(Name):
         return Path(*args)
 
     @property
-    def full_path(self) -> Path:
+    def fullpath(self) -> Path:
         """The resolved full Path representing this object on the filesystem."""
-        cwd = Path.home() if not self.cwd else Path(self.cwd)
-        return Path.joinpath(cwd, self.path)
+        return Path.joinpath(self.cwd, self.path)
 
 
 class Pipe(Name):
@@ -153,7 +157,7 @@ class Pipe(Name):
         >>> p.version
         '1'
         >>> p.values
-        {'base': 'my_wip_data', 'version': '1'}
+        {'base': 'my_wip_data', 'pipe': '.1', 'version': '1'}
         >>> p.get_name(output='exchange')  # returns a new string
         'my_wip_data.exchange.1'
         >>> p.name
@@ -166,7 +170,7 @@ class Pipe(Name):
         >>> p.name
         'my_wip_data.exchange.7.101'
         >>> p.values
-        {'base': 'my_wip_data', 'output': 'exchange', 'version': '7', 'frame': '101'}
+        {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'frame': '101'}
     """
     pipe_config = NameConfig(dict(pipe='\w+', output='\w+', version='\d+', frame='\d+'))
 
@@ -179,6 +183,7 @@ class Pipe(Name):
 
     @property
     def pipe_separator(self) -> str:
+        """The string that acts as a separator of the pipe fields."""
         return '.'
 
     @property
@@ -223,7 +228,7 @@ class PipeFile(File, Pipe):
         >>> from naming import PipeFile
         >>> p = PipeFile('wipfile.7.ext')
         >>> p.values
-        {'base': 'wipfile', 'version': '7', 'suffix': 'ext'}
+        {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
         >>> [p.get_name(frame=x, output='render') for x in range(10)]
         ['wipfile.render.7.0.ext',
         'wipfile.render.7.1.ext',

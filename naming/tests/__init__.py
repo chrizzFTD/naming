@@ -154,12 +154,12 @@ class TestFile(unittest.TestCase):
         self.assertEqual('ext', f.suffix)
         self.assertEqual('myfile', f.base)
         self.assertEqual(f.get_name(), str(f.path))
-        self.assertEqual(os.path.join(Path.home(), f.get_name()), str(f.full_path))
+        self.assertEqual(os.path.join(Path.home(), f.get_name()), str(f.fullpath))
 
     def test_cwd(self):
         f = File()
         f.cwd = 'some/absolute/path'
-        self.assertEqual(os.path.join('some', 'absolute', 'path', f.get_name()), str(f.full_path))
+        self.assertEqual(os.path.join('some', 'absolute', 'path', f.get_name()), str(f.fullpath))
 
 
 class TestPipeFile(unittest.TestCase):
@@ -309,6 +309,23 @@ class TestSubclassing(unittest.TestCase):
     class SS5(Subcoms3):
         config = dict(morename='(masnombres)')
         compounds = dict(nombre=('nombre', 'middlename', 'another'), apellido=('morename', 'apellido'))
+
+    def test_sep(self):
+        n = self.SubName()
+        self.assertEqual('{base} {second_field} {third_field}', n.get_name())
+        n.sep = 'p'
+        self.assertEqual('p', n.sep)
+        self.assertEqual('hellop{second_field}p{third_field}', n.get_name(base='hello'))
+        self.assertEqual({}, n.values)
+        with self.assertRaises(NameError):
+            n.name = n.get_name(base='hello', second_field='2nd', third_field='3r')
+        n.name = n.get_name(base='hello', second_field='2nd', third_field='3rd')
+        self.assertEqual({'base': 'hello', 'second_field': '2nd', 'third_field': '3rd'}, n.values)
+        n.sep = '?'
+        self.assertEqual('hello?2nd?3rd', n.name)
+        self.assertEqual('sups?2nd?3rd', n.get_name(base='sups'))
+        n.sep = '?*&'
+        self.assertEqual('hello?*&2nd?*&3rd', n.name)
 
     def test_config_only(self):
         n = self.SubName()
