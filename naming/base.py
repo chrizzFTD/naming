@@ -48,24 +48,22 @@ class NameConfig:
         if obj is None:
             return cfg
         # configs are immutable, so can cache here
-        result = self.memcache.get(self.name)
+        result = self.memcache.get(self.name) or {}
         if self.name and isinstance(result, MappingProxyType):
             return result
 
-        result = {}
-
         # solve compound fields
-        cmps = {k: v for k, v in objtype.compounds.items() if k in cfg}
+        compounds = {k: v for k, v in objtype.compounds.items() if k in cfg}
         solved = dict()  # will not preserve order
-        for ck, cvs in _sorted_items(cmps):
+        for ck, cvs in _sorted_items(compounds):
             # cast the compound values to regex groups, named unless a value is equal to the current key `ck`
             solved[ck] = ''.join(obj.cast(solved.pop(cv, cfg[cv]), cv if cv != ck else '') for cv in cvs)
 
-        cmps_fields = set().union(*(v for v in cmps.values()))
+        compounds_fields = set().union(*(v for v in compounds.values()))
         for k, v in cfg.items():
-            if k in cmps and k in solved:  # a compound may be nested. ensure it's also in the solved dict
+            if k in compounds and k in solved:  # a compound may be nested. ensure it's also in the solved dict
                 result[k] = solved[k]
-            elif k in cmps_fields:
+            elif k in compounds_fields:
                 continue
             else:
                 result[k] = v
@@ -127,6 +125,11 @@ class _BaseName:
         self._set_separator(sep)
         self._init_name_core(name)
 
+    def _init_name_core(self, name: str):
+        """Runs whenever a Name object is initialized or its name is set."""
+        self.__regex = re.compile(rf'^{self._pattern}$')
+        self.name = name
+
     def _set_separator(self, separator: str):
         self._separator = rf'{separator}' or ''
         self._separator_pattern = re.escape(self._separator)
@@ -141,11 +144,6 @@ class _BaseName:
         self._set_separator(value)
         name = self.get_name(**self.values) if self.name else None
         self._init_name_core(name)
-
-    def _init_name_core(self, name: str):
-        """Runs whenever a Name object is initialized or its name is set."""
-        self.__regex = re.compile(rf'^{self._pattern}$')
-        self.name = name
 
     @property
     def name(self) -> str:
