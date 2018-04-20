@@ -56,7 +56,9 @@ class NameConfig:
         solved = dict()  # will not preserve order
         for ck, cvs in _sorted_items(compounds):
             # cast the compound values to regex groups, named unless a value is equal to the current key `ck`
-            solved[ck] = ''.join(obj.cast(solved.pop(cv, cfg[cv]), cv if cv != ck else '') for cv in cvs)
+            # search first in `cfg`, then in the object for properties
+            gen = (obj.cast(solved.pop(cv, cfg.get(cv, getattr(obj, cv))), cv if cv != ck else '') for cv in cvs)
+            solved[ck] = ''.join(gen)
 
         compounds_fields = set().union(*(v for v in compounds.values()))
         for k, v in cfg.items():
@@ -174,6 +176,11 @@ class _BaseName:
     def _pattern(self) -> str:
         cfg = self.config
         # look for pattern in `cfg` first; then in `self` and finally in unreferenced solved compounds
+        pattern_list = self.get_pattern_list()
+        if not pattern_list:
+            msg = ('Expected iterable containing strings with field names from `get_pattern_list`. '
+                   'Got: {} instead'.format(pattern_list))
+            raise ValueError(msg)
         casted = (self.cast(cfg.get(p, getattr(self, p) or self._uc.get(p)), p) for p in self.get_pattern_list())
         return self._separator_pattern.join(casted)
 

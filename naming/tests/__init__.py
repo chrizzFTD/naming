@@ -258,6 +258,18 @@ class TestCompound(unittest.TestCase):
             def get_pattern_list(self):
                 return ['cmp'] + super().get_pattern_list()
 
+        class CompAndPropsInvalid(CompUnused):
+            # by compounding 'base', get_pattern_list will return an empty list, should fail to initialise
+            compounds = dict(cmp2=('base', 'prop'))
+
+            @property
+            def prop(self):
+                return 'constant'
+
+        class CompAndPropsValid(CompAndPropsInvalid):
+            def get_pattern_list(self):
+                return ['cmp', 'cmp2']
+
         c = CompUnused()
         self.assertEqual('{base}', c.get_name())
         c.name = 'hello_world'
@@ -270,6 +282,21 @@ class TestCompound(unittest.TestCase):
         c.name = '12 hello_world'
         self.assertEqual('12', c.cmp)
         self.assertEqual({'base': 'hello_world', 'cmp': '12', 'first': '1', 'second': '2'}, c.values)
+
+        with self.assertRaises(ValueError):
+            CompAndPropsInvalid()
+
+        c = CompAndPropsValid()
+        self.assertEqual('{cmp} {cmp2}', c.get_name())
+        c.name = '12 hello_worldccconstant'
+        self.assertEqual('12', c.cmp)
+        self.assertEqual('hello_worldccconstant', c.cmp2)
+        self.assertEqual({'base': 'hello_worldcc',
+                          'cmp': '12',
+                          'cmp2': 'hello_worldccconstant',
+                          'first': '1',
+                          'prop': 'constant',
+                          'second': '2'}, c.values)
 
 
 class TestPropertyField(unittest.TestCase):
