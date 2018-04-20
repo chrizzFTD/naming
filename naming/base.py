@@ -40,18 +40,18 @@ class NameConfig:
             cfg = MappingProxyType(cfg or {})
         self.cfg = cfg
         self.name = name
-        self.memcache = {}
+        self.memo = {}
 
     def __get__(self, obj, objtype):
         cfg = self.cfg
         if obj is None:
             return cfg
         # configs are immutable, so can cache here
-        result = self.memcache.get(self.name) or {}
+        result = self.memo.get(self.name) or {}
         if self.name and isinstance(result, MappingProxyType):
             return result
 
-        # solve compound fields
+        # don't solve compound fields that are not related to the current config
         compounds = {k: v for k, v in objtype.compounds.items() if (k in cfg or set(v).intersection(cfg))}
         solved = dict()  # will not preserve order
         for ck, cvs in _sorted_items(compounds):
@@ -71,7 +71,7 @@ class NameConfig:
         obj._uc = MappingProxyType(solved)
 
         result = MappingProxyType(result)
-        self.memcache[self.name] = result
+        self.memo[self.name] = result
         return result
 
     def __set__(self, obj, val):
@@ -97,9 +97,7 @@ class FieldValue:
 
 
 class _BaseName:
-    """This is the base abstract class for Name objects. You should not need to subclass directly from this object.
-    All subclasses are encouraged to inherit from Name instead of this one."""
-
+    """This is the base abstract class for Name objects. You should not need to create instances of this class."""
     config = dict()
     compounds = dict()
     drops = tuple()
@@ -113,13 +111,12 @@ class _BaseName:
             cfg.pop(drop, None)
             setattr(cls, drop, None)
 
+        # fields in compounds and name config descriptors have to be accessible through their name on instances.
         configs = (nc.cfg for nc in vars(cls).values() if isinstance(nc, NameConfig))
-        field_keys = set().union(cfg, cls.compounds, *configs)
-        for k in field_keys:
-            # fields in compounds and name config descriptors have to be accessible through their name on instances.
+        for k in set().union(cfg, cls.compounds, *configs):
             setattr(cls, k, FieldValue(k))
 
-        cls.config = NameConfig(MappingProxyType(cfg), 'config')
+        cls.config = NameConfig(cfg, 'config')
 
     def __init__(self, name: str = '', sep: str = ' '):
         super().__init__()
@@ -135,8 +132,8 @@ class _BaseName:
         self.__regex = re.compile(rf'^{self._pattern}$')
         self.name = name
 
-    def _set_separator(self, separator: str):
-        self._separator = rf'{separator}' or ''
+    def _set_separator(self, value: str):
+        self._separator = rf'{value}' if value else ''
         self._separator_pattern = re.escape(self._separator)
 
     @property
@@ -214,12 +211,8 @@ class _BaseName:
                     values[ck] = ''.join(rf'{v}' for v in comp_values)
         return self._get_nice_name(**values)
 
-    def _iter_translated_field_names(self, pattern: typing.Iterable[str], **values) -> typing.Generator:
-        for field_name in pattern:
-            if field_name in values:
-                yield rf'{values[field_name]}'
-            else:
-                yield getattr(self, field_name) or rf'{{{field_name}}}'
+    def _iter_translated_field_names(self, names: typing.Iterable[str], **values) -> typing.Generator:
+        return (rf'{values[n]}' if n in values else getattr(self, n) or rf'{{{n}}}' for n in names)
 
     @staticmethod
     def cast(value: str, name: str = '') -> str:
