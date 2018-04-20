@@ -14,7 +14,7 @@ class Name(_BaseName):
     where pattern is a valid regular expression.
 
     Classes may as well have a `drops` iterable attribute representing the fileds they want to ignore from their bases
-    and a `compounds` dictionary attribute for nesting existing fields into multiple new ones.
+    and a `compounds` dictionary attribute for nesting existing fields into new ones (or to override other fields).
 
     All fields should be unique. No duplicates are allowed.
 

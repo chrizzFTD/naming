@@ -249,6 +249,28 @@ class TestCompound(unittest.TestCase):
             c.values)
         self.assertEqual('200dalmatians.1.png', c.get_name(first=200))
 
+        class CompUnused(Name):
+            config = dict(first='1',
+                          second='2')
+            compounds = dict(cmp=('first', 'second'))
+
+        class CompUsed(CompUnused):
+            def get_pattern_list(self):
+                return ['cmp'] + super().get_pattern_list()
+
+        c = CompUnused()
+        self.assertEqual('{base}', c.get_name())
+        c.name = 'hello_world'
+        self.assertEqual(None, c.cmp)
+        self.assertEqual({'base': 'hello_world'}, c.values)
+
+        c = CompUsed()
+        self.assertEqual('{cmp} {base}', c.get_name())
+        self.assertEqual(None, c.cmp)
+        c.name = '12 hello_world'
+        self.assertEqual('12', c.cmp)
+        self.assertEqual({'base': 'hello_world', 'cmp': '12', 'first': '1', 'second': '2'}, c.values)
+
 
 class TestPropertyField(unittest.TestCase):
 

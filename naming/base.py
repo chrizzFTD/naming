@@ -1,6 +1,5 @@
 import re
 import typing
-from collections import ChainMap
 from types import MappingProxyType
 
 
@@ -53,7 +52,7 @@ class NameConfig:
             return result
 
         # solve compound fields
-        compounds = {k: v for k, v in objtype.compounds.items() if k in cfg}
+        compounds = {k: v for k, v in objtype.compounds.items() if (k in cfg or set(v).intersection(cfg))}
         solved = dict()  # will not preserve order
         for ck, cvs in _sorted_items(compounds):
             # cast the compound values to regex groups, named unless a value is equal to the current key `ck`
@@ -62,11 +61,14 @@ class NameConfig:
         compounds_fields = set().union(*(v for v in compounds.values()))
         for k, v in cfg.items():
             if k in compounds and k in solved:  # a compound may be nested. ensure it's also in the solved dict
-                result[k] = solved[k]
+                result[k] = solved.pop(k)
             elif k in compounds_fields:
                 continue
             else:
                 result[k] = v
+
+        # keep track of solved compounds that were not referenced by `cfg`
+        obj._uc = MappingProxyType(solved)
 
         result = MappingProxyType(result)
         self.memcache[self.name] = result
@@ -111,14 +113,17 @@ class _BaseName:
             cfg.pop(drop, None)
             setattr(cls, drop, None)
 
-        for k in ChainMap(cfg, *(nc.cfg for nc in vars(cls).values() if isinstance(nc, NameConfig))):
-            # fields in every class name config descriptor has to be accessible through its name on instances.
+        configs = (nc.cfg for nc in vars(cls).values() if isinstance(nc, NameConfig))
+        field_keys = set().union(cfg, cls.compounds, *configs)
+        for k in field_keys:
+            # fields in compounds and name config descriptors have to be accessible through their name on instances.
             setattr(cls, k, FieldValue(k))
 
         cls.config = NameConfig(MappingProxyType(cfg), 'config')
 
     def __init__(self, name: str = '', sep: str = ' '):
         super().__init__()
+        self._uc = MappingProxyType({})  # unreferenced compounds
         self._name = ''
         self._values = {}
         self._items = self._values.items()
@@ -170,7 +175,9 @@ class _BaseName:
 
     @property
     def _pattern(self) -> str:
-        casted = (self.cast(self.config.get(p, getattr(self, p)), p) for p in self.get_pattern_list())
+        cfg = self.config
+        # look for pattern in `cfg` first; then in `self` and finally in unreferenced solved compounds
+        casted = (self.cast(cfg.get(p, getattr(self, p) or self._uc.get(p)), p) for p in self.get_pattern_list())
         return self._separator_pattern.join(casted)
 
     def get_pattern_list(self) -> typing.List[str]:
