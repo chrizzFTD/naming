@@ -12,7 +12,7 @@ class Name(_BaseName):
     Base class for name objects.
 
     Each subclass may have its own `config` attribute that should be a dictionary in the form of {field: pattern}
-    where pattern is a valid regular expression.
+    where `pattern` is a valid regular expression.
 
     Classes may as well have a `drops` iterable attribute representing the fileds they want to ignore from their bases
     and a `compounds` dictionary attribute for nesting existing fields into new ones (or to override other fields).
@@ -22,7 +22,7 @@ class Name(_BaseName):
     ======  ==========
     **Config:**
     ------------------
-    *base*  Accepts any amount of word characters ([a-zA-Z0-9_])
+    *base*  Accepts any amount of word characters [a-zA-Z0-9_]
     ======  ==========
 
     Basic use::
@@ -36,6 +36,8 @@ class Name(_BaseName):
         >>> n.name = 'hello_world'
         >>> n
         Name("hello_world")
+        >>> str(n)  # cast to string
+        'hello_world'
         >>> n.values
         {'base': 'hello_world'}
         >>> # modify name and get values from field names
@@ -77,19 +79,8 @@ class File(Name):
         'hello.abc'
         >>> f.path
         WindowsPath('hello.abc')
-        >>> f.cwd  # if not passed when initialised, defaults to current user's home directory
-        WindowsPath('C:/Users/Christian')
-        >>> f.fullpath
-        WindowsPath('C:/Users/Christian/hello.abc')
-        >>> f = File(cwd='some/path')
-        >>> f.fullpath
-        WindowsPath('some/path/{base}.{suffix}')
     """
     file_config = NameConfig(dict(suffix='\w+'))
-
-    def __init__(self, *args, cwd=None, **kwargs):
-        self.cwd = cwd
-        super().__init__(*args, **kwargs)
 
     @property
     def _pattern(self) -> str:
@@ -105,29 +96,15 @@ class File(Name):
         return rf'{super().get_name(**values)}.{suffix}'
 
     def get_path_pattern_list(self) -> list:
-        """Fields / properties names (sorted) to concatenate and use when solving `path` and `fullpath` attributes"""
+        """Fields / properties names (sorted) to be used when solving `path`"""
         return []
 
     @property
-    def cwd(self) -> Path:
-        """Path used as the current working directory when solving the `fullpath` attribute. Defaults to Path.home()"""
-        return self._cwd
-
-    @cwd.setter
-    def cwd(self, value: str):
-        self._cwd = Path(value or Path.home())
-
-    @property
     def path(self) -> Path:
-        """The Path representing this object on the filesystem."""
+        """The Path representing this file name object."""
         args = list(self._iter_translated_field_names(self.get_path_pattern_list()))
         args.append(self.get_name())
         return Path(*args)
-
-    @property
-    def fullpath(self) -> Path:
-        """The resolved full Path representing this object on the filesystem."""
-        return Path.joinpath(self.cwd, self.path)
 
 
 class Pipe(Name):
@@ -147,7 +124,7 @@ class Pipe(Name):
     ======  ============
     **Composed Fields:**
     --------------------
-    *pipe*  Combination of unique fields in the form of: .{output})\*.{version}.{frame}**
+    *pipe*  Combination of unique fields in the form of: (.{output})\*.{version}.{frame}**
     \* optional field. ** exists only when *output* is there as well.
     ====================
 

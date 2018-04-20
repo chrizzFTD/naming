@@ -1,4 +1,3 @@
-import os
 import unittest
 from pathlib import Path
 
@@ -154,12 +153,6 @@ class TestFile(unittest.TestCase):
         self.assertEqual('ext', f.suffix)
         self.assertEqual('myfile', f.base)
         self.assertEqual(f.get_name(), str(f.path))
-        self.assertEqual(os.path.join(Path.home(), f.get_name()), str(f.fullpath))
-
-    def test_cwd(self):
-        f = File()
-        f.cwd = 'some/absolute/path'
-        self.assertEqual(os.path.join('some', 'absolute', 'path', f.get_name()), str(f.fullpath))
 
 
 class TestPipeFile(unittest.TestCase):

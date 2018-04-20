@@ -177,14 +177,15 @@ class _BaseName:
         cfg = self.config
         # look for pattern in `cfg` first; then in `self` and finally in unreferenced solved compounds
         pattern_list = self.get_pattern_list()
-        if not pattern_list:
-            msg = ('Expected iterable containing strings with field names from `get_pattern_list`. '
+        if not pattern_list or not isinstance(pattern_list, (list, tuple)):
+            msg = ('Expected list / tuple containing strings with field names from `get_pattern_list`. '
                    'Got: {} instead'.format(pattern_list))
             raise ValueError(msg)
         casted = (self.cast(cfg.get(p, getattr(self, p) or self._uc.get(p)), p) for p in self.get_pattern_list())
         return self._separator_pattern.join(casted)
 
     def get_pattern_list(self) -> typing.List[str]:
+        """Fields / properties names (sorted) to be used when building names. Defaults to the keys of self.config"""
         return list(self.config)
 
     @property
@@ -204,7 +205,7 @@ class _BaseName:
         """Get a new name string from this object's name values.
 
         :param values: Variable keyword arguments where the **key** should refer to a field on this object that will
-                       use the provided value to build the new name.
+                       use the provided **value** to build the new name.
         """
         if not values and self.name:
             return self.name
