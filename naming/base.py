@@ -122,10 +122,10 @@ class _BaseName:
 
     def __init__(self, name: str = '', sep: str = ' '):
         super().__init__()
-        self._uc = MappingProxyType({})  # unreferenced compounds
         self._name = ''
         self._values = {}
         self._items = self._values.items()
+        self._uc = MappingProxyType({})  # unreferenced compounds
         self._set_separator(sep)
         self._init_name_core(name)
 
