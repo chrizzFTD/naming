@@ -86,7 +86,7 @@ class File(Name):
     def _pattern(self) -> str:
         sep = re.escape('.')
         casted = self.cast_config(self.file_config)
-        pat = r'(\.{suffix})'.format(sep=sep, **casted)
+        pat = r'({sep}{suffix})'.format(sep=sep, **casted)
         return rf'{super()._pattern}{pat}'
 
     def get_name(self, **values) -> str:
@@ -101,7 +101,7 @@ class File(Name):
 
     @property
     def path(self) -> Path:
-        """The Path representing this file name object."""
+        """A Path for this name object joining field names from `self.get_path_pattern_list` with this object's name"""
         args = list(self._iter_translated_field_names(self.get_path_pattern_list()))
         args.append(self.get_name())
         return Path(*args)

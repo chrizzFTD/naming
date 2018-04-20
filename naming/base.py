@@ -12,7 +12,7 @@ def _dct_from_mro(cls: type, attr_name: str) -> dict:
 
 
 def _sorted_items(mapping: typing.Mapping) -> typing.Generator:
-    """Given a mapping where values are iterables, iterate over the values whose contained references are not used as
+    """Given a mapping where values are iterables, yield items whose values contained references are not used as
     keys first:
 
     Example:
@@ -25,13 +25,13 @@ def _sorted_items(mapping: typing.Mapping) -> typing.Generator:
         one ('hi', 'six', 'net')
         two ('two', 'one', 'foo')
     """
-    to_solve = set(mapping)
-    while to_solve:
+    to_yield = set(mapping)
+    while to_yield:
         for key, values in mapping.items():
-            if key not in to_solve or (to_solve - {key} & set(values)):  # other fields left to solve before this one
+            if key not in to_yield or (to_yield - {key} & set(values)):  # other keys left to yield before this one
                 continue
             yield key, values
-            to_solve.remove(key)
+            to_yield.remove(key)
 
 
 class NameConfig:
