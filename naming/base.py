@@ -1,170 +1,199 @@
 import re
-import abc
 import typing
+from types import MappingProxyType
 
 
-def _regex_property(field_name: str) -> property:
-    def getter(self):
-        pattern = getattr(self, rf'__{field_name}')
-        return rf'(?P<{field_name}>{pattern})'
-
-    def setter(self, value):
-        setattr(self, rf'__{field_name}', value)
-    return property(getter, setter)
+def _dct_from_mro(cls: type, attr_name: str) -> dict:
+    """"Get a merged dictionary from `cls` bases attribute `attr_name`. MRO defines importance (closest = strongest)."""
+    d = {}
+    for c in reversed(cls.mro()):
+        d.update(getattr(c, attr_name, {}))
+    return d
 
 
-def _field_property(field_name: str) -> property:
-    def getter(self):
-        return self._values.get(field_name)
+def _sorted_items(mapping: typing.Mapping) -> typing.Generator:
+    """Given a mapping where values are iterables, yield items whose values contained references are not used as
+    keys first:
 
-    def setter(self, value):
-        if value and str(value) == self._values.get(field_name):
+    Example:
+        >>> dct = {'two': ('two', 'one', 'foo'), 'one': ('hi', 'six', 'net'), 'six': ('three', 'four'), 'foo': ['bar']}
+        >>> for k, v in _sorted_items(dct):
+        ...     print(k, v)
+        ...
+        six ('three', 'four')
+        foo ['bar']
+        one ('hi', 'six', 'net')
+        two ('two', 'one', 'foo')
+    """
+    to_yield = set(mapping)
+    while to_yield:
+        for key, values in mapping.items():
+            if key not in to_yield or (to_yield - {key} & set(values)):  # other keys left to yield before this one
+                continue
+            yield key, values
+            to_yield.remove(key)
+
+
+class NameConfig:
+    def __init__(self, cfg: typing.Mapping = None, name: str = None):
+        if not isinstance(cfg, MappingProxyType):
+            cfg = MappingProxyType(cfg or {})
+        self.cfg = cfg
+        self.name = name
+        self.memo = {}
+
+    def __get__(self, obj, objtype):
+        cfg = self.cfg
+        if obj is None:
+            return cfg
+        # configs are immutable, so can cache here
+        result = self.memo.get(self.name) or {}
+        if self.name and isinstance(result, MappingProxyType):
+            return result
+
+        # don't solve compound fields that are not related to the current config
+        compounds = {k: v for k, v in objtype.compounds.items() if (k in cfg or set(v).intersection(cfg))}
+        solved = dict()  # will not preserve order
+        for ck, cvs in _sorted_items(compounds):
+            # cast the compound values to regex groups, named unless a value is equal to the current key `ck`
+            # search first in `cfg`, then in the object for properties
+            gen = (obj.cast(solved.pop(cv, cfg.get(cv, getattr(obj, cv))), cv if cv != ck else '') for cv in cvs)
+            solved[ck] = ''.join(gen)
+
+        compounds_fields = set().union(*(v for v in compounds.values()))
+        for k, v in cfg.items():
+            if k in compounds and k in solved:  # a compound may be nested. ensure it's also in the solved dict
+                result[k] = solved.pop(k)
+            elif k in compounds_fields:
+                continue
+            else:
+                result[k] = v
+
+        # keep track of solved compounds that were not referenced by `cfg`
+        obj._uc = MappingProxyType(solved)
+
+        result = MappingProxyType(result)
+        self.memo[self.name] = result
+        return result
+
+    def __set__(self, obj, val):
+        raise AttributeError("Can't set read-only attribute")
+
+    def __set_name__(self, owner, name):
+        if not self.name:
+            self.name = name
+
+
+class FieldValue:
+    def __init__(self, name):
+        self.name = name
+
+    def __get__(self, obj, objtype):
+        return obj._values.get(self.name)
+
+    def __set__(self, obj, val):
+        if val and str(val) == obj._values.get(self.name):
             return
-        new_name = self.get_name(**{field_name: value})
-        self.set_name(new_name)
-    return property(getter, setter)
+        new_name = obj.get_name(**{self.name: val})
+        obj.name = new_name
 
 
-class _ABCName(abc.ABCMeta):
-    def __new__(mcs, name, bases, args):
-        new_cls = super().__new__(mcs, name, bases, args)
-        mcs._merge_bases_dict('config', new_cls, bases)
-        mcs._merge_bases_dict('compounds', new_cls, bases)
-        new_cls._compounds_fields = set().union(*[v for v in new_cls.compounds.values()])
-        mcs._merge_bases_drops(new_cls, bases)
-        return new_cls
+class _BaseName:
+    """This is the base abstract class for Name objects. You should not need to create instances of this class."""
+    config = dict()
+    compounds = dict()
+    drops = tuple()
 
-    @staticmethod
-    def _merge_bases_dict(name, new_cls, bases):
-        base_maps = [getattr(b, name, {}) for b in bases]
-        base_maps.append(getattr(new_cls, name, {}))
-        new_map = {}
-        for dic in base_maps:
-            new_map.update(dic)
-        setattr(new_cls, name, new_map)
+    def __init_subclass__(cls, **kwargs):
+        cls.compounds = MappingProxyType(_dct_from_mro(cls, 'compounds'))
+        cls.drops = set().union(*(getattr(c, 'drops', tuple()) for c in cls.mro()))
 
-    @staticmethod
-    def _merge_bases_drops(new_cls, bases):
-        new_drops = set(getattr(new_cls, 'drops', tuple()))
-        for b in bases:
-            for drop in getattr(b, 'drops', tuple()):
-                new_drops.add(drop)
-                new_cls.config.pop(drop, None)
-        new_cls.drops = new_drops
+        cfg = _dct_from_mro(cls, 'config')
+        for drop in cls.drops:
+            cfg.pop(drop, None)
+            setattr(cls, drop, None)
 
+        # fields in compounds and name config descriptors have to be accessible through their name on instances.
+        configs = (nc.cfg for nc in vars(cls).values() if isinstance(nc, NameConfig))
+        for k in set().union(cfg, cls.compounds, *configs):
+            setattr(cls, k, FieldValue(k))
 
-class _BaseName(metaclass=_ABCName):
-    """This is the base abstract class for Name objects. You should not need to subclass directly from this object.
-    All subclasses are encouraged to inherit from Name instead of this one."""
+        cls.config = NameConfig(cfg, 'config')
 
-    _regex_property_name = re.compile(r'[a-zA-Z]\w+')
-
-    def __init__(self, name: str='', separator: str='_'):
+    def __init__(self, name: str = '', sep: str = ' '):
         super().__init__()
-        self.__values = {}
-        self.__items = self.__values.items()
-        self._set_separator(separator)
-        self._set_patterns()
+        self._name = ''
+        self._values = {}
+        self._items = self._values.items()
+        self._uc = MappingProxyType({})  # unreferenced compounds
+        self._set_separator(sep)
         self._init_name_core(name)
 
     def _init_name_core(self, name: str):
-        """Runs whenever a Name object is initialized or its name is set."""
-        self.__set_name(name)
-        self._set_values()
-        self.__set_regex()
-        self.__validate()
+        """Runs whenever a new instance is initialized or `sep` is set."""
+        self.__regex = re.compile(rf'^{self._pattern}$')
+        self.name = name
 
-    def _set_separator(self, separator: str):
-        self._separator = rf'{separator}'
-        self._separator_pattern = rf'\{separator}'
+    def _set_separator(self, value: str):
+        self._separator = rf'{value}' if value else ''
+        self._separator_pattern = re.escape(self._separator)
 
     @property
-    def separator(self) -> str:
-        """The string that acts as a separator of all the fields in the name."""
+    def sep(self) -> str:
         return self._separator
 
-    @separator.setter
-    def separator(self, value: str):
+    @sep.setter
+    def sep(self, value: str):
+        """The string that acts as a separator of all the fields in the name."""
         self._set_separator(value)
         name = self.get_name(**self.values) if self.name else None
         self._init_name_core(name)
 
-    @abc.abstractmethod
-    def _set_patterns(self):
-        pass
-
-    def _set_pattern(self, *patterns):
-        for p in patterns:
-            setattr(self.__class__, rf'_{p}', _regex_property(p))
-            self._add_field_property(p)
-
-    def _add_field_property(self, field_name):
-        setattr(self.__class__, field_name, _field_property(field_name))
-
-    def __set_name(self, name: str):
-        self.__name = rf'{name}' if name else None
-
     @property
     def name(self) -> str:
-        """The name string set on the object."""
-        return self.__name
+        return self._name
 
-    @abc.abstractmethod
-    def _set_values(self):
-        pass
-
-    def __set_regex(self):
-        self.__regex = re.compile(r'^{}$'.format(self._get_joined_pattern()))
-
-    def __validate(self):
-        if not self.name:
-            return
-        self.set_name(self.name)
-
-    def set_name(self, name: str):
+    @name.setter
+    def name(self, name: str):
         """Set this object's name to the provided string.
 
         :param name: The name to be set on this object.
-        :raises NameError: If an invalid string is provided.
-        :returns: Reference to self.
+        :raises ValueError: If an invalid string is provided.
         """
-        match = self.__regex.match(name)
-        if not match:
-            msg = ' '.join([rf"Can't set invalid name '{name}' on {self.__class__.__name__} instance.",
-                            rf"Valid convention is: {self.__class__().get_name()}"])
-            raise NameError(msg)
-        self.__set_name(name)
-        self.__values.update(match.groupdict())
-        return self
+        name = rf'{name}' if name else ''
+        if name:
+            match = self.__regex.match(name)
+            if not match:
+                proxy = self.__class__(sep=self._separator)
+                pat = self.__regex.pattern
+                msg = (rf"Can't set invalid name '{name}' on {self.__class__.__name__} instance. "
+                       rf"Valid convention is: '{proxy.get_name()}' with pattern: {pat}'")
+                raise ValueError(msg)
+            self._values.update(match.groupdict())
+        else:
+            self._values.clear()
+        self._name = name
 
     @property
-    def _values(self) -> typing.Dict[str, str]:
-        return self.__values
+    def _pattern(self) -> str:
+        cfg = self.config
+        # look for pattern in `cfg` first; then in `self` and finally in unreferenced solved compounds
+        pattern_list = self.get_pattern_list()
+        if not pattern_list or not isinstance(pattern_list, (list, tuple)):
+            msg = ('Expected list / tuple containing strings with field names from `get_pattern_list`. '
+                   'Got: {} instead'.format(pattern_list))
+            raise ValueError(msg)
+        casted = (self.cast(cfg.get(p, getattr(self, p) or self._uc.get(p)), p) for p in self.get_pattern_list())
+        return self._separator_pattern.join(casted)
 
-    @abc.abstractmethod
     def get_pattern_list(self) -> typing.List[str]:
-        return []
-
-    def _get_values_pattern(self) -> typing.List[str]:
-        return [getattr(self, p) for p in self.get_pattern_list()]
-
-    def _get_joined_pattern(self) -> str:
-        return self._separator_pattern.join(self._get_values_pattern())
+        """Fields / properties names (sorted) to be used when building names. Defaults to the keys of self.config"""
+        return list(self.config)
 
     @property
     def values(self) -> dict:
         """The field values of this object's name as a dictionary in the form of {field: value}."""
-        return {k: v for k, v in self.__items if not self._filter_kv(k, v)}
-
-    def _filter_kv(self, k: str, v) -> bool:
-        if self._filter_k(k) or self._filter_v(v):
-            return True
-
-    def _filter_k(self, k: str):
-        pass
-
-    def _filter_v(self, v):
-        return v is None
+        return {k: v for k, v in self._items if v is not None}
 
     @property
     def nice_name(self) -> str:
@@ -172,47 +201,41 @@ class _BaseName(metaclass=_ABCName):
         return self._get_nice_name()
 
     def _get_nice_name(self, **values) -> str:
-        return self._separator.join(self._iter_translated_pattern_list('get_pattern_list', **values))
+        return self._separator.join(self._iter_translated_field_names(self.get_pattern_list(), **values))
 
     def get_name(self, **values) -> str:
         """Get a new name string from this object's name values.
 
         :param values: Variable keyword arguments where the **key** should refer to a field on this object that will
-                       use the provided value to build the new name.
+                       use the provided **value** to build the new name.
         """
         if not values and self.name:
             return self.name
         if values:
-            for ck, cv in getattr(self, 'compounds', {}).items():
-                if ck not in values:
-                    compounds = []
-                    for c in cv:
-                        value = values.get(c) or getattr(self, c)
-                        if value is None:  # 0 is a valid value
-                            break
-                        compounds.append(rf'{value}')
-                    else:
-                        values[ck] = ''.join(compounds)
+            # if values are provided, solve compounds that may be affected
+            for ck, cvs in _sorted_items(self.compounds):
+                if ck in cvs and ck in values:  # redefined compound name to outer scope e.g. fifth = (fifth, sixth)
+                    continue
+                comp_values = [values.pop(cv, getattr(self, cv)) for cv in cvs]
+                if None not in comp_values:
+                    values[ck] = ''.join(rf'{v}' for v in comp_values)
         return self._get_nice_name(**values)
 
-    def _iter_translated_pattern_list(self, pattern: str, **values) -> typing.Generator:
-        self_values = self._values
-        for p in getattr(self, pattern)():
-            nice_name = self._regex_property_name.search(p).group(0)
-            if nice_name in values:
-                value = str(values[nice_name])
-            elif self_values:
-                try:
-                    value = str(self_values[nice_name])
-                except KeyError:
-                    value = getattr(self, p)  # must be a valid property
-            else:
-                value = rf'[{nice_name}]'
-            yield value
+    def _iter_translated_field_names(self, names: typing.Iterable[str], **values) -> typing.Generator:
+        return (rf'{values[n]}' if n in values else getattr(self, n) or rf'{{{n}}}' for n in names)
+
+    @staticmethod
+    def cast(value: str, name: str = '') -> str:
+        """"Cast `value` to a grouped regular expression when `name` is provided."""
+        return rf'(?P<{name}>{value})' if name else rf'{value}'
+
+    @classmethod
+    def cast_config(cls, config):
+        """Cast this class config to grouped regular expressions."""
+        return {k: cls.cast(v, k) for k, v in config.items()}
 
     def __str__(self):
         return self.get_name()
 
     def __repr__(self):
-        name = self.name or ''
-        return rf'{self.__class__.__name__}("{name}")'
+        return rf'{self.__class__.__name__}("{self.name}")'
