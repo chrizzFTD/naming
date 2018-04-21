@@ -158,15 +158,17 @@ class _BaseName:
         """Set this object's name to the provided string.
 
         :param name: The name to be set on this object.
-        :raises NameError: If an invalid string is provided.
+        :raises ValueError: If an invalid string is provided.
         """
         name = rf'{name}' if name else ''
         if name:
             match = self.__regex.match(name)
             if not match:
+                proxy = self.__class__(sep=self._separator)
+                pat = self.__regex.pattern
                 msg = (rf"Can't set invalid name '{name}' on {self.__class__.__name__} instance. "
-                       rf"Valid convention is: '{self.__class__().get_name()}' with pattern: {self._pattern}'")
-                raise NameError(msg)
+                       rf"Valid convention is: '{proxy.get_name()}' with pattern: {pat}'")
+                raise ValueError(msg)
             self._values.update(match.groupdict())
         else:
             self._values.clear()

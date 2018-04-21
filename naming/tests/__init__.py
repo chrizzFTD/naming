@@ -14,7 +14,7 @@ class TestName(unittest.TestCase):
     def test_init_name(self):
         n = Name('initname')
         self.assertEqual('initname', n.get_name())
-        with self.assertRaises(NameError):
+        with self.assertRaises(ValueError):
             Name(dict(my_name='dict'))
         n = Name(dict())
         self.assertFalse(None, n.get_name())
@@ -172,7 +172,7 @@ class TestPipeFile(unittest.TestCase):
     def test_set_property(self):
         pf = PipeFile()
         self.assertEqual('{base}.{pipe}.{suffix}', pf.get_name())
-        with self.assertRaises(NameError):
+        with self.assertRaises(ValueError):
             pf.name = 'awesome'
         pf.name = 'hello_world.1.png'
         pf.base = 'awesome'
@@ -204,7 +204,19 @@ class TestPipeFile(unittest.TestCase):
         self.assertEqual('2017', pf.year)
         self.assertEqual('iamlast', pf.lastfield)
         self.assertEqual('abc', pf.suffix)
-
+        pf = ProjectFile()
+        self.assertEqual('{base} {year} {username} {anotherfield} {lastfield}.{pipe}.{suffix}', pf.get_name())
+        self.assertEqual('', pf.name)
+        pf.name = 'hello 2008 c constant last.1.abc'
+        with self.assertRaises(ValueError):
+            pf.year = 2
+        v = pf.values.copy()
+        self.assertEqual({'base': 'hello', 'year': '2008', 'username': 'c', 'anotherfield': 'constant',
+                          'lastfield': 'last', 'pipe': '.1', 'version': '1', 'suffix': 'abc'}, v)
+        self.assertFalse(v is pf.values)
+        pf.sep = ' - '
+        self.assertEqual('hello - 2008 - c - constant - last.1.abc', pf.name)
+        self.assertTrue(pf.values == v)
 
 class TestDrops(unittest.TestCase):
 
@@ -359,8 +371,9 @@ class TestSubclassing(unittest.TestCase):
         self.assertEqual('p', n.sep)
         self.assertEqual('hellop{second_field}p{third_field}', n.get_name(base='hello'))
         self.assertEqual({}, n.values)
-        with self.assertRaises(NameError):
-            n.name = n.get_name(base='hello', second_field='2nd', third_field='3r')
+        newname = n.get_name(base='hello', second_field='2nd', third_field='3r')
+        with self.assertRaises(ValueError):
+            n.name = newname
         n.name = n.get_name(base='hello', second_field='2nd', third_field='3rd')
         self.assertEqual({'base': 'hello', 'second_field': '2nd', 'third_field': '3rd'}, n.values)
         n.sep = '?'
@@ -374,7 +387,7 @@ class TestSubclassing(unittest.TestCase):
         self.assertEqual('{base} {second_field} {third_field}', n.get_name())
         n.name = 'word 2nd 3rd'
         self.assertEqual('2nd', n.second_field)
-        with self.assertRaises(NameError):
+        with self.assertRaises(ValueError):
             n.second_field = 'notsec'
         n = self.SubName2(n.get_name(second_field='notsec'))
         self.assertEqual('word notsec 3rd', n.name)
@@ -387,12 +400,12 @@ class TestSubclassing(unittest.TestCase):
         self.assertEqual('3rd', n.third_field)
         self.assertEqual('11', n.version)
         n = self.Replace()
-        with self.assertRaises(NameError):
+        with self.assertRaises(ValueError):
             n.base = 'repl'
         values.update(base='repl', fourth_field='4th', fifth_field='5th')
         n.name = n.get_name(**values)
         self.assertEqual('repl notsec 3rd 4th 5th', n.name)
-        with self.assertRaises(NameError):
+        with self.assertRaises(ValueError):
             self.SubName3('mrb dos 3r')
         n = self.SubName3('mrb dos 3rd')
         self.assertEqual('mrb', n.base)
@@ -402,7 +415,7 @@ class TestSubclassing(unittest.TestCase):
         self.assertEqual('{base} {second_field} {third_field} {fifth_field}', n.get_name())
         n.name = 'repl notsec 3rd 5th'
         self.assertEqual('notsec', n.second_field)
-        with self.assertRaises(NameError):
+        with self.assertRaises(ValueError):
             n.third_field = 'tres'
         n = self.Compounds()
         self.assertEqual('{base} {second_field} {third_field} {fifth_field} {lastfield}', n.get_name())
@@ -419,7 +432,7 @@ class TestSubclassing(unittest.TestCase):
         self.assertEqual('3rd', n.third_field)
         self.assertEqual('5thlast', n.fifth_field)
         self.assertEqual('last', n.lastfield)
-        with self.assertRaises(NameError):
+        with self.assertRaises(ValueError):
             n.base = 'repls'
         n = self.Subcoms2()
         self.assertEqual('{base} {fifth_field} {another} {nested}', n.get_name())
@@ -434,7 +447,7 @@ class TestSubclassing(unittest.TestCase):
                       morename='masnombres', another='another', nested='nested', f1='f1', f2='f2')
         n.name = n.get_name(**values)
         self.assertEqual('s1sts2nd3rd f1f2last nested nombremedioanother masnombresapellido', n.name)
-        with self.assertRaises(NameError):
+        with self.assertRaises(ValueError):
             self.SubName3('mrb dos 3r')
         self.assertEqual('masnombres', n.morename)
 
@@ -461,5 +474,5 @@ class TestSubclassing(unittest.TestCase):
         self.assertEqual('9th', n.nine)
         self.assertEqual('0', n.zero)
         self.assertEqual('9th8th', n.base)
-        with self.assertRaises(NameError):
+        with self.assertRaises(ValueError):
             n.six = 'madman'
