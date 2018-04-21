@@ -1,9 +1,9 @@
-# standard
+import re
 from pathlib import Path
-# package
-from .base import _BaseName
 
-__all__ = ['Name', 'File', 'Pipe', 'PipeFile']
+from .base import _BaseName, NameConfig
+
+__all__ = ['Name', 'File', 'Pipe', 'PipeFile', 'NameConfig']
 
 
 class Name(_BaseName):
@@ -12,65 +12,42 @@ class Name(_BaseName):
     Base class for name objects.
 
     Each subclass may have its own `config` attribute that should be a dictionary in the form of {field: pattern}
-    where pattern is a valid regular expression.
+    where `pattern` is a valid regular expression.
 
     Classes may as well have a `drops` iterable attribute representing the fileds they want to ignore from their bases
-    and a `compounds` dictionary attribute for nesting existing fields into multiple new ones.
+    and a `compounds` dictionary attribute for nesting existing fields into new ones (or to override other fields).
 
-    All fields should be unique. No duplicates are allowed.
+    All field names should be unique. No duplicates are allowed.
 
     ======  ==========
     **Config:**
     ------------------
-    *base*  Accepts any amount of word characters
+    *base*  Accepts any amount of word characters [a-zA-Z0-9_]
     ======  ==========
 
     Basic use::
 
         >>> from naming import Name
         >>> n = Name()
-        >>> n.get_name()  # no name has been set on the object, convention is solved with [missing] fields
-        '[base]'
+        >>> n.get_name()  # no name has been set on the object, convention is solved with {missing} fields
+        '{base}'
         >>> n.values
         {}
-        >>> n.set_name('hello_world')
+        >>> n.name = 'hello_world'
+        >>> n
+        Name("hello_world")
+        >>> str(n)  # cast to string
+        'hello_world'
         >>> n.values
         {'base': 'hello_world'}
-        >>> n.base = 'fields_as_properties'
+        >>> # modify name and get values from field names
+        >>> n.base = 'through_field_name'
         >>> n.values
-        {'base': 'fields_as_properties'}
+        {'base': 'through_field_name'}
+        >>> n.base
+        'through_field_name'
     """
     config = dict(base=r'\w+')
-    drops = tuple()
-    compounds = dict()
-
-    def __init__(self, name: str='', separator: str='_'):
-        """Sets the patterns defined by the `config` attribute. If any extra work is to be done by the class init
-        it should be implemented on the `_init_name_core` method.
-
-        :param name: Name to initialize the object with. Defaults to an empty string and it can later be set
-                     by calling the :func:`~naming.Name.set_name` method.
-        :param separator: Separator for the name fields. Defaults to an underscore.
-        """
-        self.__keys = self.config.keys()
-        self.__items = self.config.items()
-        super().__init__(name, separator)
-
-    def _set_values(self):
-        super()._set_values()
-        for k, v in self.__items:
-            setattr(self, rf'_{k}', v)
-        for ck, cv in self.compounds.items():
-            setattr(self, rf'_{ck}', ''.join(getattr(self, rf'_{v}') for v in cv))
-
-    def _set_patterns(self):
-        super()._set_patterns()
-        self._set_pattern(*self.__keys)
-
-    def get_pattern_list(self):
-        result = super().get_pattern_list()
-        result.extend(rf'_{k}' for k in self.__keys if not (k in self.drops or k in self._compounds_fields))
-        return result
 
 
 class File(Name):
@@ -78,72 +55,56 @@ class File(Name):
 
     File Name objects.
 
-    ===========  ===========
+    ========  ========
     **Unique Fields:**
     ------------------------
-    *extension*  Any amount of word characters
-    ===========  ===========
+    *suffix*  Any amount of word characters
+    ========  ========
 
     Basic use::
 
         >>> from naming import File
         >>> f = File()
         >>> f.get_name()
-        '[basse].[extension]'
-        >>> f.get_name(extension='png')
-        '[base].png'
-        >>> f.set_name('hello.world')
+        '{basse}.{suffix}'
+        >>> f.get_name(suffix='png')
+        '{base}.png'
+        >>> f = File('hello.world')
         >>> f.values
-        {'base': 'hello', 'extension': 'world'}
-        >>> f.extension
+        {'base': 'hello', 'suffix': 'world'}
+        >>> f.suffix
         'world'
-        >>> f.extension = 'abc'
+        >>> f.suffix = 'abc'
         >>> f.name
         'hello.abc'
-        >>> f.values
-        {'base': 'hello', 'extension': 'abc'}
+        >>> f.path
+        WindowsPath('hello.abc')
     """
-    def __init__(self, *args, **kwargs):
-        self._cwd = kwargs.pop('cwd', None)
-        super().__init__(*args, **kwargs)
+    file_config = NameConfig(dict(suffix='\w+'))
 
-    def _set_values(self):
-        super()._set_values()
-        self._extension = '[.](?P<extension>\w+)'
-        self._add_field_property('extension')
-
-    def _get_joined_pattern(self) -> str:
-        return rf'{super()._get_joined_pattern()}{self._extension}'
+    @property
+    def _pattern(self) -> str:
+        sep = re.escape('.')
+        casted = self.cast_config(self.file_config)
+        pat = r'({sep}{suffix})'.format(sep=sep, **casted)
+        return rf'{super()._pattern}{pat}'
 
     def get_name(self, **values) -> str:
         if not values and self.name:
-            return super().get_name(**values)
-        extension = values.get('extension') or self.extension or "[extension]"
-        return rf'{super().get_name(**values)}.{extension}'
+            return super().get_name()
+        suffix = values.get('suffix') or self.suffix or '{suffix}'
+        return rf'{super().get_name(**values)}.{suffix}'
 
-    def get_path_pattern_list(self):
+    def get_path_pattern_list(self) -> list:
+        """Fields / properties names (sorted) to be used when solving `path`"""
         return []
 
     @property
-    def cwd(self):
-        return self._cwd
-
-    @cwd.setter
-    def cwd(self, value):
-        self._cwd = value
-
-    @property
     def path(self) -> Path:
-        """The Path representing this object on the filesystem."""
-        args = list(self._iter_translated_pattern_list('get_path_pattern_list'))
+        """A Path for this name object joining field names from `self.get_path_pattern_list` with this object's name"""
+        args = list(self._iter_translated_field_names(self.get_path_pattern_list()))
         args.append(self.get_name())
         return Path(*args)
-
-    @property
-    def full_path(self) -> Path:
-        """The resolved full Path representing this object on the filesystem."""
-        cwd = Path.home() if not self.cwd else Path(self.cwd)
-        return Path.joinpath(cwd, self.path)
 
 
 class Pipe(Name):
@@ -172,18 +133,18 @@ class Pipe(Name):
         >>> from naming import Pipe
         >>> p = Pipe()
         >>> p.get_name()
-        '[base].[pipe]'
+        '{base}.{pipe}'
         >>> p.get_name(version=10)
-        '[base].10'
+        '{base}.10'
         >>> p.get_name(output='data')
-        '[base].data.[version]'
+        '{base}.data.{version}'
         >>> p.get_name(output='cache', version=7, frame=24)
-        '[base].cache.7.24'
+        '{base}.cache.7.24'
         >>> p = Pipe('my_wip_data.1')
         >>> p.version
         '1'
         >>> p.values
-        {'base': 'my_wip_data', 'version': '1'}
+        {'base': 'my_wip_data', 'pipe': '.1', 'version': '1'}
         >>> p.get_name(output='exchange')  # returns a new string
         'my_wip_data.exchange.1'
         >>> p.name
@@ -196,69 +157,55 @@ class Pipe(Name):
         >>> p.name
         'my_wip_data.exchange.7.101'
         >>> p.values
-        {'base': 'my_wip_data', 'output': 'exchange', 'version': '7', 'frame': '101'}
+        {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'frame': '101'}
     """
-    _pipe_fields = ('output', 'version', 'frame')
-
-    def _set_values(self):
-        super()._set_values()
-        self._version = '\d+'
-        self._output = '\w+'
-        self._frame = '\d+'
-        sep = self._pipe_separator_pattern
-        self._pipe = rf'(({sep}{self._output})?{sep}{self._version}({sep}{self._frame})?)'
-
-    def _set_patterns(self):
-        super()._set_patterns()
-        self._set_pattern('pipe', *self._pipe_fields)
-
-    def _get_joined_pattern(self):
-        return rf'{super()._get_joined_pattern()}{self._pipe}'
+    pipe_config = NameConfig(dict(pipe='\w+', output='\w+', version='\d+', frame='\d+'))
 
     @property
-    def pipe_separator(self) -> str:
+    def _pattern(self):
+        sep = re.escape(self.pipe_sep)
+        casted = self.cast_config(self.pipe_config)
+        pat = r'(?P<pipe>({sep}{output})?{sep}{version}({sep}{frame})?)'.format(sep=sep, **casted)
+        return rf'{super()._pattern}{pat}'
+
+    @property
+    def pipe_sep(self) -> str:
+        """The string that acts as a separator of the pipe fields."""
         return '.'
-
-    @property
-    def _pipe_separator_pattern(self):
-        return rf'\{self.pipe_separator}'
 
     @property
     def pipe_name(self) -> str:
         """The pipe name string of this object."""
-        pipe_suffix = self.pipe or rf"{self.pipe_separator}[pipe]"
+        pipe_suffix = self.pipe or rf"{self.pipe_sep}{{pipe}}"
         return rf'{self.nice_name}{pipe_suffix}'
-
-    def _filter_k(self, k):
-        return k == 'pipe'
 
     def _format_pipe_field(self, k, v):
         if k == 'frame' and v is None:
             return ''
-        return rf'{self.pipe_separator}{v if v is not None else rf"[{k}]"}'
+        return rf'{self.pipe_sep}{v if v is not None else rf"{{{k}}}"}'
 
     def _get_pipe_field(self, output=None, version=None, frame=None) -> str:
         fields = dict(output=output or None, version=version, frame=frame)
         # comparisons to None due to 0 being a valid value
-        fields = {k: v if v is not None else getattr(self, k) for k, v in fields.items()}
+        fields = {k: v if v is not None else self._values.get(k) for k, v in fields.items()}
 
         if all(v is None for v in fields.values()):
-            suffix = rf'{self.pipe_separator}[pipe]'
+            suffix = rf'{self.pipe_sep}{{pipe}}'
             return self.pipe or suffix if self.name else suffix
-
-        if not fields['output'] and fields['frame'] is None:  # optional fields
-            return rf'.{fields["version"] or 0}'
+        elif not fields['output'] and fields['frame'] is None:  # optional fields
+            return rf'{self.pipe_sep}{fields["version"]}'
 
         return ''.join(self._format_pipe_field(k, v) for k, v in fields.items())
 
     def get_name(self, **values) -> str:
         if not values and self.name:
-            return super().get_name(**values)
+            return super().get_name()
         try:
-            # allow for getting name without pipe field in subclasses e.g. .File
+            # allow for getting name without pipe field in subclasses
             pipe = values['pipe'] or ''
         except KeyError:
-            kwargs = {k: values.get(k) for k in self._pipe_fields}
+            kwargs = {k: values.get(k) for k in self.pipe_config}
+            kwargs.pop('pipe')
             pipe = self._get_pipe_field(**kwargs)
         return rf'{super().get_name(**values)}{pipe}'
 
@@ -270,7 +217,7 @@ class PipeFile(File, Pipe):
         >>> from naming import PipeFile
         >>> p = PipeFile('wipfile.7.ext')
         >>> p.values
-        {'base': 'wipfile', 'version': '7', 'extension': 'ext'}
+        {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
         >>> [p.get_name(frame=x, output='render') for x in range(10)]
         ['wipfile.render.7.0.ext',
         'wipfile.render.7.1.ext',
@@ -288,31 +235,32 @@ class PipeFile(File, Pipe):
         ...                   another='(constant)',
         ...                   last='[a-zA-Z0-9]+')
         ...
-        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast.data.17.abc')
+        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast.data.17.abc', sep='_')
         >>> pf.values
         {'base': 'project_data_name',
         'year': '2017',
         'user': 'christianl',
         'another': 'constant',
         'last': 'iamlast',
+        'pipe': '.data.17',
         'output': 'data',
         'version': '17',
-        'extension': 'abc'}
-        >>> pf.nice_name  # no pipe & extension fields
+        'suffix': 'abc'}
+        >>> pf.nice_name  # no pipe & suffix fields
         'project_data_name_2017_christianl_constant_iamlast'
         >>> pf.year
         '2017'
-        >>> pf.year = 'nondigits'  # mutating with invalid fields raises a NameError
+        >>> pf.year = 'nondigits'  # mutating with invalid fields raises a ValueError
         Traceback (most recent call last):
         ...
-        NameError: Can't set invalid name 'project_data_name_nondigits_christianl_constant_iamlast.data.17.abc' on ProjectFile instance. Valid convention is: [base]_[year]_[user]_[another]_[last].[pipe].[extension]
+        ValueError: Can't set invalid name 'project_data_name_nondigits_christianl_constant_iamlast.data.17.abc' on ProjectFile instance. Valid convention is: '{base}_{year}_{user}_{another}_{last}.{pipe}.{suffix}' with pattern: ^(?P<base>\w+)_(?P<year>[0-9]{4})_(?P<user>[a-z]+)_(?P<another>(constant))_(?P<last>[a-zA-Z0-9]+)(?P<pipe>(\.(?P<output>\w+))?\.(?P<version>\d+)(\.(?P<frame>\d+))?)(\.(?P<suffix>\w+))$'
         >>> pf.year = 1907
-        >>> pf.name
-        'project_data_name_1907_christianl_constant_iamlast.data.17.abc'
-        >>> pf.extension
+        >>> pf
+        ProjectFile("project_data_name_1907_christianl_constant_iamlast.data.17.abc")
+        >>> pf.suffix
         'abc'
-        >>> pf.separator = '  '  # you can set the separator to a different set of characters
+        >>> pf.sep = '  '  # you can set the separator to a different set of characters
         >>> pf.name
-        'project_data_name  1907  christianl  constant  iamlast.data.17.abc'
+        'project_data_name   1907   christianl   constant   iamlast.data.17.abc'
     """
     pass

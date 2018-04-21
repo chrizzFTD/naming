@@ -24,27 +24,44 @@ Basic Use
 
         >>> from naming import Name
         >>> n = Name()
-        >>> n.get_name()  # no name has been set on the object, convention is solved with [missing] fields
-        '[base]'
+        >>> n.get_name()  # no name has been set on the object, convention is solved with {missing} fields
+        '{base}'
         >>> n.values
         {}
-        >>> n.set_name('hello_world')
-        >>> n.values
-        {'base': 'hello_world'}
+        >>> n.name = 'hello_world'
+        >>> n
+        Name("hello_world")
         >>> str(n)  # cast to string
         'hello_world'
+        >>> n.values
+        {'base': 'hello_world'}
+        >>> # modify name and get values from field names
+        >>> n.base = 'through_field_name'
+        >>> n.values
+        {'base': 'through_field_name'}
+        >>> n.base
+        'through_field_name'
 
     Pipe::
 
         >>> from naming import Pipe
+        >>> p = Pipe()
+        >>> p.get_name()
+        '{base}.{pipe}'
+        >>> p.get_name(version=10)
+        '{base}.10'
+        >>> p.get_name(output='data')
+        '{base}.data.{version}'
+        >>> p.get_name(output='cache', version=7, frame=24)
+        '{base}.cache.7.24'
         >>> p = Pipe('my_wip_data.1')
         >>> p.version
         '1'
         >>> p.values
-        {'base': 'my_wip_data', 'version': '1'}
-        >>> p.get_name(output='exchange', version=2)  # returns a new string
-        'my_wip_data.exchange.2'
-        >>> p.name  # object didn't change
+        {'base': 'my_wip_data', 'pipe': '.1', 'version': '1'}
+        >>> p.get_name(output='exchange')  # returns a new string
+        'my_wip_data.exchange.1'
+        >>> p.name
         'my_wip_data.1'
         >>> p.output = 'exchange'  # mutates the object
         >>> p.name
@@ -54,31 +71,33 @@ Basic Use
         >>> p.name
         'my_wip_data.exchange.7.101'
         >>> p.values
-        {'base': 'my_wip_data', 'output': 'exchange', 'version': '7', 'frame': '101'}
+        {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'frame': '101'}
 
     File::
 
         >>> from naming import File
         >>> f = File()
         >>> f.get_name()
-        '[basse].[extension]'
-        >>> f.get_name(extension='png')
-        '[base].png'
-        >>> f.set_name('hello.world')
+        '{basse}.{suffix}'
+        >>> f.get_name(suffix='png')
+        '{base}.png'
+        >>> f = File('hello.world')
         >>> f.values
-        {'base': 'hello', 'extension': 'world'}
-        >>> f.extension
+        {'base': 'hello', 'suffix': 'world'}
+        >>> f.suffix
         'world'
-        >>> f.extension = 'abc'
+        >>> f.suffix = 'abc'
         >>> f.name
         'hello.abc'
+        >>> f.path
+        WindowsPath('hello.abc')
 
     PipeFile::
 
         >>> from naming import PipeFile
         >>> p = PipeFile('wipfile.7.ext')
         >>> p.values
-        {'base': 'wipfile', 'version': '7', 'extension': 'ext'}
+        {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
         >>> [p.get_name(frame=x, output='render') for x in range(10)]
         ['wipfile.render.7.0.ext',
         'wipfile.render.7.1.ext',
@@ -105,32 +124,33 @@ Basic Use
         ...                   another='(constant)',
         ...                   last='[a-zA-Z0-9]+')
         ...
-        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast.data.17.abc')
+        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast.data.17.abc', sep='_')
         >>> pf.values
         {'base': 'project_data_name',
         'year': '2017',
         'user': 'christianl',
         'another': 'constant',
         'last': 'iamlast',
+        'pipe': '.data.17',
         'output': 'data',
         'version': '17',
-        'extension': 'abc'}
-        >>> pf.nice_name  # no pipe & extension fields
+        'suffix': 'abc'}
+        >>> pf.nice_name  # no pipe & suffix fields
         'project_data_name_2017_christianl_constant_iamlast'
         >>> pf.year
         '2017'
-        >>> pf.year = 'nondigits'  # mutating with invalid fields raises a NameError
+        >>> pf.year = 'nondigits'  # mutating with invalid fields raises a ValueError
         Traceback (most recent call last):
         ...
-        NameError: Can't set invalid name 'project_data_name_nondigits_christianl_constant_iamlast.data.17.abc' on ProjectFile instance. Valid convention is: [base]_[year]_[user]_[another]_[last].[pipe].[extension]
+        ValueError: Can't set invalid name 'project_data_name_nondigits_christianl_constant_iamlast.data.17.abc' on ProjectFile instance. Valid convention is: '{base}_{year}_{user}_{another}_{last}.{pipe}.{suffix}' with pattern: ^(?P<base>\w+)_(?P<year>[0-9]{4})_(?P<user>[a-z]+)_(?P<another>(constant))_(?P<last>[a-zA-Z0-9]+)(?P<pipe>(\.(?P<output>\w+))?\.(?P<version>\d+)(\.(?P<frame>\d+))?)(\.(?P<suffix>\w+))$'
         >>> pf.year = 1907
-        >>> pf.name
-        'project_data_name_1907_christianl_constant_iamlast.data.17.abc'
-        >>> pf.extension
+        >>> pf
+        ProjectFile("project_data_name_1907_christianl_constant_iamlast.data.17.abc")
+        >>> pf.suffix
         'abc'
-        >>> pf.separator = '  '  # you can set the separator to a different set of characters
+        >>> pf.sep = '  '  # you can set the separator to a different set of characters
         >>> pf.name
-        'project_data_name  1907  christianl  constant  iamlast.data.17.abc'
+        'project_data_name   1907   christianl   constant   iamlast.data.17.abc'
 
     Dropping fields from bases::
 
@@ -141,12 +161,12 @@ Basic Use
         ...
         >>> d = Dropper()
         >>> d.get_name()
-        '[without]_[basename].[pipe].[extension]'
+        '{without}_{basename}.{pipe}.{suffix}'
         >>> # New subclasses will drop the 'base' field as well
         >>> Subdropper = type('Dropper', (Dropper,), dict(config=dict(subdrop='[\w]')))
         >>> s = Subdropper()
         >>> s.get_name()
-        '[without]_[basename]_[subdrop].[pipe].[extension]'
+        '{without}_{basename}_{subdrop}.{pipe}.{suffix}'
 
     Setting compound fields::
 
@@ -158,10 +178,10 @@ Basic Use
         ...
         >>> c = Compound()
         >>> c.get_name()  # we see the original field 'base'
-        '[base].[pipe].[extension]'
+        '{base}.{pipe}.{suffix}'
         >>> c.get_name(first=50, second='abc')  # providing the compounds will work
-        '50abc.[pipe].[extension]'
-        >>> c.set_name(c.get_name(base='101dalmatians', version=1, extension='png'))  # providing the key field will also work
+        '50abc.{pipe}.{suffix}'
+        >>> c.name = c.get_name(base='101dalmatians', version=1, suffix='png')  # providing the key field will also work
         >>> c.nice_name
         '101dalmatians'
         >>> c.get_name(first=200)
@@ -178,23 +198,10 @@ Basic Use
         ...
         >>> fp = FilePath()
         >>> fp.get_name()
-        '[base]_[extrafield].[extension]'
+        '{base} {extrafield}.{suffix}'
         >>> # path attribute will vary depending on the OS
         >>> fp.path
-        WindowsPath('[base]/[extrafield]/[base]_[extrafield].[extension]')
-        >>> # File names have a cwd attribute that helps locate it on the file system. defaults to None
-        >>> print(fp.cwd)
-        None
-        >>> # full_path joins the cwd of the File object with the path attribute
-        >>> # if cwd is None, the full_path will resolve to the users home directory
-        >>> f.full_path
-        WindowsPath('C:/Users/Christian/[base]/[extrafield]/[base]_[extrafield].[extension]')
-        >>> f.cwd = 'A:/tempdir'
-        >>> f.full_path
-        WindowsPath('A:/tempdir/[base]/[extrafield]/[base]_[extrafield].[extension]')
-        >>> f.set_name('wip_file.abc')
-        >>> f.full_path
-        WindowsPath('A:/tempdir/wip/file/wip_file.abc')
+        WindowsPath('{base}/{extrafield}/{base} {extrafield}.{suffix}')
 
     Using properties as fields while solving names::
 
@@ -222,9 +229,14 @@ Basic Use
         ...
         >>> pf = PropertyField()
         >>> pf.get_name()
-        '[base]_[extrafield]_[nameproperty].[pipe].[extension]'
-        >>> pf.set_name('simple_props_staticvalue.1.abc')
+        '{base} {extrafield} staticvalue.{pipe}.{suffix}'
+        >>> pf.name = 'simple props staticvalue.1.abc'
         >>> pf.values
-        {'base': 'simple', 'extrafield': 'props', 'version': '1', 'extension': 'abc'}
+        {'base': 'simple',
+        'extrafield': 'props',
+        'nameproperty': 'staticvalue',
+        'pipe': '.1',
+        'version': '1',
+        'suffix': 'abc'}
         >>> pf.path
-        WindowsPath('simple/props/path_field/simple_props_staticvalue.1.abc')
+        WindowsPath('simple/props/path_field/simple props staticvalue.1.abc')
