@@ -238,5 +238,4 @@ class _BaseName:
         return self.get_name()
 
     def __repr__(self):
-        name = self.name or ''
-        return rf'{self.__class__.__name__}("{name}")'
+        return rf'{self.__class__.__name__}("{self.name}")'
