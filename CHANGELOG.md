@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
-## [Unreleased] - XXXX-XX-XX
+## [0.2.0](https://github.com/chrizzFTD/naming/releases/tag/Release-0.2.0) - 2018-04-21
 ### Added
 - `NameConfig` object that allows subclasses to use more configurations apart from the builtin `config`.
 
