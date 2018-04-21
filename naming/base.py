@@ -130,7 +130,7 @@ class _BaseName:
         self._init_name_core(name)
 
     def _init_name_core(self, name: str):
-        """Runs whenever a Name object is initialized or its name is set."""
+        """Runs whenever a new instance is initialized or `sep` is set."""
         self.__regex = re.compile(rf'^{self._pattern}$')
         self.name = name
 
