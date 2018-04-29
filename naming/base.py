@@ -140,26 +140,25 @@ class _BaseName:
 
     @property
     def sep(self) -> str:
+        """The string that acts as a separator of all the fields in the name."""
         return self._separator
 
     @sep.setter
     def sep(self, value: str):
-        """The string that acts as a separator of all the fields in the name."""
         self._set_separator(value)
         name = self.get_name(**self.values) if self.name else None
         self._init_name_core(name)
 
     @property
     def name(self) -> str:
+        """This object's solved name.
+
+        :raises ValueError: If an invalid string is provided when setting the attribute.
+        """
         return self._name
 
     @name.setter
     def name(self, name: str):
-        """Set this object's name to the provided string.
-
-        :param name: The name to be set on this object.
-        :raises ValueError: If an invalid string is provided.
-        """
         name = rf'{name}' if name else ''
         if name:
             match = self.__regex.match(name)
@@ -197,7 +196,7 @@ class _BaseName:
 
     @property
     def nice_name(self) -> str:
-        """This object's pure name attribute."""
+        """This object's pure name without fields not present in `self.config`."""
         return self._get_nice_name()
 
     def _get_nice_name(self, **values) -> str:
@@ -226,7 +225,7 @@ class _BaseName:
 
     @staticmethod
     def cast(value: str, name: str = '') -> str:
-        """"Cast `value` to a grouped regular expression when `name` is provided."""
+        """Cast `value` to a grouped regular expression when `name` is provided."""
         return rf'(?P<{name}>{value})' if name else rf'{value}'
 
     @classmethod
