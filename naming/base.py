@@ -190,7 +190,7 @@ class _BaseName:
         return list(self.config)
 
     @property
-    def values(self) -> dict:
+    def values(self) -> typing.Dict[str, str]:
         """The field values of this object's name as a dictionary in the form of {field: value}."""
         return {k: v for k, v in self._items if v is not None}
 
@@ -229,8 +229,8 @@ class _BaseName:
         return rf'(?P<{name}>{value})' if name else rf'{value}'
 
     @classmethod
-    def cast_config(cls, config):
-        """Cast this class config to grouped regular expressions."""
+    def cast_config(cls, config: typing.Mapping[str, str]) -> typing.Dict[str, str]:
+        """Cast `config` to grouped regular expressions."""
         return {k: cls.cast(v, k) for k, v in config.items()}
 
     def __str__(self):
