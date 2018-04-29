@@ -140,26 +140,25 @@ class _BaseName:
 
     @property
     def sep(self) -> str:
+        """The string that acts as a separator of all the fields in the name."""
         return self._separator
 
     @sep.setter
     def sep(self, value: str):
-        """The string that acts as a separator of all the fields in the name."""
         self._set_separator(value)
         name = self.get_name(**self.values) if self.name else None
         self._init_name_core(name)
 
     @property
     def name(self) -> str:
+        """This object's solved name.
+
+        :raises ValueError: If an invalid string is provided when setting the attribute.
+        """
         return self._name
 
     @name.setter
     def name(self, name: str):
-        """Set this object's name to the provided string.
-
-        :param name: The name to be set on this object.
-        :raises ValueError: If an invalid string is provided.
-        """
         name = rf'{name}' if name else ''
         if name:
             match = self.__regex.match(name)
@@ -191,13 +190,13 @@ class _BaseName:
         return list(self.config)
 
     @property
-    def values(self) -> dict:
+    def values(self) -> typing.Dict[str, str]:
         """The field values of this object's name as a dictionary in the form of {field: value}."""
         return {k: v for k, v in self._items if v is not None}
 
     @property
     def nice_name(self) -> str:
-        """This object's pure name attribute."""
+        """This object's pure name without fields not present in `self.config`."""
         return self._get_nice_name()
 
     def _get_nice_name(self, **values) -> str:
@@ -226,12 +225,12 @@ class _BaseName:
 
     @staticmethod
     def cast(value: str, name: str = '') -> str:
-        """"Cast `value` to a grouped regular expression when `name` is provided."""
+        """Cast `value` to a grouped regular expression when `name` is provided."""
         return rf'(?P<{name}>{value})' if name else rf'{value}'
 
     @classmethod
-    def cast_config(cls, config):
-        """Cast this class config to grouped regular expressions."""
+    def cast_config(cls, config: typing.Mapping[str, str]) -> typing.Dict[str, str]:
+        """Cast `config` to grouped regular expressions."""
         return {k: cls.cast(v, k) for k, v in config.items()}
 
     def __str__(self):
