@@ -15,7 +15,7 @@ class TestName(unittest.TestCase):
         n = Name('initname')
         self.assertEqual('initname', n.get_name())
         with self.assertRaises(ValueError):
-            Name(dict())
+            Name(dict(my_name='dict'))
         n = Name(dict())
         self.assertFalse(None, n.get_name())
 
