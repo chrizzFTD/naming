@@ -89,6 +89,8 @@ class FieldValue:
         self.name = name
 
     def __get__(self, obj, objtype):
+        if obj is None:
+            return
         return obj._values.get(self.name)
 
     def __set__(self, obj, val):
@@ -98,7 +100,7 @@ class FieldValue:
         obj.name = new_name
 
 
-class _BaseName:
+class BaseName:
     """This is the base abstract class for Name objects. You should not need to create instances of this class."""
     config = dict()
     compounds = dict()
