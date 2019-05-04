@@ -1,12 +1,19 @@
 import re
 from pathlib import Path
 
-from .base import _BaseName, NameConfig
+from .base import BaseName, NameConfig
 
-__all__ = ['Name', 'File', 'Pipe', 'PipeFile', 'NameConfig']
+__all__ = [
+    'BaseName',
+    'Name',
+    'File',
+    'Pipe',
+    'PipeFile',
+    'NameConfig',
+]
 
 
-class Name(_BaseName):
+class Name(BaseName):
     """Inherited by: :class:`naming.File` :class:`naming.Pipe`
 
     Base class for name objects.

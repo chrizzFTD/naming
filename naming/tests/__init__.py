@@ -24,6 +24,9 @@ class TestName(unittest.TestCase):
         n.name = 'setname'
         self.assertEqual('setname', n.get_name())
 
+    def test_class_field_access(self):
+        self.assertEqual(Name.base, None)
+
 
 class TestConfig(unittest.TestCase):
 
