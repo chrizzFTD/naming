@@ -58,7 +58,7 @@ class Name(_BaseName):
     """
 
 
-class File(Name):
+class File(_BaseName):
     """Inherited by: :class:`naming.PipeFile`
 
     File Name objects.
@@ -118,7 +118,7 @@ class File(Name):
         return Path(*args)
 
 
-class Pipe(Name):
+class Pipe(_BaseName):
     """Inherited by: :class:`naming.PipeFile`
 
     Pipe Name objects.
