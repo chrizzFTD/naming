@@ -13,9 +13,7 @@ __all__ = [
 
 
 class Name(_BaseName):
-    """Inherited by: :class:`naming.File` :class:`naming.Pipe`
-
-    Base class for name objects.
+    """Base class for name objects.
 
     Each subclass may have its own `config` attribute that should be a dictionary in the form of {field: pattern}
     where `pattern` is a valid regular expression.
@@ -280,4 +278,3 @@ class PipeFile(File, Pipe):
         >>> pf.name
         'project_data_name   1907   christianl   constant   iamlast.data.17.abc'
     """
-    pass

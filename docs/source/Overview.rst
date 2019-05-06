@@ -18,12 +18,18 @@ Class Flow
 Basic Use
 =========
 
-.. topic:: Built-ins
+.. topic:: Built-ins & `config` attribute
+
+    Inherit from the class to use and assign a class attribute `config` as a
+    mapping of {field_name: regex_pattern} to use.
 
     Name::
 
         >>> from naming import Name
-        >>> n = Name()
+        >>> class BasicName(Name):
+        ...     config = dict(base=r'\w+')
+        ...
+        >>> n = BasicName()
         >>> n.get_name()  # no name has been set on the object, convention is solved with {missing} fields
         '{base}'
         >>> n.values
@@ -45,7 +51,10 @@ Basic Use
     Pipe::
 
         >>> from naming import Pipe
-        >>> p = Pipe()
+        >>> class BasicPipe(Pipe):
+        ...     config = dict(base=r'\w+')
+        ...
+        >>> p = BasicPipe()
         >>> p.get_name()
         '{base}.{pipe}'
         >>> p.get_name(version=10)
@@ -54,7 +63,7 @@ Basic Use
         '{base}.data.{version}'
         >>> p.get_name(output='cache', version=7, frame=24)
         '{base}.cache.7.24'
-        >>> p = Pipe('my_wip_data.1')
+        >>> p = BasicPipe('my_wip_data.1')
         >>> p.version
         '1'
         >>> p.values
@@ -76,12 +85,15 @@ Basic Use
     File::
 
         >>> from naming import File
-        >>> f = File()
+        >>> class BasicFile(File):
+        ...     config = dict(base=r'\w+')
+        ...
+        >>> f = BasicFile()
         >>> f.get_name()
         '{basse}.{suffix}'
         >>> f.get_name(suffix='png')
         '{base}.png'
-        >>> f = File('hello.world')
+        >>> f = BasicFile('hello.world')
         >>> f.values
         {'base': 'hello', 'suffix': 'world'}
         >>> f.suffix
@@ -95,7 +107,10 @@ Basic Use
     PipeFile::
 
         >>> from naming import PipeFile
-        >>> p = PipeFile('wipfile.7.ext')
+        >>> class BasicPipeFile(PipeFile):
+        ...     config = dict(base=r'\w+')
+        ...
+        >>> p = BasicPipeFile('wipfile.7.ext')
         >>> p.values
         {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
         >>> [p.get_name(frame=x, output='render') for x in range(10)]
@@ -110,15 +125,14 @@ Basic Use
         'wipfile.render.7.8.ext',
         'wipfile.render.7.9.ext']
 
-.. topic:: Custom Names
+.. topic:: Extending Names
 
     The **config**, **drops** and **compounds** attributes are merged on the subclasses to provide a simple but flexible
     and scalable system that can help rule all names in a project.
 
-    Inheriting from a built-in Name::
+    Inheriting from an existing name::
 
-        >>> from naming import PipeFile
-        >>> class ProjectFile(PipeFile):
+        >>> class ProjectFile(BasicPipeFile):
         ...     config = dict(year='[0-9]{4}',
         ...                   user='[a-z]+',
         ...                   another='(constant)',
@@ -154,8 +168,7 @@ Basic Use
 
     Dropping fields from bases::
 
-        >>> from naming import PipeFile
-        >>> class Dropper(PipeFile):
+        >>> class Dropper(BasicPipeFile):
         ...     config = dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+')
         ...     drops=('base',)
         ...
@@ -170,9 +183,8 @@ Basic Use
 
     Setting compound fields::
 
-        >>> from naming import PipeFile
         >>> # splitting the 'base' field into multiple joined fields
-        >>> class Compound(PipeFile)
+        >>> class Compound(BasicPipeFile)
         ...     config=dict(first=r'\d+', second=r'[a-zA-Z]+')
         ...     compounds=dict(base=('first', 'second'))
         ...
@@ -191,7 +203,7 @@ Basic Use
 
         >>> from naming import File
         >>> class FilePath(File):
-        ...     config = dict(extrafield='[a-z0-9]+')
+        ...     config = dict(base=r'\w+', extrafield='[a-z0-9]+')
         ...     def get_path_pattern_list(self):
         ...         # As an example we are returning the pattern list from the name object (base, extrafield)
         ...         return super().get_pattern_list()
@@ -207,7 +219,7 @@ Basic Use
 
         >>> from naming import PipeFile
         >>> class PropertyField(PipeFile):
-        ...     config = dict(extrafield='[a-z0-9]+')
+        ...     config = dict(base=r'\w+', extrafield='[a-z0-9]+')
         ...
         ...     @property
         ...     def nameproperty(self):
