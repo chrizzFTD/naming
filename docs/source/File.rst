@@ -7,3 +7,4 @@ File
 .. inheritance-diagram:: naming.File
 
 .. autoclass:: naming.File
+    :no-show-inheritance:

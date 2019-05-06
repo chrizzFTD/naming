@@ -7,4 +7,5 @@ Pipe
 .. inheritance-diagram:: naming.Pipe
 
 .. autoclass:: naming.Pipe
+    :no-show-inheritance:
 
