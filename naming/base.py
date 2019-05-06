@@ -100,7 +100,7 @@ class FieldValue:
         obj.name = new_name
 
 
-class BaseName:
+class _BaseName:
     """This is the base abstract class for Name objects. You should not need to create instances of this class."""
     config = dict()
     compounds = dict()

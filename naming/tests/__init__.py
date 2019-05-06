@@ -1,7 +1,23 @@
 import unittest
 from pathlib import Path
 
-from naming import *
+import naming
+
+
+class Name(naming.Name):
+    config = dict(base=r'\w+')
+
+
+class Pipe(naming.Pipe):
+    config = dict(base=r'\w+')
+
+
+class File(naming.File):
+    config = dict(base=r'\w+')
+
+
+class PipeFile(File, Pipe):
+    pass
 
 
 class TestName(unittest.TestCase):
@@ -220,6 +236,7 @@ class TestPipeFile(unittest.TestCase):
         pf.sep = ' - '
         self.assertEqual('hello - 2008 - c - constant - last.1.abc', pf.name)
         self.assertTrue(pf.values == v)
+
 
 class TestDrops(unittest.TestCase):
 
@@ -453,7 +470,6 @@ class TestSubclassing(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.SubName3('mrb dos 3r')
         self.assertEqual('masnombres', n.morename)
-
 
     def test_compounds(self):
         class ComplicatedCompound(Name):

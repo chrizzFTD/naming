@@ -1,10 +1,9 @@
 import re
 from pathlib import Path
 
-from .base import BaseName, NameConfig
+from .base import _BaseName, NameConfig
 
 __all__ = [
-    'BaseName',
     'Name',
     'File',
     'Pipe',
@@ -13,7 +12,7 @@ __all__ = [
 ]
 
 
-class Name(BaseName):
+class Name(_BaseName):
     """Inherited by: :class:`naming.File` :class:`naming.Pipe`
 
     Base class for name objects.
@@ -35,7 +34,10 @@ class Name(BaseName):
     Basic use::
 
         >>> from naming import Name
-        >>> n = Name()
+        >>> class MyName(Name):
+        ...     config = dict(base=r'\w+')
+        ...
+        >>> n = MyName()
         >>> n.get_name()  # no name has been set on the object, convention is solved with {missing} fields
         '{base}'
         >>> n.values
@@ -54,7 +56,6 @@ class Name(BaseName):
         >>> n.base
         'through_field_name'
     """
-    config = dict(base=r'\w+')
 
 
 class File(Name):
@@ -71,12 +72,15 @@ class File(Name):
     Basic use::
 
         >>> from naming import File
-        >>> f = File()
+        >>> class MyFile(File):
+        ...     config = dict(base=r'\w+')
+        ...
+        >>> f = MyFile()
         >>> f.get_name()
         '{basse}.{suffix}'
         >>> f.get_name(suffix='png')
         '{base}.png'
-        >>> f = File('hello.world')
+        >>> f = MyFile('hello.world')
         >>> f.values
         {'base': 'hello', 'suffix': 'world'}
         >>> f.suffix
@@ -138,7 +142,10 @@ class Pipe(Name):
     Basic use::
 
         >>> from naming import Pipe
-        >>> p = Pipe()
+        >>> class MyPipe(Pipe):
+        ...     config = dict(base=r'\w+')
+        ...
+        >>> p = MyPipe()
         >>> p.get_name()
         '{base}.{pipe}'
         >>> p.get_name(version=10)
@@ -147,7 +154,7 @@ class Pipe(Name):
         '{base}.data.{version}'
         >>> p.get_name(output='cache', version=7, frame=24)
         '{base}.cache.7.24'
-        >>> p = Pipe('my_wip_data.1')
+        >>> p = MyPipe('my_wip_data.1')
         >>> p.version
         '1'
         >>> p.values
@@ -222,7 +229,10 @@ class PipeFile(File, Pipe):
     Basic use::
 
         >>> from naming import PipeFile
-        >>> p = PipeFile('wipfile.7.ext')
+        >>> class MyPipeFile(PipeFile):
+        ...     config = dict(base=r'\w+')
+        ...
+        >>> p = MyPipeFile('wipfile.7.ext')
         >>> p.values
         {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
         >>> [p.get_name(frame=x, output='render') for x in range(10)]
@@ -236,7 +246,7 @@ class PipeFile(File, Pipe):
         'wipfile.render.7.7.ext',
         'wipfile.render.7.8.ext',
         'wipfile.render.7.9.ext']
-        >>> class ProjectFile(PipeFile):
+        >>> class ProjectFile(MyPipeFile):
         ...     config = dict(year='[0-9]{4}',
         ...                   user='[a-z]+',
         ...                   another='(constant)',
