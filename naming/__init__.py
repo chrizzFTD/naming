@@ -23,12 +23,6 @@ class Name(_BaseName):
 
     All field names should be unique. No duplicates are allowed.
 
-    ======  ==========
-    **Config:**
-    ------------------
-    *base*  Accepts any amount of word characters [a-zA-Z0-9_]
-    ======  ==========
-
     Basic use::
 
         >>> from naming import Name
