@@ -122,9 +122,10 @@ class _BaseName:
 
         cls.config = NameConfig(cfg, 'config')
 
-    def __init__(self, name: str = '', sep: str = ' '):
+    def __init__(self, name: str = '', sep: str = ' ', compounds_sep: str = ''):
         super().__init__()
         self._name = ''
+        self._compounds_sep = compounds_sep
         self._values = {}
         self._items = self._values.items()
         self._uc = MappingProxyType({})  # unreferenced compounds
@@ -150,6 +151,11 @@ class _BaseName:
         self._set_separator(value)
         name = self.get_name(**self.values) if self.name else None
         self._init_name_core(name)
+
+    @property
+    def compounds_sep(self):
+        """"The string that acts as a separator for the compound fields"""
+        return self._compounds_sep
 
     @property
     def name(self) -> str:
@@ -219,7 +225,7 @@ class _BaseName:
                     continue
                 comp_values = [values.pop(cv, getattr(self, cv)) for cv in cvs]
                 if None not in comp_values:
-                    values[ck] = ''.join(rf'{v}' for v in comp_values)
+                    values[ck] = self._compounds_sep.join(rf'{v}' for v in comp_values)
         return self._get_nice_name(**values)
 
     def _iter_translated_field_names(self, names: typing.Iterable[str], **values) -> typing.Generator:
