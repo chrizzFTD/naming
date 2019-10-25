@@ -495,3 +495,18 @@ class TestSubclassing(unittest.TestCase):
         self.assertEqual('9th8th', n.base)
         with self.assertRaises(ValueError):
             n.six = 'madman'
+
+        class ComplicatedCompoundWithSep(ComplicatedCompound):
+            compounds_sep = '-'
+        n = ComplicatedCompoundWithSep('2nd-7th-3rd-4th-5th-9th-8th 0')
+        self.assertEqual('7th-3rd-4th-5th', n.one)
+        self.assertEqual('2nd-7th-3rd-4th-5th-9th-8th', n.two)
+        self.assertEqual('3rd', n.three)
+        self.assertEqual('4th', n.four)
+        self.assertEqual('5th', n.five)
+        self.assertEqual('3rd-4th', n.six)
+        self.assertEqual('7th', n.seven)
+        self.assertEqual('8th', n.eight)
+        self.assertEqual('9th', n.nine)
+        self.assertEqual('0', n.zero)
+        self.assertEqual('9th-8th', n.base)
