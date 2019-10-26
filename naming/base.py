@@ -52,13 +52,13 @@ class NameConfig:
             return result
 
         # don't solve compound fields that are not related to the current config
-        compounds = {k: v for k, v in objtype.compounds.items() if (k in cfg or set(v).intersection(cfg))}
+        compounds = {k: v for k, v in objtype.join.items() if (k in cfg or set(v).intersection(cfg))}
         solved = dict()  # will not preserve order
         for ck, cvs in _sorted_items(compounds):
             # cast the compound values to regex groups, named unless a value is equal to the current key `ck`
             # search first in `cfg`, then in the object for properties
             gen = (obj.cast(solved.pop(cv, cfg.get(cv, getattr(obj, cv))), cv if cv != ck else '') for cv in cvs)
-            solved[ck] = ''.join(gen)
+            solved[ck] = obj.join_sep.join(gen)
 
         compounds_fields = set().union(*(v for v in compounds.values()))
         for k, v in cfg.items():
@@ -103,21 +103,22 @@ class FieldValue:
 class _BaseName:
     """This is the base abstract class for Name objects. You should not need to create instances of this class."""
     config = dict()
-    compounds = dict()
-    drops = tuple()
+    drop = tuple()
+    join = dict()
+    join_sep = ''
 
     def __init_subclass__(cls, **kwargs):
-        cls.compounds = MappingProxyType(_dct_from_mro(cls, 'compounds'))
-        cls.drops = set().union(*(getattr(c, 'drops', tuple()) for c in cls.mro()))
+        cls.join = MappingProxyType(_dct_from_mro(cls, 'join'))
+        cls.drop = set().union(*(getattr(c, 'drop', tuple()) for c in cls.mro()))
 
         cfg = _dct_from_mro(cls, 'config')
-        for drop in cls.drops:
+        for drop in cls.drop:
             cfg.pop(drop, None)
             setattr(cls, drop, None)
 
         # fields in compounds and name config descriptors have to be accessible through their name on instances.
         configs = (nc.cfg for nc in vars(cls).values() if isinstance(nc, NameConfig))
-        for k in set().union(cfg, cls.compounds, *configs):
+        for k in set().union(cfg, cls.join, *configs):
             setattr(cls, k, FieldValue(k))
 
         cls.config = NameConfig(cfg, 'config')
@@ -214,12 +215,12 @@ class _BaseName:
             return self.name
         if values:
             # if values are provided, solve compounds that may be affected
-            for ck, cvs in _sorted_items(self.compounds):
+            for ck, cvs in _sorted_items(self.join):
                 if ck in cvs and ck in values:  # redefined compound name to outer scope e.g. fifth = (fifth, sixth)
                     continue
                 comp_values = [values.pop(cv, getattr(self, cv)) for cv in cvs]
                 if None not in comp_values:
-                    values[ck] = ''.join(rf'{v}' for v in comp_values)
+                    values[ck] = self.join_sep.join(rf'{v}' for v in comp_values)
         return self._get_nice_name(**values)
 
     def _iter_translated_field_names(self, names: typing.Iterable[str], **values) -> typing.Generator:

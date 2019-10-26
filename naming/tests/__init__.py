@@ -242,7 +242,7 @@ class TestDrops(unittest.TestCase):
 
     def test_empty_name(self):
         Dropper = type('Dropper', (PipeFile,), dict(config=dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+'),
-                                                    drops=('base',)))
+                                                    drop=('base',)))
         d = Dropper(sep='_')
         self.assertEqual('{without}_{basename}.{pipe}.{suffix}', d.get_name())
         self.assertEqual('awesome_{basename}.{pipe}.{suffix}', d.get_name(without='awesome'))
@@ -261,7 +261,7 @@ class TestCompound(unittest.TestCase):
 
     def test_empty_name(self):
         Compound = type('Compound', (PipeFile,), dict(config=dict(first=r'[\d]+', second=r'[a-zA-Z]+'),
-                                                      compounds=dict(base=('first', 'second'))))
+                                                      join=dict(base=('first', 'second'))))
         c = Compound(sep='_')
         self.assertEqual('{base}.{pipe}.{suffix}', c.get_name())
         self.assertEqual('{base}.{pipe}.{suffix}', c.get_name(first=50))
@@ -277,7 +277,7 @@ class TestCompound(unittest.TestCase):
         class CompUnused(Name):
             config = dict(first='1',
                           second='2')
-            compounds = dict(cmp=('first', 'second'))
+            join = dict(cmp=('first', 'second'))
 
         class CompUsed(CompUnused):
             def get_pattern_list(self):
@@ -285,7 +285,7 @@ class TestCompound(unittest.TestCase):
 
         class CompAndPropsInvalid(CompUnused):
             # by compounding 'base', get_pattern_list will return an empty list, should fail to initialise
-            compounds = dict(cmp2=('base', 'prop'))
+            join = dict(cmp2=('base', 'prop'))
 
             @property
             def prop(self):
@@ -364,25 +364,25 @@ class TestSubclassing(unittest.TestCase):
     SubName2 = type('SubName2', (SubName,), dict(config=dict(second_field='(notsec)')))
     Replace = type('Replace', (SubName2,), dict(config=dict(base='(repl)', fourth_field='(4th)', fifth_field='(5th)')))
     SubName3 = type('SubName3', (SubName2,), dict(config=dict(base='(mrb)', second_field='(dos)')))
-    Drop = type('Drop', (Replace,), dict(drops=('fourth_field',)))
+    Drop = type('Drop', (Replace,), dict(drop=('fourth_field',)))
 
     class Compounds(Drop):
         config = dict(subfirst='(s1st)', subscnd='(s2nd)', f1='(f1)', f2='(f2)', lastfield='(last)')
-        compounds = dict(second_field=('subfirst', 'subscnd'), fifth_field=('f1', 'f2'))
+        join = dict(second_field=('subfirst', 'subscnd'), fifth_field=('f1', 'f2'))
 
     class Subcoms(Compounds):
-        compounds = dict(base=('second_field', 'third_field'), fifth_field=('fifth_field', 'lastfield'))
+        join = dict(base=('second_field', 'third_field'), fifth_field=('fifth_field', 'lastfield'))
 
     class Subcoms2(Compounds):
         config = dict(another='(another)', nested='(nested)')
-        compounds = dict(base=('second_field', 'third_field'), fifth_field=('f1', 'f2', 'lastfield'))
+        join = dict(base=('second_field', 'third_field'), fifth_field=('f1', 'f2', 'lastfield'))
 
     class Subcoms3(Subcoms2):
         config = dict(nombre='(nombre)', apellido='(apellido)', middlename='(medio)')
 
     class SS5(Subcoms3):
         config = dict(morename='(masnombres)')
-        compounds = dict(nombre=('nombre', 'middlename', 'another'), apellido=('morename', 'apellido'))
+        join = dict(nombre=('nombre', 'middlename', 'another'), apellido=('morename', 'apellido'))
 
     def test_sep(self):
         n = self.SubName()
@@ -475,7 +475,7 @@ class TestSubclassing(unittest.TestCase):
         class ComplicatedCompound(Name):
             config = dict(one='1st', two='2nd', three='3rd', four='4th', five='5th', six='6th', seven='7th',
                           eight='8th', nine='9th', zero='0')
-            compounds = dict(two=('two', 'one', 'base'),
+            join = dict(two=('two', 'one', 'base'),
                              one=('seven', 'six', 'five'),
                              six=('three', 'four'),
                              base=('nine', 'eight')
@@ -495,3 +495,18 @@ class TestSubclassing(unittest.TestCase):
         self.assertEqual('9th8th', n.base)
         with self.assertRaises(ValueError):
             n.six = 'madman'
+
+        class ComplicatedCompoundWithSep(ComplicatedCompound):
+            join_sep = '-'
+        n = ComplicatedCompoundWithSep('2nd-7th-3rd-4th-5th-9th-8th 0')
+        self.assertEqual('7th-3rd-4th-5th', n.one)
+        self.assertEqual('2nd-7th-3rd-4th-5th-9th-8th', n.two)
+        self.assertEqual('3rd', n.three)
+        self.assertEqual('4th', n.four)
+        self.assertEqual('5th', n.five)
+        self.assertEqual('3rd-4th', n.six)
+        self.assertEqual('7th', n.seven)
+        self.assertEqual('8th', n.eight)
+        self.assertEqual('9th', n.nine)
+        self.assertEqual('0', n.zero)
+        self.assertEqual('9th-8th', n.base)

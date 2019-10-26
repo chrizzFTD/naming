@@ -18,16 +18,10 @@ class Name(_BaseName):
     Each subclass may have its own `config` attribute that should be a dictionary in the form of {field: pattern}
     where `pattern` is a valid regular expression.
 
-    Classes may as well have a `drops` iterable attribute representing the fileds they want to ignore from their bases
-    and a `compounds` dictionary attribute for nesting existing fields into new ones (or to override other fields).
+    Classes may as well have a `drop` iterable attribute representing the fileds they want to ignore from their bases
+    and a `join` dictionary attribute for nesting existing fields into new ones (or to override other fields).
 
     All field names should be unique. No duplicates are allowed.
-
-    ======  ==========
-    **Config:**
-    ------------------
-    *base*  Accepts any amount of word characters [a-zA-Z0-9_]
-    ======  ==========
 
     Basic use::
 
