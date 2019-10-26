@@ -184,7 +184,7 @@ Basic Use
     Setting compound fields::
 
         >>> # splitting the 'base' field into multiple joined fields
-        >>> class Compound(BasicPipeFile)
+        >>> class Compound(BasicPipeFile):
         ...     config=dict(first=r'\d+', second=r'[a-zA-Z]+')
         ...     join=dict(base=('first', 'second'))
         ...
@@ -198,7 +198,7 @@ Basic Use
         '101dalmatians'
         >>> c.get_name(first=200)
         '200dalmatians.1.png'
-        >>> class CompoundByDash(Compound)
+        >>> class CompoundByDash(Compound):
         ...     join_sep = '-'  # you can specify the string to join compounds
         ...
         >>> c = CompoundByDash('101-dalmatians.1.png')
