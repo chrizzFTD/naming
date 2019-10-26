@@ -6,7 +6,7 @@ Overview
     This package offers classes representing names as strings that follow a certain pattern convention. New Name
     objects can subclass from the provided classes in a simple manner. Each Name object has a **config** attribute
     that contains the fields and regex patterns of the convention to follow. Names can also drop fields from their
-    parent classes with the **drops** attribute, or they can merge / split fields with the **compounds** attribute.
+    parent classes with the **drop** attribute, or they can merge / split fields with the **join** attribute.
 
 Class Flow
 ==========
@@ -127,7 +127,7 @@ Basic Use
 
 .. topic:: Extending Names
 
-    The **config**, **drops** and **compounds** attributes are merged on the subclasses to provide a simple but flexible
+    The **config**, **drop** and **join** attributes are merged on the subclasses to provide a simple but flexible
     and scalable system that can help rule all names in a project.
 
     Inheriting from an existing name::
@@ -170,7 +170,7 @@ Basic Use
 
         >>> class Dropper(BasicPipeFile):
         ...     config = dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+')
-        ...     drops=('base',)
+        ...     drop=('base',)
         ...
         >>> d = Dropper()
         >>> d.get_name()
@@ -186,18 +186,24 @@ Basic Use
         >>> # splitting the 'base' field into multiple joined fields
         >>> class Compound(BasicPipeFile)
         ...     config=dict(first=r'\d+', second=r'[a-zA-Z]+')
-        ...     compounds=dict(base=('first', 'second'))
+        ...     join=dict(base=('first', 'second'))
         ...
         >>> c = Compound()
         >>> c.get_name()  # we see the original field 'base'
         '{base}.{pipe}.{suffix}'
-        >>> c.get_name(first=50, second='abc')  # providing the compounds will work
+        >>> c.get_name(first=50, second='abc')  # providing each field to join will work
         '50abc.{pipe}.{suffix}'
         >>> c.name = c.get_name(base='101dalmatians', version=1, suffix='png')  # providing the key field will also work
         >>> c.nice_name
         '101dalmatians'
         >>> c.get_name(first=200)
         '200dalmatians.1.png'
+        >>> class CompoundByDash(Compound)
+        ...     join_sep = '-'  # you can specify the string to join compounds
+        ...
+        >>> c = CompoundByDash('101-dalmatians.1.png')
+        >>> c.get_name(first=300)
+        '300-dalmatians.1.png'
 
     Defining path rules for File subclasses::
 
