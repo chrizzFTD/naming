@@ -1,7 +1,9 @@
 language: python
 python:
-  - "3.6"
-#  - "3.7-dev"  Disabled as PyYAML seems to fail as of 180421 https://travis-ci.org/chrizzFTD/naming/jobs/369410602
+  - 3.6
+  - 3.7
+  - 3.8
+
 install:
   - pip install python-coveralls
 script:
