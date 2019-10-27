@@ -20,6 +20,30 @@ class PipeFile(File, Pipe):
     pass
 
 
+class FrameRange(naming.File):
+    config = dict.fromkeys(
+        ('high', 'low', 'minimum', 'maximum'), r'\d{1,2}'
+    )
+    join = dict(
+        freq=('high', 'low'),
+        range=('minimum', 'maximum'),
+    )
+    join_sep = '-'
+
+    def get_pattern_list(self):
+        return ["freq", "range"]
+
+
+class SubFrameRange(FrameRange):
+    config = dict(
+        tail=r'[\w\.]+',
+        version=r'\d+',
+    )
+
+    def get_pattern_list(self):
+        return super().get_pattern_list() + list(self.config.keys())
+
+
 class TestName(unittest.TestCase):
 
     def test_empty_name(self):
@@ -510,3 +534,72 @@ class TestSubclassing(unittest.TestCase):
         self.assertEqual('9th', n.nine)
         self.assertEqual('0', n.zero)
         self.assertEqual('9th-8th', n.base)
+
+    def test_compounds_pattern_inheritance(self):
+        class NameAndNumber(naming.Name):
+            config = dict(first_name=r'\w+', second_name=r'\w+', n1=r'\d', n2=r'\d')
+            join = dict(full_name=('first_name', 'second_name'), number=('n1', 'n2'))
+            join_sep = '-'
+
+            def get_pattern_list(self):
+                return ['full_name', 'number']
+
+        n = NameAndNumber()
+        n.name = n.get_name(full_name='john-doe', number='1-2')
+        n.n1 = 2
+        n.first_name = 'jane'
+        self.assertEqual(n.name, 'jane-doe 2-2')
+
+        n = NameAndNumber(n.name)
+        n.full_name = 'john-doe'
+        n.number = '1-2'
+        self.assertEqual(n.name, 'john-doe 1-2')
+
+        class Role(NameAndNumber):
+            config = dict(role=r'\w+')
+
+            def get_pattern_list(self):
+                return super().get_pattern_list() + ['role']
+
+        n = Role()
+        n.name = n.get_name(full_name='john-doe', number='1-2', role='work')
+        n.n1 = 2
+        n.first_name = 'jane'
+        n.role = 'dev'
+        self.assertEqual(n.name, 'jane-doe 2-2 dev')
+
+        n = Role()
+        n.name = n.get_name(full_name='john-doe', number='1-2', role='work')
+        n.n1 = 2
+        n.first_name = 'jane'
+        n.role = 'dev'
+        self.assertEqual(n.name, 'jane-doe 2-2 dev')
+
+    def test_log(self):
+        name = SubFrameRange()
+        name.name = name.get_name(
+            high=19,
+            low=10,
+            minimum=22,
+            maximum=22,
+            tail='naming',
+            version=22,
+            suffix='ext',
+        )
+        name.freq = '17-10'
+        name.high = '97'
+        name.name = name.get_name(low=2, version=20)
+        self.assertEqual('97-2 22-22 naming 20.ext', name.name)
+
+        name2 = SubFrameRange()
+        name2.name = name.get_name(
+            high=23,
+            low=11,
+            minimum=45,
+            maximum=54,
+            tail='rrr',
+            version=54,
+            suffix='xxx',
+        )
+        name2.version = 37
+        self.assertEqual(name._pattern, name2._pattern)

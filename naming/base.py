@@ -1,5 +1,6 @@
 import re
 import typing
+from collections import ChainMap
 from types import MappingProxyType
 
 
@@ -54,11 +55,14 @@ class NameConfig:
         # don't solve compound fields that are not related to the current config
         compounds = {k: v for k, v in objtype.join.items() if (k in cfg or set(v).intersection(cfg))}
         solved = dict()  # will not preserve order
+        pattern_lookup = ChainMap({}, solved, cfg)
         for ck, cvs in _sorted_items(compounds):
             # cast the compound values to regex groups, named unless a value is equal to the current key `ck`
             # search first in `cfg`, then in the object for properties
-            gen = (obj.cast(solved.pop(cv, cfg.get(cv, getattr(obj, cv))), cv if cv != ck else '') for cv in cvs)
-            solved[ck] = obj.join_sep.join(gen)
+            compound_fields = {cv: obj.cast(solved.pop(cv, pattern_lookup.get(cv, getattr(obj, cv))), cv if cv != ck else '') for cv in cvs}
+            compound_pattern = obj.join_sep.join(compound_fields.values())
+            compound_fields[ck] = solved[ck] = compound_pattern
+            pattern_lookup.update(compound_fields)
 
         compounds_fields = set().union(*(v for v in compounds.values()))
         for k, v in cfg.items():
@@ -70,7 +74,8 @@ class NameConfig:
                 result[k] = v
 
         # keep track of solved compounds that were not referenced by `cfg`
-        obj._uc = MappingProxyType(solved)
+        obj._uc = MappingProxyType(pattern_lookup)
+        objtype._uc = obj._uc
 
         result = MappingProxyType(result)
         self.memo[self.name] = result
@@ -128,7 +133,6 @@ class _BaseName:
         self._name = ''
         self._values = {}
         self._items = self._values.items()
-        self._uc = MappingProxyType({})  # unreferenced compounds
         self._set_separator(sep)
         self._init_name_core(name)
 
@@ -178,14 +182,14 @@ class _BaseName:
 
     @property
     def _pattern(self) -> str:
-        cfg = self.config
-        # look for pattern in `cfg` first; then in `self` and finally in unreferenced solved compounds
         pattern_list = self.get_pattern_list()
         if not pattern_list or not isinstance(pattern_list, (list, tuple)):
             msg = ('Expected list / tuple containing strings with field names from `get_pattern_list`. '
                    'Got: {} instead'.format(pattern_list))
             raise ValueError(msg)
-        casted = (self.cast(cfg.get(p, getattr(self, p) or self._uc.get(p)), p) for p in self.get_pattern_list())
+
+        cfg = self.config
+        casted = (self.cast(self._uc.get(p, getattr(self, p)), p) for p in self.get_pattern_list())
         return self._separator_pattern.join(casted)
 
     def get_pattern_list(self) -> typing.List[str]:
@@ -217,6 +221,9 @@ class _BaseName:
             # if values are provided, solve compounds that may be affected
             for ck, cvs in _sorted_items(self.join):
                 if ck in cvs and ck in values:  # redefined compound name to outer scope e.g. fifth = (fifth, sixth)
+                    continue
+                if values.get(ck):
+                    # compound key has been provided in values
                     continue
                 comp_values = [values.pop(cv, getattr(self, cv)) for cv in cvs]
                 if None not in comp_values:
