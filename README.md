@@ -10,10 +10,9 @@ Object-oriented names for the digital era.
 naming provides a simple yet flexible and scalable interface for naming conventions.
 It follows the UNIX tradition of single-purpose tools that do one thing well.
 
-![Alt text](https://g.gravizo.com/source/svg/custom_mark10?https%3A%2F%2Fraw.githubusercontent.com%2FchrizzFTD%2Fnaming%2Ffeature%2Fgraphviz_readme%2FREADME.md)
+![Alt text](https://g.gravizo.com/source/svg/https%3A%2F%2Fraw.githubusercontent.com%2FchrizzFTD%2Fnaming%2Ffeature%2Fgraphviz_readme%2FREADME.md)
 <details> 
 <summary></summary>
-custom_mark10
   digraph G {
     size ="4,4";
     main [shape=box];
@@ -29,7 +28,6 @@ custom_mark10
     node [shape=box,style=filled,color=".7 .3 1.0"];
     execute -> compare;
   }
-custom_mark10
 </details>
     
 ### Installation
