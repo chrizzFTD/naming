@@ -25,7 +25,7 @@ custom_mark10
     execute -> { make_string; printf};
     init -> make_string;
     edge [color=red];
-    main -> printf [style=bold,label="100 PLZ"];
+    main -> printf [style=bold,label="100 NOW"];
     make_string [label="make a string"];
     node [shape=box,style=filled,color=".7 .3 1.0"];
     execute -> compare;
