@@ -45,7 +45,6 @@ strict digraph G {
     file_format [label=".{suffix}"]
     file_example [label=".ext"]
     file_patterns [label="suffix = \w+" fontcolor=lightgoldenrod4]
-
     PIPE, pipe_format, pipe_example [color=lightskyblue4 fillcolor=lightblue]
     pipe_format [label=".{pipe}"]
     pipe_example [label=".1
