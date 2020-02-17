@@ -18,6 +18,7 @@ It follows the UNIX tradition of single-purpose tools that do one thing well.
 <details> 
 <summary></summary>
 custom_mark
+ @startdot
  digraph G {
     {
       node [style="rounded, filled" shape=box];
