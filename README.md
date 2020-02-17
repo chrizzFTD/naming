@@ -15,28 +15,20 @@ It follows the UNIX tradition of single-purpose tools that do one thing well.
 <details> 
 <summary></summary>
 custom_mark10
- digraph G {
-    {
-      node [style="rounded, filled" shape=box];
-      class, FILE, PIPE, PIPEFILE;
-    }
-    {
-      node [style=filled margin=0 width=1 height=0.46 shape=polygon fixedsize=true skew=0.4];
-      format, file_format, pipe_format, pipefile_format;
-    }
-    {
-      node [shape=none];
-      patterns, file_patterns, pipe_patterns, pipefile_patterns;
-    }
-    {
-      node [style="dashed, filled" shape=box];
-      example, file_example, pipe_example, pipefile_example;
-    }
+digraph G {
+    node [shape=none];
+    patterns, file_patterns, pipe_patterns, pipefile_patterns;
+    node [style="rounded, filled" shape=box];
+    class, FILE, PIPE, PIPEFILE;
+    node [style="dashed, filled"];
+    example, file_example, pipe_example, pipefile_example;
+    node [style=filled margin=0 width=1 height=0.46 shape=polygon fixedsize=true skew=0.4];
+    format, file_format, pipe_format, pipefile_format;
     subgraph legend {
-        edge[style=invis];
-        class, format, example, patterns [color=gray40 fillcolor=gray95];
-        patterns [label="field=pattern" fontcolor=gray22];
-        class -> format -> patterns  -> example;
+      edge[style=invis];
+      class, format, example, patterns [color=gray40 fillcolor=gray95];
+      patterns [label="field=pattern" fontcolor=gray22];
+      class -> format -> patterns  -> example;
     }
     FILE, file_format, file_example [color=lightgoldenrod3 fillcolor=lemonchiffon1];
     file_format [label=".{suffix}"];
@@ -55,7 +47,7 @@ custom_mark10
     FILE -> file_format -> file_patterns -> file_example;
     PIPEFILE -> pipefile_format -> pipefile_patterns -> pipefile_example;
     {PIPE, FILE} -> PIPEFILE;
- }
+}
 }
 custom_mark10
 </details>
