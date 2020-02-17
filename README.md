@@ -24,12 +24,9 @@ digraph G {
     example, file_example, pipe_example, pipefile_example;
     node [style=filled margin=0 width=1 height=0.46 shape=polygon fixedsize=true skew=0.4];
     format, file_format, pipe_format, pipefile_format;
-    subgraph legend {
-      edge[style=invis];
-      class, format, example, patterns [color=gray40 fillcolor=gray95];
-      patterns [label="field=pattern" fontcolor=gray22];
-      class -> format -> patterns  -> example;
-    }
+    class, format, example, patterns [color=gray40 fillcolor=gray95];
+    patterns [label="field=pattern" fontcolor=gray22];
+    class -> format -> patterns  -> example [style=invis];
     FILE, file_format, file_example [color=lightgoldenrod3 fillcolor=lemonchiffon1];
     file_format [label=".{suffix}"];
     file_example [label=".ext"];
@@ -47,7 +44,6 @@ digraph G {
     FILE -> file_format -> file_patterns -> file_example;
     PIPEFILE -> pipefile_format -> pipefile_patterns -> pipefile_example;
     {PIPE, FILE} -> PIPEFILE;
-}
 }
 custom_mark10
 </details>
