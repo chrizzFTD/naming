@@ -20,6 +20,7 @@ digraph G {
     PIPE -> pipe_format -> pipe_patterns -> pipe_example;
     FILE -> file_format -> file_patterns -> file_example;
     PIPEFILE -> pipefile_format -> pipefile_patterns -> pipefile_example;
+    {PIPE, FILE} -> PIPEFILE;
 }
 custom_mark10
 </details>
