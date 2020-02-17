@@ -47,17 +47,11 @@ strict digraph G {
     file_patterns [label="suffix = \w+" fontcolor=lightgoldenrod4];
     PIPE, pipe_format, pipe_example [color=lightskyblue4 fillcolor=lightblue];
     pipe_format [label=".{pipe}"];
-    pipe_example [label=".1
-    .1.out
-    .1.out.101"];
-    pipe_patterns [label="version = \d+ 
-    output=\w+?
-    frame=\d+?"];
+    pipe_example [label=".1.out.101"];
+    pipe_patterns [label="version = \d+ output=\w+? frame=\d+?"];
     PIPEFILE, pipefile_format, pipefile_example [color=mediumorchid4 fillcolor=plum2];
     pipefile_format [skew=0.15 width=2 label="{base}.{pipe}.{suffix}"];
-    pipefile_example [label="wip_data.7.ext
-    pipe_data.7.out.ext
-    framed_data.7.out.101.ext"];
+    pipefile_example [label="framed_data.7.out.101.ext"];
     pipefile_patterns [label="base = \w+" fontcolor=mediumorchid4];
     edge [color=gray36 arrowhead="vee"];
     PIPE -> pipe_format -> pipe_patterns -> pipe_example;
