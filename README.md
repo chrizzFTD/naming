@@ -37,9 +37,7 @@ digraph G {
     PIPE [color=lightskyblue4 fillcolor=lightblue];
     pipe_format [label=".(pipe)" color=lightskyblue4 fillcolor=lightblue];
     pipe_example [label=".1.out.101" color=lightskyblue4 fillcolor=lightblue];
-    pipe_patterns [label="version = \d+
-    output=\w+?
-    frame=\d+?"];
+    pipe_patterns [label="version = \d+ output=\w+? frame=\d+?"];
     PIPEFILE [color=mediumorchid4 fillcolor=plum2];
     pipefile_format [skew=0.15 width=2 label="(base).(pipe).(suffix)" color=mediumorchid4 fillcolor=plum2];
     pipefile_example [label="framed_data.7.out.101.ext" color=mediumorchid4 fillcolor=plum2];
