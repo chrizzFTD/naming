@@ -16,6 +16,7 @@ It follows the UNIX tradition of single-purpose tools that do one thing well.
 <summary></summary>
 custom_mark10
 digraph G {
+    FILE, file_format, file_example [color=lightgoldenrod3 fillcolor=lemonchiffon1];
     class -> format -> patterns  -> example;
     PIPE -> pipe_format -> pipe_patterns -> pipe_example;
     FILE -> file_format -> file_patterns -> file_example;
