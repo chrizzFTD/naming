@@ -15,21 +15,53 @@ It follows the UNIX tradition of single-purpose tools that do one thing well.
 <details> 
 <summary></summary>
 custom_mark10
-  digraph G {
-    size ="4,4";
-    main [shape=box];
-    main -> parse [weight=8];
-    parse -> execute;
-    main -> init [style=dotted];
-    main -> cleanup;
-    execute -> { make_string; printf};
-    init -> make_string;
-    edge [color=red];
-    main -> printf [style=bold,label="100 NOW"];
-    make_string [label="make a string"];
-    node [shape=box,style=filled,color=".7 .3 1.0"];
-    execute -> compare;
-  }
+digraph G {
+    {
+      node [style="rounded, filled" shape=box];
+      class, FILE, PIPE, PIPEFILE;
+    }
+    {
+      node [style=filled margin=0 width=1 height=0.46 shape=polygon fixedsize=true skew=0.4];
+      format, file_format, pipe_format, pipefile_format;
+    }
+    {
+      node [shape=none];
+      patterns, file_patterns, pipe_patterns, pipefile_patterns;
+    }
+    {
+      node [style="dashed, filled" shape=box]
+      example, file_example, pipe_example, pipefile_example;
+    }
+    subgraph legend {
+        edge[style=invis];
+        class, format, example, patterns [color=gray40 fillcolor=gray95];
+        patterns [label="field=pattern" fontcolor=gray22];
+        class -> format -> patterns  -> example;
+    }
+    FILE, file_format, file_example [color=lightgoldenrod3 fillcolor=lemonchiffon1];
+    file_format [label=".{suffix}"];
+    file_example [label=".ext"];
+    file_patterns [label="suffix = \w+" fontcolor=lightgoldenrod4];
+    PIPE, pipe_format, pipe_example [color=lightskyblue4 fillcolor=lightblue];
+    pipe_format [label=".{pipe}"];
+    pipe_example [label=".1
+    .1.out
+    .1.out.101"];
+    pipe_patterns [label="version = \d+ 
+    output=\w+?
+    frame=\d+?"];
+    PIPEFILE, pipefile_format, pipefile_example [color=mediumorchid4 fillcolor=plum2];
+    pipefile_format [skew=0.15 width=2 label="{base}.{pipe}.{suffix}"];
+    pipefile_example [label="wip_data.7.ext
+    pipe_data.7.out.ext
+    framed_data.7.out.101.ext"];
+    pipefile_patterns [label="base = \w+" fontcolor=mediumorchid4];
+    edge [color=gray36 arrowhead="vee"];
+    PIPE -> pipe_format -> pipe_patterns -> pipe_example;
+    FILE -> file_format -> file_patterns -> file_example;
+    PIPEFILE -> pipefile_format -> pipefile_patterns -> pipefile_example;
+    {PIPE, FILE} -> PIPEFILE;
+}
 custom_mark10
 </details>
     
