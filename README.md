@@ -17,7 +17,7 @@ It follows the UNIX tradition of single-purpose tools that do one thing well.
 ![Alt text](http://g.gravizo.com/source/builtins?https%3A%2F%2Fraw.githubusercontent.com%2FchrizzFTD%2Fnaming%2Ffeature%2Fgraphviz_readme%2FREADME.md)
 <details> 
 <summary></summary>
-builtins
+custom_mark
 strict digraph G {
     {
       node [style="rounded, filled" shape=box];
@@ -66,7 +66,7 @@ strict digraph G {
     {PIPE, FILE} -> PIPEFILE;
 }
 )
-builtins
+custom_mark
 </details>
     
 ### Installation
