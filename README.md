@@ -10,11 +10,7 @@ Object-oriented names for the digital era.
 naming provides a simple yet flexible and scalable interface for naming conventions.
 It follows the UNIX tradition of single-purpose tools that do one thing well.
 
-<div class="footer">
-        <img src="https://docs.google.com/drawings/d/1wU-T04kgE7O_uVr4XRNIxGsnZP-TJmVxG5mqQE6mMNM/pub?w=1380&amp;h=980">
-    </div>
-
-![Alt text](https://g.gravizo.com/source/svg/custom_mark12?https%3A%2F%2Fraw.githubusercontent.com%2FchrizzFTD%2Fnaming%2Ffeature%2Fgraphviz_readme%2FREADME.mdnot)
+![Alt text](https://g.gravizo.com/source/svg/custom_mark12?https%3A%2F%2Fraw.githubusercontent.com%2FchrizzFTD%2Fnaming%2Ffeature%2Fgraphviz_readme%2FREADME.md)
 <details> 
 <summary></summary>
 custom_mark12
