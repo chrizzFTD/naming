@@ -28,15 +28,15 @@ digraph G {
     patterns [label="field=pattern" fontcolor=gray22];	
     class -> format -> patterns  -> example [style=invis];	
     FILE, file_format, file_example [color=lightgoldenrod3 fillcolor=lemonchiffon1];	
-    file_format [label=".{suffix}"];	
+    file_format [label=".suffix"];	
     file_example [label=".ext"];	
     file_patterns [label="suffix = \w+" fontcolor=lightgoldenrod4];	
     PIPE, pipe_format, pipe_example [color=lightskyblue4 fillcolor=lightblue];	
-    pipe_format [label=".{pipe}"];	
+    pipe_format [label=".pipe"];	
     pipe_example [label=".1.out.101"];	
     pipe_patterns [label="version = \d+ output=\w+? frame=\d+?"];	
     PIPEFILE, pipefile_format, pipefile_example [color=mediumorchid4 fillcolor=plum2];	
-    pipefile_format [skew=0.15 width=2 label="{base}.{pipe}.{suffix}"];	
+    pipefile_format [skew=0.15 width=2 label="base.pipe.suffix"];	
     pipefile_example [label="framed_data.7.out.101.ext"];	
     pipefile_patterns [label="base = \w+" fontcolor=mediumorchid4];	
     edge [color=gray36 arrowhead="vee"];
