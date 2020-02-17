@@ -32,7 +32,7 @@ strict digraph G {
       patterns, file_patterns, pipe_patterns, pipefile_patterns;
     }
     {
-      node [style="dashed, filled" shape=box]
+      node [style="dashed, filled" shape=box];
       example, file_example, pipe_example, pipefile_example;
     }
     subgraph legend {
