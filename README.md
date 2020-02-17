@@ -18,7 +18,6 @@ It follows the UNIX tradition of single-purpose tools that do one thing well.
 <details> 
 <summary></summary>
 custom_mark12
-@startuml
  digraph G {
     {
       node [style="rounded, filled" shape=box];
@@ -60,7 +59,6 @@ custom_mark12
     PIPEFILE -> pipefile_format -> pipefile_patterns -> pipefile_example;
     {PIPE, FILE} -> PIPEFILE;
  }
-)
 custom_mark12
 </details>
     
