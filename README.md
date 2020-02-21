@@ -20,6 +20,8 @@ $ pip install naming
 
 ### Usage
 
+Please refer to the [documentation](http://naming.readthedocs.io/en/latest/) for details on contents and usage.
+
 ```python
 >>> import naming
 >>> class NameFileConvention(naming.Name, naming.File):
@@ -40,4 +42,3 @@ NameFileConvention("john connor 07.jpg")
 ValueError: Can't set invalid name 'john connor not_a_number.jpg' on NameFileConvention instance. Valid convention is: '{first} {last} {number}.{suffix}' with pattern: ^(?P<first>\w+)\ (?P<last>\w+)\ (?P<number>\d+)(\.(?P<suffix>\w+))$'
 ```
 
-Refer to the [documentation](http://naming.readthedocs.io/en/latest/) for details on contents and usage.
