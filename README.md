@@ -9,48 +9,6 @@ Object-oriented names for the digital era.
 
 naming provides a simple yet flexible and scalable interface for naming conventions.
 It follows the UNIX tradition of single-purpose tools that do one thing well.
-
-![Alt text](https://g.gravizo.com/source/svg/custom_mark10?https%3A%2F%2Fraw.githubusercontent.com%2FchrizzFTD%2Fnaming%2Ffeature%2Fgraphviz_readme%2FREADME.md)
-
-<details> 
-<summary></summary>
-custom_mark10
-digraph G {
-    node [shape=none];
-    patterns, file_patterns, pipe_patterns, pipefile_patterns;
-    node [style="rounded, filled" shape=box];
-    class, FILE, PIPE, PIPEFILE;
-    node [style="dashed, filled"];
-    example, file_example, pipe_example, pipefile_example;
-    node [style=filled margin=0 width=1 height=0.46 shape=polygon fixedsize=true skew=0.4];
-    format, file_format, pipe_format, pipefile_format;
-    legend [shape=point height=0.1 color=white]
-    class [color=gray40 fillcolor=gray95];
-    format [color=gray40 fillcolor=gray95];
-    example [color=gray40 fillcolor=gray95];
-    patterns [label="field=pattern" fontcolor=gray22];
-    legend -> class -> format -> patterns  -> example [style=invis];
-    FILE [color=lightgoldenrod3 fillcolor=lemonchiffon1];
-    file_format [label=".(suffix)" color=lightgoldenrod3 fillcolor=lemonchiffon1];
-    file_example [label=".ext" color=lightgoldenrod3 fillcolor=lemonchiffon1];
-    file_patterns [label="suffix = \w+" fontcolor=lightgoldenrod4];
-    PIPE [color=lightskyblue4 fillcolor=lightblue];
-    pipe_format [label=".(pipe)" color=lightskyblue4 fillcolor=lightblue];
-    pipe_example [label=".1.out.101" color=lightskyblue4 fillcolor=lightblue];
-    pipe_patterns [label="version = \d+ output=\w+? frame=\d+?"];
-    PIPEFILE [color=mediumorchid4 fillcolor=plum2];
-    pipefile_format [skew=0.15 width=2 label="(base).(pipe).(suffix)" color=mediumorchid4 fillcolor=plum2];
-    pipefile_example [label="framed_data.7.out.101.ext" color=mediumorchid4 fillcolor=plum2];
-    pipefile_patterns [label="base = \w+" fontcolor=mediumorchid4];
-    edge [color=gray36 arrowhead="vee"];
-    PIPE -> pipe_format -> pipe_patterns -> pipe_example;
-    FILE -> file_format -> file_patterns -> file_example;
-    PIPEFILE -> pipefile_format -> pipefile_patterns -> pipefile_example;
-    PIPE -> PIPEFILE;
-    FILE -> PIPEFILE;
-}
-custom_mark10
-</details>
     
 ### Installation
 
@@ -61,5 +19,25 @@ $ pip install naming
 ```
 
 ### Usage
+
+```python
+>>> import naming
+>>> class NameFileConvention(naming.Name, naming.File):
+...     config = dict(first=r'\w+', last=r'\w+', number=r'\d+')
+...
+>>> name = NameFileConvention('john doe 07.jpg')
+>>> name.last
+'doe'
+>>> name.number
+'07'
+>>> name.get_name(first='jane', number=99)
+'jane doe 99.jpg'
+>>> name.last = 'connor'
+>>> name
+NameFileConvention("john connor 07.jpg")
+>>> name.number = 'not_a_number'
+...
+ValueError: Can't set invalid name 'john connor not_a_number.jpg' on NameFileConvention instance. Valid convention is: '{first} {last} {number}.{suffix}' with pattern: ^(?P<first>\w+)\ (?P<last>\w+)\ (?P<number>\d+)(\.(?P<suffix>\w+))$'
+```
 
 Refer to the [documentation](http://naming.readthedocs.io/en/latest/) for details on contents and usage.
