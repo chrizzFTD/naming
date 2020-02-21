@@ -7,8 +7,8 @@
 
 Object-oriented names for the digital era.
 
-naming provides a simple yet flexible and scalable interface for naming conventions.
-It follows the UNIX tradition of single-purpose tools that do one thing well.
+`naming` provides an interface for dealing with naming conventions; from
+defining them, to identifying names and creating new ones.
     
 ### Installation
 
