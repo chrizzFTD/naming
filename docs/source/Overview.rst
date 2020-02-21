@@ -10,6 +10,7 @@ Overview
 
 Class Flow
 ==========
+.. graphviz:: overview.dot
 
 .. raw:: html
 
