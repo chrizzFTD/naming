@@ -1,4 +1,5 @@
 strict digraph G {
+    bgcolor=invis
     {
       node [style="rounded, filled" shape=box]
       class, FILE, PIPE, PIPEFILE
