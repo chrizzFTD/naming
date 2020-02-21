@@ -8,13 +8,9 @@ Overview
     that contains the fields and regex patterns of the convention to follow. Names can also drop fields from their
     parent classes with the **drop** attribute, or they can merge / split fields with the **join** attribute.
 
-Class Flow
-==========
-.. graphviz:: overview.dot
-
-.. raw:: html
-
-    <img src="https://docs.google.com/drawings/d/1wU-T04kgE7O_uVr4XRNIxGsnZP-TJmVxG5mqQE6mMNM/pub?w=690&amp;h=490">
+Composition Example
+===================
+.. graphviz:: example.dot
 
 Basic Use
 =========
