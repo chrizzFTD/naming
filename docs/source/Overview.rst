@@ -124,7 +124,7 @@ Usage
 
 .. topic:: Extending Names
 
-    **config**, **drop** and **join** attributes are merged on subclasses.
+    The **config**, **drop** and **join** attributes are merged on subclasses.
 
     Inheriting from an existing name::
 
