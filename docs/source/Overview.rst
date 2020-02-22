@@ -3,20 +3,17 @@ Overview
 
 .. topic:: Name Objects
 
-    This package offers classes representing names as strings that follow a certain pattern convention. New Name
-    objects can subclass from the provided classes in a simple manner. Each Name object has a **config** attribute
+    This package offers classes representing names as strings that follow a certain pattern convention.
+    Each Name object has a **config** attribute
     that contains the fields and regex patterns of the convention to follow. Names can also drop fields from their
     parent classes with the **drop** attribute, or they can merge / split fields with the **join** attribute.
 
-Class Flow
-==========
+Composition Example
+===================
+.. graphviz:: example.dot
 
-.. raw:: html
-
-    <img src="https://docs.google.com/drawings/d/1wU-T04kgE7O_uVr4XRNIxGsnZP-TJmVxG5mqQE6mMNM/pub?w=690&amp;h=490">
-
-Basic Use
-=========
+Usage
+=====
 
 .. topic:: Built-ins & `config` attribute
 
@@ -127,8 +124,7 @@ Basic Use
 
 .. topic:: Extending Names
 
-    The **config**, **drop** and **join** attributes are merged on the subclasses to provide a simple but flexible
-    and scalable system that can help rule all names in a project.
+    The **config**, **drop** and **join** attributes are merged on subclasses.
 
     Inheriting from an existing name::
 

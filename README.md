@@ -7,12 +7,8 @@
 
 Object-oriented names for the digital era.
 
-naming provides a simple yet flexible and scalable interface for naming conventions.
-It follows the UNIX tradition of single-purpose tools that do one thing well.
-
-<div class="footer">
-        <img src="https://docs.google.com/drawings/d/1wU-T04kgE7O_uVr4XRNIxGsnZP-TJmVxG5mqQE6mMNM/pub?w=1380&amp;h=980">
-    </div>
+`naming` provides an interface for dealing with naming conventions; from
+defining them, to identifying names and creating new ones.
     
 ### Installation
 
@@ -24,4 +20,25 @@ $ pip install naming
 
 ### Usage
 
-Refer to the [documentation](http://naming.readthedocs.io/en/latest/) for details on contents and usage.
+Please refer to the [documentation](http://naming.readthedocs.io/en/latest/) for details on contents and usage.
+
+```python
+>>> import naming
+>>> class NameFileConvention(naming.Name, naming.File):
+...     config = dict(first=r'\w+', last=r'\w+', number=r'\d+')
+...
+>>> name = NameFileConvention('john doe 07.jpg')
+>>> name.last
+'doe'
+>>> name.number
+'07'
+>>> name.get_name(first='jane', number=99)
+'jane doe 99.jpg'
+>>> name.last = 'connor'
+>>> name
+NameFileConvention("john connor 07.jpg")
+>>> name.number = 'not_a_number'
+...
+ValueError: Can't set invalid name 'john connor not_a_number.jpg' on NameFileConvention instance. Valid convention is: '{first} {last} {number}.{suffix}' with pattern: ^(?P<first>\w+)\ (?P<last>\w+)\ (?P<number>\d+)(\.(?P<suffix>\w+))$'
+```
+
