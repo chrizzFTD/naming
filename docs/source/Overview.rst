@@ -12,8 +12,8 @@ Composition Example
 ===================
 .. graphviz:: example.dot
 
-Basic Use
-=========
+Usage
+=====
 
 .. topic:: Built-ins & `config` attribute
 
