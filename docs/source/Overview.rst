@@ -124,8 +124,7 @@ Usage
 
 .. topic:: Extending Names
 
-    The **config**, **drop** and **join** attributes are merged on the subclasses to provide a simple but flexible
-    and scalable system that can help rule all names in a project.
+    **config**, **drop** and **join** attributes are merged on subclasses.
 
     Inheriting from an existing name::
 
