@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 
-_VERSION = '0.4.1'
+_VERSION = '0.5.0'
 setup(
     name='naming',
     version=_VERSION,
