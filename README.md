@@ -32,13 +32,13 @@ Please refer to the [documentation](http://naming.readthedocs.io/en/latest/) for
 'doe'
 >>> name.number
 '07'
->>> name.get(first='jane', number=99)
+>>> name.get(first='jane', number=99)  # returns new name string
 'jane doe 99.jpg'
->>> name.last = 'connor'
+>>> name.last = 'connor'  # mutates current name
 >>> name
 NameFileConvention("john connor 07.jpg")
 >>> name.number = 'not_a_number'
 ...
-ValueError: Can't set invalid name 'john connor not_a_number.jpg' on NameFileConvention instance. Valid convention is: '{first} {last} {number}.{suffix}' with pattern: ^(?P<first>\w+)\ (?P<last>\w+)\ (?P<number>\d+)(\.(?P<suffix>\w+))$'
+ValueError: Can't set field 'number' with invalid value 'not a number' on 'NameFileConvention("john doe 07.jpg")'. A valid field value should match pattern: '\d+'
 ```
 

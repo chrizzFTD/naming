@@ -262,7 +262,7 @@ class PipeFile(File, Pipe):
         >>> pf.year = 'nondigits'  # mutating with invalid fields raises a ValueError
         Traceback (most recent call last):
         ...
-        ValueError: Can't set invalid name 'project_data_name_nondigits_christianl_constant_iamlast.data.17.abc' on ProjectFile instance. Valid convention is: '{base}_{year}_{user}_{another}_{last}.{pipe}.{suffix}' with pattern: ^(?P<base>\w+)_(?P<year>[0-9]{4})_(?P<user>[a-z]+)_(?P<another>(constant))_(?P<last>[a-zA-Z0-9]+)(?P<pipe>(\.(?P<output>\w+))?\.(?P<version>\d+)(\.(?P<frame>\d+))?)(\.(?P<suffix>\w+))$'
+        ValueError: Can't set field 'year' with invalid value 'nondigits' on 'ProjectFile("project_data_name_2017_christianl_constant_iamlast.data.17.abc")'. A valid field value should match pattern: '[0-9]{4}'
         >>> pf.year = 1907
         >>> pf
         ProjectFile("project_data_name_1907_christianl_constant_iamlast.data.17.abc")

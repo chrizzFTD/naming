@@ -603,3 +603,22 @@ class TestSubclassing(unittest.TestCase):
         )
         name2.version = 37
         self.assertEqual(name._pattern, name2._pattern)
+
+
+class TestErrorMessage(unittest.TestCase):
+    def test_set_descriptor_message(self):
+        class NameFileConvention(naming.Name, naming.File):
+            config = dict(first=r'\w+', last=r'\w+', number=r'\d+')
+
+        name = NameFileConvention('john doe 07.jpg')
+        with self.assertRaises(ValueError):
+            name.number = 'not_a_number'
+
+        # now check the message is specific to the number field
+        try:
+            name.number = 'not_a_number'
+        except ValueError as exc:
+            message = exc.args[0]
+            expected = "Can't set field 'number' with invalid value 'not_a_number'"
+            self.assertTrue(expected in message)
+            self.assertTrue('A valid field value should match pattern:' in message)

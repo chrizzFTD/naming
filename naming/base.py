@@ -102,7 +102,16 @@ class FieldValue:
         if val and str(val) == obj._values.get(self.name):
             return
         new_name = obj.get(**{self.name: val})
-        obj.name = new_name
+        try:
+            obj.name = new_name
+        except ValueError:
+            if self.name in obj.config:
+                pattern = obj.config[self.name]
+                msg = (rf"Can't set field '{self.name}' with invalid value '{val}' on '{obj!r}'. "
+                       rf"A valid field value should match pattern: '{pattern}'")
+                raise ValueError(msg)
+            else:
+                raise
 
 
 class _BaseName:
@@ -172,8 +181,8 @@ class _BaseName:
             if not match:
                 proxy = self.__class__(sep=self._separator)
                 pat = self.__regex.pattern
-                msg = (rf"Can't set invalid name '{name}' on {self.__class__.__name__} instance. "
-                       rf"Valid convention is: '{proxy.get()}' with pattern: {pat}'")
+                msg = (rf"Can't set invalid name '{name}' on {self!r}. "
+                       rf"Valid convention is: '{proxy.get()}' with pattern: '{pat}'")
                 raise ValueError(msg)
             self._values.update(match.groupdict())
         else:
