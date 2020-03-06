@@ -32,7 +32,7 @@ Please refer to the [documentation](http://naming.readthedocs.io/en/latest/) for
 'doe'
 >>> name.number
 '07'
->>> name.get_name(first='jane', number=99)
+>>> name.get(first='jane', number=99)
 'jane doe 99.jpg'
 >>> name.last = 'connor'
 >>> name

@@ -27,7 +27,7 @@ Usage
         ...     config = dict(base=r'\w+')
         ...
         >>> n = BasicName()
-        >>> n.get_name()  # no name has been set on the object, convention is solved with {missing} fields
+        >>> n.get()  # no name has been set on the object, convention is solved with {missing} fields
         '{base}'
         >>> n.values
         {}
@@ -52,20 +52,20 @@ Usage
         ...     config = dict(base=r'\w+')
         ...
         >>> p = BasicPipe()
-        >>> p.get_name()
+        >>> p.get()
         '{base}.{pipe}'
-        >>> p.get_name(version=10)
+        >>> p.get(version=10)
         '{base}.10'
-        >>> p.get_name(output='data')
+        >>> p.get(output='data')
         '{base}.data.{version}'
-        >>> p.get_name(output='cache', version=7, frame=24)
+        >>> p.get(output='cache', version=7, frame=24)
         '{base}.cache.7.24'
         >>> p = BasicPipe('my_wip_data.1')
         >>> p.version
         '1'
         >>> p.values
         {'base': 'my_wip_data', 'pipe': '.1', 'version': '1'}
-        >>> p.get_name(output='exchange')  # returns a new string
+        >>> p.get(output='exchange')  # returns a new string
         'my_wip_data.exchange.1'
         >>> p.name
         'my_wip_data.1'
@@ -86,9 +86,9 @@ Usage
         ...     config = dict(base=r'\w+')
         ...
         >>> f = BasicFile()
-        >>> f.get_name()
+        >>> f.get()
         '{basse}.{suffix}'
-        >>> f.get_name(suffix='png')
+        >>> f.get(suffix='png')
         '{base}.png'
         >>> f = BasicFile('hello.world')
         >>> f.values
@@ -110,7 +110,7 @@ Usage
         >>> p = BasicPipeFile('wipfile.7.ext')
         >>> p.values
         {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
-        >>> [p.get_name(frame=x, output='render') for x in range(10)]
+        >>> [p.get(frame=x, output='render') for x in range(10)]
         ['wipfile.render.7.0.ext',
         'wipfile.render.7.1.ext',
         'wipfile.render.7.2.ext',
@@ -169,12 +169,12 @@ Usage
         ...     drop=('base',)
         ...
         >>> d = Dropper()
-        >>> d.get_name()
+        >>> d.get()
         '{without}_{basename}.{pipe}.{suffix}'
         >>> # New subclasses will drop the 'base' field as well
         >>> Subdropper = type('Dropper', (Dropper,), dict(config=dict(subdrop='[\w]')))
         >>> s = Subdropper()
-        >>> s.get_name()
+        >>> s.get()
         '{without}_{basename}_{subdrop}.{pipe}.{suffix}'
 
     Setting compound fields::
@@ -185,20 +185,20 @@ Usage
         ...     join=dict(base=('first', 'second'))
         ...
         >>> c = Compound()
-        >>> c.get_name()  # we see the original field 'base'
+        >>> c.get()  # we see the original field 'base'
         '{base}.{pipe}.{suffix}'
-        >>> c.get_name(first=50, second='abc')  # providing each field to join will work
+        >>> c.get(first=50, second='abc')  # providing each field to join will work
         '50abc.{pipe}.{suffix}'
-        >>> c.name = c.get_name(base='101dalmatians', version=1, suffix='png')  # providing the key field will also work
+        >>> c.name = c.get(base='101dalmatians', version=1, suffix='png')  # providing the key field will also work
         >>> c.nice_name
         '101dalmatians'
-        >>> c.get_name(first=200)
+        >>> c.get(first=200)
         '200dalmatians.1.png'
         >>> class CompoundByDash(Compound):
         ...     join_sep = '-'  # you can specify the string to join compounds
         ...
         >>> c = CompoundByDash('101-dalmatians.1.png')
-        >>> c.get_name(first=300)
+        >>> c.get(first=300)
         '300-dalmatians.1.png'
 
     Defining path rules for File subclasses::
@@ -211,7 +211,7 @@ Usage
         ...         return super().get_pattern_list()
         ...
         >>> fp = FilePath()
-        >>> fp.get_name()
+        >>> fp.get()
         '{base} {extrafield}.{suffix}'
         >>> # path attribute will vary depending on the OS
         >>> fp.path
@@ -242,7 +242,7 @@ Usage
         ...         return result
         ...
         >>> pf = PropertyField()
-        >>> pf.get_name()
+        >>> pf.get()
         '{base} {extrafield} staticvalue.{pipe}.{suffix}'
         >>> pf.name = 'simple props staticvalue.1.abc'
         >>> pf.values

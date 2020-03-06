@@ -101,7 +101,7 @@ class FieldValue:
     def __set__(self, obj, val):
         if val and str(val) == obj._values.get(self.name):
             return
-        new_name = obj.get_name(**{self.name: val})
+        new_name = obj.get(**{self.name: val})
         obj.name = new_name
 
 
@@ -153,7 +153,7 @@ class _BaseName:
     @sep.setter
     def sep(self, value: str):
         self._set_separator(value)
-        name = self.get_name(**self.values) if self.name else None
+        name = self.get(**self.values) if self.name else None
         self._init_name_core(name)
 
     @property
@@ -173,7 +173,7 @@ class _BaseName:
                 proxy = self.__class__(sep=self._separator)
                 pat = self.__regex.pattern
                 msg = (rf"Can't set invalid name '{name}' on {self.__class__.__name__} instance. "
-                       rf"Valid convention is: '{proxy.get_name()}' with pattern: {pat}'")
+                       rf"Valid convention is: '{proxy.get()}' with pattern: {pat}'")
                 raise ValueError(msg)
             self._values.update(match.groupdict())
         else:
@@ -209,13 +209,14 @@ class _BaseName:
     def _get_nice_name(self, **values) -> str:
         return self._separator.join(self._iter_translated_field_names(self.get_pattern_list(), **values))
 
-    def get_name(self, **values) -> str:
+    def get(self, **values) -> str:
         """Get a new name string from this object's name values.
 
         :param values: Variable keyword arguments where the **key** should refer to a field on this object that will
                        use the provided **value** to build the new name.
         """
         if not values and self.name:
+            # no overridden field values to set, can return existing name string
             return self.name
         if values:
             # if values are provided, solve compounds that may be affected
@@ -227,6 +228,7 @@ class _BaseName:
                     continue
                 comp_values = [values.pop(cv, getattr(self, cv)) for cv in cvs]
                 if None not in comp_values:
+                    # only if the full compound values are complete, we join and use it
                     values[ck] = self.join_sep.join(rf'{v}' for v in comp_values)
         return self._get_nice_name(**values)
 
@@ -244,7 +246,7 @@ class _BaseName:
         return {k: cls.cast(v, k) for k, v in config.items()}
 
     def __str__(self):
-        return self.get_name()
+        return self.get()
 
     def __repr__(self):
         return rf'{self.__class__.__name__}("{self.name}")'
