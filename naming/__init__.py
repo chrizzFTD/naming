@@ -30,7 +30,7 @@ class Name(_BaseName):
         ...     config = dict(base=r'\w+')
         ...
         >>> n = MyName()
-        >>> n.get_name()  # no name has been set on the object, convention is solved with {missing} fields
+        >>> n.get()  # no name has been set on the object, convention is solved with {missing} fields
         '{base}'
         >>> n.values
         {}
@@ -68,9 +68,9 @@ class File(_BaseName):
         ...     config = dict(base=r'\w+')
         ...
         >>> f = MyFile()
-        >>> f.get_name()
+        >>> f.get()
         '{basse}.{suffix}'
-        >>> f.get_name(suffix='png')
+        >>> f.get(suffix='png')
         '{base}.png'
         >>> f = MyFile('hello.world')
         >>> f.values
@@ -92,11 +92,11 @@ class File(_BaseName):
         pat = r'({sep}{suffix})'.format(sep=sep, **casted)
         return rf'{super()._pattern}{pat}'
 
-    def get_name(self, **values) -> str:
+    def get(self, **values) -> str:
         if not values and self.name:
-            return super().get_name()
+            return super().get()
         suffix = values.get('suffix') or self.suffix or '{suffix}'
-        return rf'{super().get_name(**values)}.{suffix}'
+        return rf'{super().get(**values)}.{suffix}'
 
     def get_path_pattern_list(self) -> list:
         """Fields / properties names (sorted) to be used when solving `path`"""
@@ -106,7 +106,7 @@ class File(_BaseName):
     def path(self) -> Path:
         """A Path for this name object joining field names from `self.get_path_pattern_list` with this object's name"""
         args = list(self._iter_translated_field_names(self.get_path_pattern_list()))
-        args.append(self.get_name())
+        args.append(self.get())
         return Path(*args)
 
 
@@ -138,20 +138,20 @@ class Pipe(_BaseName):
         ...     config = dict(base=r'\w+')
         ...
         >>> p = MyPipe()
-        >>> p.get_name()
+        >>> p.get()
         '{base}.{pipe}'
-        >>> p.get_name(version=10)
+        >>> p.get(version=10)
         '{base}.10'
-        >>> p.get_name(output='data')
+        >>> p.get(output='data')
         '{base}.data.{version}'
-        >>> p.get_name(output='cache', version=7, frame=24)
+        >>> p.get(output='cache', version=7, frame=24)
         '{base}.cache.7.24'
         >>> p = MyPipe('my_wip_data.1')
         >>> p.version
         '1'
         >>> p.values
         {'base': 'my_wip_data', 'pipe': '.1', 'version': '1'}
-        >>> p.get_name(output='exchange')  # returns a new string
+        >>> p.get(output='exchange')  # returns a new string
         'my_wip_data.exchange.1'
         >>> p.name
         'my_wip_data.1'
@@ -203,9 +203,9 @@ class Pipe(_BaseName):
 
         return ''.join(self._format_pipe_field(k, v) for k, v in fields.items())
 
-    def get_name(self, **values) -> str:
+    def get(self, **values) -> str:
         if not values and self.name:
-            return super().get_name()
+            return super().get()
         try:
             # allow for getting name without pipe field in subclasses
             pipe = values['pipe'] or ''
@@ -213,7 +213,7 @@ class Pipe(_BaseName):
             kwargs = {k: values.get(k) for k in self.pipe_config}
             kwargs.pop('pipe')
             pipe = self._get_pipe_field(**kwargs)
-        return rf'{super().get_name(**values)}{pipe}'
+        return rf'{super().get(**values)}{pipe}'
 
 
 class PipeFile(File, Pipe):
@@ -227,7 +227,7 @@ class PipeFile(File, Pipe):
         >>> p = MyPipeFile('wipfile.7.ext')
         >>> p.values
         {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
-        >>> [p.get_name(frame=x, output='render') for x in range(10)]
+        >>> [p.get(frame=x, output='render') for x in range(10)]
         ['wipfile.render.7.0.ext',
         'wipfile.render.7.1.ext',
         'wipfile.render.7.2.ext',
@@ -262,7 +262,7 @@ class PipeFile(File, Pipe):
         >>> pf.year = 'nondigits'  # mutating with invalid fields raises a ValueError
         Traceback (most recent call last):
         ...
-        ValueError: Can't set invalid name 'project_data_name_nondigits_christianl_constant_iamlast.data.17.abc' on ProjectFile instance. Valid convention is: '{base}_{year}_{user}_{another}_{last}.{pipe}.{suffix}' with pattern: ^(?P<base>\w+)_(?P<year>[0-9]{4})_(?P<user>[a-z]+)_(?P<another>(constant))_(?P<last>[a-zA-Z0-9]+)(?P<pipe>(\.(?P<output>\w+))?\.(?P<version>\d+)(\.(?P<frame>\d+))?)(\.(?P<suffix>\w+))$'
+        ValueError: Can't set field 'year' with invalid value 'nondigits' on 'ProjectFile("project_data_name_2017_christianl_constant_iamlast.data.17.abc")'. A valid field value should match pattern: '[0-9]{4}'
         >>> pf.year = 1907
         >>> pf
         ProjectFile("project_data_name_1907_christianl_constant_iamlast.data.17.abc")
