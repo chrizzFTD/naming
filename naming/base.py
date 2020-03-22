@@ -1,5 +1,6 @@
 import re
 import typing
+from itertools import chain
 from collections import ChainMap
 from types import MappingProxyType
 
@@ -82,7 +83,8 @@ class NameConfig:
         return result
 
     def __set__(self, obj, val):
-        raise AttributeError("Can't set read-only attribute")
+        msg = f"Can't set read-only attribute '{self.name}' to '{val}' on instance: {obj!r}."
+        raise AttributeError(msg)
 
     def __set_name__(self, owner, name):
         if not self.name:
@@ -123,7 +125,7 @@ class _BaseName:
 
     def __init_subclass__(cls, **kwargs):
         cls.join = MappingProxyType(_dct_from_mro(cls, 'join'))
-        cls.drop = set().union(*(getattr(c, 'drop', tuple()) for c in cls.mro()))
+        cls.drop = frozenset(chain.from_iterable(getattr(c, 'drop', tuple()) for c in cls.mro()))
 
         cfg = _dct_from_mro(cls, 'config')
         for drop in cls.drop:
