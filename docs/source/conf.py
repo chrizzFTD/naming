@@ -49,6 +49,7 @@ extensions = ['sphinx.ext.autodoc',
 
 # graphviz_dot = r'B:\__appdata__\graphviz\bin\dot.exe'
 inheritance_graph_attrs = dict(bgcolor='transparent')
+graphviz_output_format = 'svg'
 
 # inheritance_node_attrs = dict(shape='Mrecord', fontsize=14, height=0.75, color='dodgerblue1', style='filled')
 inheritance_node_attrs = dict(shape='Mrecord', color='"#2573a7"', style='filled', fillcolor='"#eaf4fa"')
