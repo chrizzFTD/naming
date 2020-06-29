@@ -3,7 +3,7 @@ strict digraph G {
     bgcolor=invis
     {
       node [style="rounded, filled" shape=box]
-      class, FILE, PIPE, PIPEFILE
+      class, File, Pipe, PipeFile
     }
     {
       node [style=filled margin=0 width=1 height=0.46 shape=polygon fixedsize=true skew=0.4]
@@ -25,13 +25,13 @@ strict digraph G {
         class -> format -> patterns  -> example
     }
 
-    FILE, file_format, file_example [color=lightgoldenrod3 fillcolor=lemonchiffon1]
+    File, file_format, file_example [color=lightgoldenrod3 fillcolor=lemonchiffon1]
     file_format [label=".{suffix}"]
     file_example [label=".ext"]
     // escape the inverse slash so generated image displays one
     file_patterns [label="suffix = \\w+" fontcolor=lightgoldenrod4]
 
-    PIPE, pipe_format, pipe_example [color=lightskyblue4 fillcolor=lightblue]
+    Pipe, pipe_format, pipe_example [color=lightskyblue4 fillcolor=lightblue]
     pipe_format [label=".{pipe}"]
     pipe_example [label=".1
     .1.out
@@ -40,7 +40,7 @@ strict digraph G {
     output = \\w+?
     frame = \\d+?"]
 
-    PIPEFILE, pipefile_format, pipefile_example [color=mediumorchid4 fillcolor=plum2]
+    PipeFile, pipefile_format, pipefile_example [color=mediumorchid4 fillcolor=plum2]
     pipefile_format [skew=0.15 width=2 label="{base}.{pipe}.{suffix}"]
     pipefile_example [label="wip_data.7.ext
     pipe_data.7.out.ext
@@ -48,8 +48,8 @@ strict digraph G {
     pipefile_patterns [label="base = \\w+" fontcolor=mediumorchid4]
 
     edge [color=gray36 arrowhead="vee"]
-    PIPE -> pipe_format -> pipe_patterns -> pipe_example
-    FILE -> file_format -> file_patterns -> file_example
-    PIPEFILE -> pipefile_format -> pipefile_patterns -> pipefile_example
-    {PIPE, FILE} -> PIPEFILE
+    Pipe -> pipe_format -> pipe_patterns -> pipe_example
+    File -> file_format -> file_patterns -> file_example
+    PipeFile -> pipefile_format -> pipefile_patterns -> pipefile_example
+    {Pipe, File} -> PipeFile
 }
