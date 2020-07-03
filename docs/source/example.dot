@@ -1,4 +1,4 @@
-strict digraph G {
+strict digraph example {
     // nodes creation, shape and style defined here
     bgcolor=invis
     {
