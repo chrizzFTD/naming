@@ -3,7 +3,7 @@ strict digraph example {
     bgcolor=invis
     {
       node [style="rounded, filled" shape=box]
-      class, File, Pipe, PipeFile
+      class, File, Pipe, BasicPipeFile
     }
     {
       node [style=filled margin=0 width=1 height=0.46 shape=polygon fixedsize=true skew=0.4]
@@ -40,8 +40,7 @@ strict digraph example {
     output = \\w+?
     frame = \\d+?"]
 
-    PipeFile, pipefile_format, pipefile_example [color=mediumorchid4 fillcolor=plum2]
-    PipeFile [label=BasicPipeFile]
+    BasicPipeFile, pipefile_format, pipefile_example [color=mediumorchid4 fillcolor=plum2]
     pipefile_format [skew=0.15 width=2 label="{base}.{pipe}.{suffix}"]
     pipefile_example [label="wip_data.7.ext
     pipe_data.7.out.ext
@@ -51,6 +50,6 @@ strict digraph example {
     edge [color=gray36 arrowhead=vee]
     Pipe ->  pipe_config_patterns -> pipe_format -> pipe_example
     File -> file_config_patterns -> file_format -> file_example
-    PipeFile -> pipefile_config_patterns -> pipefile_format -> pipefile_example
-    {Pipe, File} -> PipeFile
+    BasicPipeFile -> pipefile_config_patterns -> pipefile_format -> pipefile_example
+    {Pipe, File} -> BasicPipeFile
 }
