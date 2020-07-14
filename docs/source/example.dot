@@ -11,7 +11,7 @@ strict digraph example {
     }
     {
       node [shape=none]
-      patterns, file_patterns, pipe_patterns, pipefile_patterns
+      config_patterns, file_config_patterns, pipe_config_patterns, pipefile_config_patterns
     }
     {
       node [style="dashed, filled" shape=box]
@@ -20,36 +20,37 @@ strict digraph example {
     // connections, labels and color related updates by higher level groups
     subgraph legend {
         edge[style=invis]  // connect with invisible edges to emulate a legend
-        class, format, example, patterns [color=gray40 fillcolor=gray95]
-        patterns [label="field=pattern" fontcolor=gray22]
-        class -> format -> patterns  -> example
+        class, format, example, config_patterns [color=gray40 fillcolor=gray95]
+        config_patterns [label="field=pattern" fontcolor=gray22]
+        class -> config_patterns -> format -> example
     }
 
     File, file_format, file_example [color=lightgoldenrod3 fillcolor=lemonchiffon1]
     file_format [label=".{suffix}"]
     file_example [label=".ext"]
     // escape the inverse slash so generated image displays one
-    file_patterns [label="suffix = \\w+" fontcolor=lightgoldenrod4]
+    file_config_patterns [label="suffix = \\w+" fontcolor=lightgoldenrod4]
 
     Pipe, pipe_format, pipe_example [color=lightskyblue4 fillcolor=lightblue]
     pipe_format [label=".{pipe}"]
     pipe_example [label=".1
     .1.out
     .1.out.101"]
-    pipe_patterns [label="version = \\d+
+    pipe_config_patterns [label="version = \\d+
     output = \\w+?
     frame = \\d+?"]
 
     PipeFile, pipefile_format, pipefile_example [color=mediumorchid4 fillcolor=plum2]
+    PipeFile [label=BasicPipeFile]
     pipefile_format [skew=0.15 width=2 label="{base}.{pipe}.{suffix}"]
     pipefile_example [label="wip_data.7.ext
     pipe_data.7.out.ext
     framed_data.7.out.101.ext"]
-    pipefile_patterns [label="base = \\w+" fontcolor=mediumorchid4]
+    pipefile_config_patterns [label="base = \\w+" fontcolor=mediumorchid4]
 
-    edge [color=gray36 arrowhead="vee"]
-    Pipe -> pipe_format -> pipe_patterns -> pipe_example
-    File -> file_format -> file_patterns -> file_example
-    PipeFile -> pipefile_format -> pipefile_patterns -> pipefile_example
+    edge [color=gray36 arrowhead=vee]
+    Pipe ->  pipe_config_patterns -> pipe_format -> pipe_example
+    File -> file_config_patterns -> file_format -> file_example
+    PipeFile -> pipefile_config_patterns -> pipefile_format -> pipefile_example
     {Pipe, File} -> PipeFile
 }
