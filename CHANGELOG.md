@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## [0.5.1](https://github.com/chrizzFTD/naming/releases/tag/Release-0.5.1) - 2020-09-18
+### Changed
+- `setup.py` now uses `setup.cfg` fully.
+
 ## [0.5.0](https://github.com/chrizzFTD/naming/releases/tag/Release-0.5.0) - 2020-03-07
 ### Changed
 - Renamed `get_name` method to `get`.
