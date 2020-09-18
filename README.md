@@ -12,7 +12,7 @@ defining them, to identifying names and creating new ones.
     
 ### Installation
 
-naming is available for Python 3.6 onwards via PyPI.
+`naming` is available for Python 3.6 onwards via PyPI.
 
 ```bash
 $ pip install naming
