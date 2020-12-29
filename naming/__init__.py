@@ -23,8 +23,7 @@ class Name(_BaseName):
 
     All field names should be unique. No duplicates are allowed.
 
-    Basic use::
-
+    Example:
         >>> from naming import Name
         >>> class MyName(Name):
         ...     config = dict(base=r'\w+')
@@ -54,15 +53,15 @@ class File(_BaseName):
     """Inherited by: :class:`naming.PipeFile`
 
     File Name objects.
+    All named files are expected to have a suffix (extension) after a dot.
 
-    ========  ========
-    **Unique Fields:**
-    ------------------------
-    *suffix*  Any amount of word characters
-    ========  ========
+    =========  ==============
+    **Field**  **Characters**
+    ---------  --------------
+    *suffix*   Any amount of word characters
+    =========  ==============
 
-    Basic use::
-
+    Example:
         >>> from naming import File
         >>> class MyFile(File):
         ...     config = dict(base=r'\w+')
@@ -113,26 +112,37 @@ class File(_BaseName):
 class Pipe(_BaseName):
     """Inherited by: :class:`naming.PipeFile`
 
-    Pipe Name objects.
+    Pipeline names have a field `pipe` which is composed of distinctive elements that make a resource unique.
 
-    =========  =========
-    **Unique Fields:**
-    --------------------
-    *output**  Any amount of word characters
-    *version*  Any amount of digits
-    *frame***  Any amount of digits
-    \* optional field. ** exists only when *output* is there as well.
-    ====================
+    +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
+    | **Field** | **Characters**              |  **Description**                                                                                  |
+    +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
+    | *version* | One or more digits          | Required field that helps track important states of a pipeline resource during its lifecycle.     |
+    |           |                             | This allows for history revision, rollbacks and comparisons.                                      |
+    +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
+    | *output*  | One or more word characters |Optional field used when the produced data can be separated into meaningful distinct streams, e.g: |
+    |           |                             |                                                                                                   |
+    |           |                             |- Left or right channel of a track.                                                                |
+    |           |                             |- Beauty, specular, diffues render passes.                                                         |
+    |           |                             |- Body, eyes, hair textures.                                                                       |
+    +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
+    | *index*   | One or more digits          |Position of an element where the pipeline resource is a sequence, e.g:                             |
+    |           |                             |                                                                                                   |
+    |           |                             |- A frame of a rendered shot.                                                                      |
+    |           |                             |- UDIM textures.                                                                                   |
+    |           |                             |- Chunks of a cache.                                                                               |
+    |           |                             |                                                                                                   |
+    |           |                             |If used, the *output* field must also exist. This is to prevent ambiguity when solving the fields. |
+    +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
 
     ======  ============
-    **Composed Fields:**
+    **Composed Fields**
     --------------------
-    *pipe*  Combination of unique fields in the form of: (.{output})\*.{version}.{frame}**
+    *pipe*  Combination of unique fields in the form of: (.{output})\*.{version}.{index}**
     \* optional field. ** exists only when *output* is there as well.
     ====================
 
-    Basic use::
-
+    Example:
         >>> from naming import Pipe
         >>> class MyPipe(Pipe):
         ...     config = dict(base=r'\w+')
@@ -144,7 +154,7 @@ class Pipe(_BaseName):
         '{base}.10'
         >>> p.get(output='data')
         '{base}.data.{version}'
-        >>> p.get(output='cache', version=7, frame=24)
+        >>> p.get(output='cache', version=7, index=24)
         '{base}.cache.7.24'
         >>> p = MyPipe('my_wip_data.1')
         >>> p.version
@@ -158,20 +168,20 @@ class Pipe(_BaseName):
         >>> p.output = 'exchange'  # mutates the object
         >>> p.name
         'my_wip_data.exchange.1'
-        >>> p.frame = 101
+        >>> p.index = 101
         >>> p.version = 7
         >>> p.name
         'my_wip_data.exchange.7.101'
         >>> p.values
-        {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'frame': '101'}
+        {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'index': '101'}
     """
-    pipe_config = NameConfig(dict(pipe='\w+', output='\w+', version='\d+', frame='\d+'))
+    pipe_config = NameConfig(dict(pipe='\w+', output='\w+', version='\d+', index='\d+'))
 
     @property
     def _pattern(self):
         sep = re.escape(self.pipe_sep)
         casted = self.cast_config(self.pipe_config)
-        pat = r'(?P<pipe>({sep}{output})?{sep}{version}({sep}{frame})?)'.format(sep=sep, **casted)
+        pat = r'(?P<pipe>({sep}{output})?{sep}{version}({sep}{index})?)'.format(sep=sep, **casted)
         return rf'{super()._pattern}{pat}'
 
     @property
@@ -186,19 +196,19 @@ class Pipe(_BaseName):
         return rf'{self.nice_name}{pipe_suffix}'
 
     def _format_pipe_field(self, k, v):
-        if k == 'frame' and v is None:
+        if k == 'index' and v is None:
             return ''
         return rf'{self.pipe_sep}{v if v is not None else rf"{{{k}}}"}'
 
-    def _get_pipe_field(self, output=None, version=None, frame=None) -> str:
-        fields = dict(output=output or None, version=version, frame=frame)
+    def _get_pipe_field(self, output=None, version=None, index=None) -> str:
+        fields = dict(output=output or None, version=version, index=index)
         # comparisons to None due to 0 being a valid value
         fields = {k: v if v is not None else self._values.get(k) for k, v in fields.items()}
 
         if all(v is None for v in fields.values()):
             suffix = rf'{self.pipe_sep}{{pipe}}'
             return self.pipe or suffix if self.name else suffix
-        elif not fields['output'] and fields['frame'] is None:  # optional fields
+        elif not fields['output'] and fields['index'] is None:  # optional fields
             return rf'{self.pipe_sep}{fields["version"]}'
 
         return ''.join(self._format_pipe_field(k, v) for k, v in fields.items())
@@ -218,8 +228,9 @@ class Pipe(_BaseName):
 
 class PipeFile(File, Pipe):
     """
-    Basic use::
+    A convenience mixin for pipeline files in a project.
 
+    Example:
         >>> from naming import PipeFile
         >>> class MyPipeFile(PipeFile):
         ...     config = dict(base=r'\w+')
@@ -227,7 +238,7 @@ class PipeFile(File, Pipe):
         >>> p = MyPipeFile('wipfile.7.ext')
         >>> p.values
         {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
-        >>> [p.get(frame=x, output='render') for x in range(10)]
+        >>> [p.get(index=x, output='render') for x in range(10)]
         ['wipfile.render.7.0.ext',
         'wipfile.render.7.1.ext',
         'wipfile.render.7.2.ext',

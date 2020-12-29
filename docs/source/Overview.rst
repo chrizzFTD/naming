@@ -3,10 +3,10 @@ Overview
 
 .. topic:: Name Objects
 
-    This package offers classes representing names as strings that follow a certain pattern convention.
-    Each Name object has a **config** attribute
-    that contains the fields and regex patterns of the convention to follow. Names can also drop fields from their
-    parent classes with the **drop** attribute, or they can merge / split fields with the **join** attribute.
+    This package provides an interface for dealing with naming conventions; from defining them, to identifying names and creating new ones.
+
+    Each Name object has a **config** attribute that contains the fields and regex patterns of the convention to follow.
+    Names can also drop fields from their parent classes with the **drop** attribute, or they can merge / split fields with the **join** attribute.
 
 Composition Example
 ===================
@@ -58,7 +58,7 @@ Usage
         '{base}.10'
         >>> p.get(output='data')
         '{base}.data.{version}'
-        >>> p.get(output='cache', version=7, frame=24)
+        >>> p.get(output='cache', version=7, index=24)
         '{base}.cache.7.24'
         >>> p = BasicPipe('my_wip_data.1')
         >>> p.version
@@ -72,12 +72,12 @@ Usage
         >>> p.output = 'exchange'  # mutates the object
         >>> p.name
         'my_wip_data.exchange.1'
-        >>> p.frame = 101
+        >>> p.index = 101
         >>> p.version = 7
         >>> p.name
         'my_wip_data.exchange.7.101'
         >>> p.values
-        {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'frame': '101'}
+        {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'index': '101'}
 
     File::
 
@@ -110,7 +110,7 @@ Usage
         >>> p = BasicPipeFile('wipfile.7.ext')
         >>> p.values
         {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
-        >>> [p.get(frame=x, output='render') for x in range(10)]
+        >>> [p.get(index=x, output='render') for x in range(10)]
         ['wipfile.render.7.0.ext',
         'wipfile.render.7.1.ext',
         'wipfile.render.7.2.ext',
