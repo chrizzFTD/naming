@@ -39,15 +39,17 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.intersphinx',
               'sphinx.ext.todo',
               'sphinx.ext.coverage',
-              # 'sphinx.ext.imgmath',
-              # 'sphinx.ext.ifconfig',
               'sphinx.ext.viewcode',
-              # 'sphinx.ext.githubpages',
               'sphinx.ext.graphviz',
+              'sphinx_copybutton',
+              'sphinx_toggleprompt',
               'sphinx.ext.inheritance_diagram',
               'sphinx_autodoc_typehints']
 
 # graphviz_dot = r'B:\__appdata__\graphviz\bin\dot.exe'
+# Offset to play well with copybutton
+toggleprompt_offset_right = 25
+
 inheritance_graph_attrs = dict(bgcolor='transparent')
 graphviz_output_format = 'svg'
 
@@ -66,8 +68,7 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
 
 # The master toctree document.
 master_doc = 'index'
