@@ -38,13 +38,13 @@ strict digraph example {
     .1.out.101"]
     pipe_config_patterns [label="version = \\d+
     output = \\w+?
-    frame = \\d+?"]
+    index = \\d+?"]
 
     BasicPipeFile, pipefile_format, pipefile_example [color=mediumorchid4 fillcolor=plum2]
     pipefile_format [skew=0.15 width=2 label="{base}.{pipe}.{suffix}"]
     pipefile_example [label="wip_data.7.ext
     pipe_data.7.out.ext
-    framed_data.7.out.101.ext"]
+    indexed_data.7.out.101.ext"]
     pipefile_config_patterns [label="base = \\w+" fontcolor=mediumorchid4]
 
     edge [color=gray36 arrowhead=vee]

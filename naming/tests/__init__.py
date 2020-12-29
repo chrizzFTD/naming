@@ -111,9 +111,9 @@ class TestPipe(unittest.TestCase):
         self.assertEqual('{base}.{pipe}', p.get())
         self.assertEqual('{base}.10', p.get(version=10))
         self.assertEqual('{base}.geo.10', p.get(version=10, output='geo'))
-        self.assertEqual('{base}.geo.10.25', p.get(version=10, output='geo', frame=25))
-        self.assertEqual('{base}.{output}.10.25', p.get(version=10, frame=25))
-        self.assertEqual('{base}.{output}.{version}.101', p.get(frame=101))
+        self.assertEqual('{base}.geo.10.25', p.get(version=10, output='geo', index=25))
+        self.assertEqual('{base}.{output}.10.25', p.get(version=10, index=25))
+        self.assertEqual('{base}.{output}.{version}.101', p.get(index=101))
         self.assertEqual('{base}.cache.{version}', p.get(output='cache'))
         self.assertEqual('{base}', p.get(pipe=None))
 
@@ -124,9 +124,9 @@ class TestPipe(unittest.TestCase):
             self.assertEqual('{base}.{pipe}', p.get())
             self.assertEqual('{base}.10', p.get(version=10))
             self.assertEqual('{base}.geo.10', p.get(version=10, output='geo'))
-            self.assertEqual('{base}.geo.10.25', p.get(version=10, output='geo', frame=25))
-            self.assertEqual('{base}.{output}.10.25', p.get(version=10, frame=25))
-            self.assertEqual('{base}.{output}.{version}.101', p.get(frame=101))
+            self.assertEqual('{base}.geo.10.25', p.get(version=10, output='geo', index=25))
+            self.assertEqual('{base}.{output}.10.25', p.get(version=10, index=25))
+            self.assertEqual('{base}.{output}.{version}.101', p.get(index=101))
             self.assertEqual('{base}.cache.{version}', p.get(output='cache'))
             self.assertEqual('{base}', p.get(pipe=None))
 
@@ -139,7 +139,7 @@ class TestPipe(unittest.TestCase):
         self.assertEqual('7', p.version)
         p = Pipe('initname.geo.0.1')
         self.assertEqual('0', p.version)
-        self.assertEqual('1', p.frame)
+        self.assertEqual('1', p.index)
         self.assertEqual('initname', p.nice_name)
 
         p = Pipe('name_with_underscores.pipeline.0')
@@ -150,7 +150,7 @@ class TestPipe(unittest.TestCase):
         self.assertEqual('7', p.version)
         p = Pipe('name_with_underscores.geo.0.1')
         self.assertEqual('0', p.version)
-        self.assertEqual('1', p.frame)
+        self.assertEqual('1', p.index)
         self.assertEqual('name_with_underscores', p.nice_name)
 
     def test_set_name(self):
@@ -160,7 +160,7 @@ class TestPipe(unittest.TestCase):
         self.assertEqual('pipeline', p.output)
         self.assertEqual('0', p.version)
         p.name = 'setname.pipeline.0.5'
-        self.assertEqual('5', p.frame)
+        self.assertEqual('5', p.index)
         self.assertEqual('setname', p.nice_name)
 
     def test_values(self):
@@ -175,11 +175,11 @@ class TestPipe(unittest.TestCase):
         self.assertEqual('{base}.out.7', p.get(pipe='.out.7'))
         self.assertEqual('{base}.out.{version}', p.get(output='out'))
         self.assertEqual('{base}.7', p.get(version=7))
-        self.assertEqual('{base}.{output}.{version}.101', p.get(frame=101))
+        self.assertEqual('{base}.{output}.{version}.101', p.get(index=101))
 
     def test_get_init_name(self):
         p = Pipe('my_pipe_file.7')
-        self.assertEqual('my_pipe_file.{output}.7.101', p.get(frame=101))
+        self.assertEqual('my_pipe_file.{output}.7.101', p.get(index=101))
         self.assertEqual('my_pipe_file.cache.7', p.get(output='cache'))
         self.assertEqual('my_pipe_file.8', p.get(version=int(p.version) + 1))
 
@@ -271,14 +271,14 @@ class TestDrops(unittest.TestCase):
         self.assertEqual('{without}_{basename}.{pipe}.{suffix}', d.get())
         self.assertEqual('awesome_{basename}.{pipe}.{suffix}', d.get(without='awesome'))
         self.assertEqual('{without}_replaced.{output}.{version}.101.{suffix}',
-                         d.get(basename='replaced', frame=101))
+                         d.get(basename='replaced', index=101))
 
         Subdropper = type('Dropper', (Dropper,), dict(config=dict(subdrop='[\w]')))
         s = Subdropper(sep='_')
         self.assertEqual('{without}_{basename}_{subdrop}.{pipe}.{suffix}', s.get())
         self.assertEqual('awesome_{basename}_{subdrop}.{pipe}.{suffix}', s.get(without='awesome'))
         self.assertEqual('{without}_replaced_{subdrop}.{output}.{version}.101.{suffix}',
-                         s.get(basename='replaced', frame=101))
+                         s.get(basename='replaced', index=101))
 
 
 class TestCompound(unittest.TestCase):

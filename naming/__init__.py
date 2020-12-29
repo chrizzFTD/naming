@@ -54,6 +54,7 @@ class File(_BaseName):
     """Inherited by: :class:`naming.PipeFile`
 
     File Name objects.
+    All named files are expected to have a suffix (extension) after a dot.
 
     ========  ========
     **Unique Fields:**
@@ -114,20 +115,32 @@ class Pipe(_BaseName):
     """Inherited by: :class:`naming.PipeFile`
 
     Pipe Name objects.
+    The pipe composed field includes the specific pipeline elements unique to a resource,
+    e.g.:
+    version: Identifier that helps track important states of a pipeline resource during its lifecycle.
+        This allows for history revision, rollback and comparisons.
+        This field is always required.
+    output: Optional field used when the produced data can be separated into meaningful distinct channels, e.g:
+        left and right channel of a track. beauty, specular render passes. body, eyes, hair textures.
+    index: Position of an element where the pipeline resource is a sequence.
+        If an index is used, the output field must also exist. This is because otherwise
+        distinguishing between an output and a version would become complex.
+        E.g. a frame of a rendered scene. An UDIM tile of a texture. A chunk of a cache.
+
 
     =========  =========
     **Unique Fields:**
     --------------------
     *output**  Any amount of word characters
     *version*  Any amount of digits
-    *frame***  Any amount of digits
+    *index***  Any amount of digits
     \* optional field. ** exists only when *output* is there as well.
     ====================
 
     ======  ============
     **Composed Fields:**
     --------------------
-    *pipe*  Combination of unique fields in the form of: (.{output})\*.{version}.{frame}**
+    *pipe*  Combination of unique fields in the form of: (.{output})\*.{version}.{index}**
     \* optional field. ** exists only when *output* is there as well.
     ====================
 
@@ -144,7 +157,7 @@ class Pipe(_BaseName):
         '{base}.10'
         >>> p.get(output='data')
         '{base}.data.{version}'
-        >>> p.get(output='cache', version=7, frame=24)
+        >>> p.get(output='cache', version=7, index=24)
         '{base}.cache.7.24'
         >>> p = MyPipe('my_wip_data.1')
         >>> p.version
@@ -158,20 +171,20 @@ class Pipe(_BaseName):
         >>> p.output = 'exchange'  # mutates the object
         >>> p.name
         'my_wip_data.exchange.1'
-        >>> p.frame = 101
+        >>> p.index = 101
         >>> p.version = 7
         >>> p.name
         'my_wip_data.exchange.7.101'
         >>> p.values
-        {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'frame': '101'}
+        {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'index': '101'}
     """
-    pipe_config = NameConfig(dict(pipe='\w+', output='\w+', version='\d+', frame='\d+'))
+    pipe_config = NameConfig(dict(pipe='\w+', output='\w+', version='\d+', index='\d+'))
 
     @property
     def _pattern(self):
         sep = re.escape(self.pipe_sep)
         casted = self.cast_config(self.pipe_config)
-        pat = r'(?P<pipe>({sep}{output})?{sep}{version}({sep}{frame})?)'.format(sep=sep, **casted)
+        pat = r'(?P<pipe>({sep}{output})?{sep}{version}({sep}{index})?)'.format(sep=sep, **casted)
         return rf'{super()._pattern}{pat}'
 
     @property
@@ -186,19 +199,19 @@ class Pipe(_BaseName):
         return rf'{self.nice_name}{pipe_suffix}'
 
     def _format_pipe_field(self, k, v):
-        if k == 'frame' and v is None:
+        if k == 'index' and v is None:
             return ''
         return rf'{self.pipe_sep}{v if v is not None else rf"{{{k}}}"}'
 
-    def _get_pipe_field(self, output=None, version=None, frame=None) -> str:
-        fields = dict(output=output or None, version=version, frame=frame)
+    def _get_pipe_field(self, output=None, version=None, index=None) -> str:
+        fields = dict(output=output or None, version=version, index=index)
         # comparisons to None due to 0 being a valid value
         fields = {k: v if v is not None else self._values.get(k) for k, v in fields.items()}
 
         if all(v is None for v in fields.values()):
             suffix = rf'{self.pipe_sep}{{pipe}}'
             return self.pipe or suffix if self.name else suffix
-        elif not fields['output'] and fields['frame'] is None:  # optional fields
+        elif not fields['output'] and fields['index'] is None:  # optional fields
             return rf'{self.pipe_sep}{fields["version"]}'
 
         return ''.join(self._format_pipe_field(k, v) for k, v in fields.items())
@@ -227,7 +240,7 @@ class PipeFile(File, Pipe):
         >>> p = MyPipeFile('wipfile.7.ext')
         >>> p.values
         {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
-        >>> [p.get(frame=x, output='render') for x in range(10)]
+        >>> [p.get(index=x, output='render') for x in range(10)]
         ['wipfile.render.7.0.ext',
         'wipfile.render.7.1.ext',
         'wipfile.render.7.2.ext',
