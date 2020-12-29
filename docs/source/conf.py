@@ -47,6 +47,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx_autodoc_typehints']
 
 # graphviz_dot = r'B:\__appdata__\graphviz\bin\dot.exe'
+
 # Offset to play well with copybutton
 toggleprompt_offset_right = 25
 

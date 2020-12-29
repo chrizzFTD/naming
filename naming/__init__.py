@@ -23,8 +23,7 @@ class Name(_BaseName):
 
     All field names should be unique. No duplicates are allowed.
 
-    Basic use::
-
+    Example:
         >>> from naming import Name
         >>> class MyName(Name):
         ...     config = dict(base=r'\w+')
@@ -56,14 +55,13 @@ class File(_BaseName):
     File Name objects.
     All named files are expected to have a suffix (extension) after a dot.
 
-    ========  ========
-    **Unique Fields:**
-    ------------------------
-    *suffix*  Any amount of word characters
-    ========  ========
+    =========  ==============
+    **Field**  **Characters**
+    ---------  --------------
+    *suffix*   Any amount of word characters
+    =========  ==============
 
-    Basic use::
-
+    Example:
         >>> from naming import File
         >>> class MyFile(File):
         ...     config = dict(base=r'\w+')
@@ -114,38 +112,37 @@ class File(_BaseName):
 class Pipe(_BaseName):
     """Inherited by: :class:`naming.PipeFile`
 
-    Pipe Name objects.
-    The pipe composed field includes the specific pipeline elements unique to a resource,
-    e.g.:
-    version: Identifier that helps track important states of a pipeline resource during its lifecycle.
-        This allows for history revision, rollback and comparisons.
-        This field is always required.
-    output: Optional field used when the produced data can be separated into meaningful distinct channels, e.g:
-        left and right channel of a track. beauty, specular render passes. body, eyes, hair textures.
-    index: Position of an element where the pipeline resource is a sequence.
-        If an index is used, the output field must also exist. This is because otherwise
-        distinguishing between an output and a version would become complex.
-        E.g. a frame of a rendered scene. An UDIM tile of a texture. A chunk of a cache.
+    Pipeline names have a field `pipe` which is composed of distinctive elements that make a resource unique.
 
-
-    =========  =========
-    **Unique Fields:**
-    --------------------
-    *output**  Any amount of word characters
-    *version*  Any amount of digits
-    *index***  Any amount of digits
-    \* optional field. ** exists only when *output* is there as well.
-    ====================
+    +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
+    | **Field** | **Characters**              |  **Description**                                                                                  |
+    +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
+    | *version* | One or more digits          | Required field that helps track important states of a pipeline resource during its lifecycle.     |
+    |           |                             | This allows for history revision, rollbacks and comparisons.                                      |
+    +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
+    | *output*  | One or more word characters |Optional field used when the produced data can be separated into meaningful distinct streams, e.g: |
+    |           |                             |                                                                                                   |
+    |           |                             |- Left or right channel of a track.                                                                |
+    |           |                             |- Beauty, specular, diffues render passes.                                                         |
+    |           |                             |- Body, eyes, hair textures.                                                                       |
+    +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
+    | *index*   | One or more digits          |Position of an element where the pipeline resource is a sequence, e.g:                             |
+    |           |                             |                                                                                                   |
+    |           |                             |- A frame of a rendered shot.                                                                      |
+    |           |                             |- UDIM textures.                                                                                   |
+    |           |                             |- Chunks of a cache.                                                                               |
+    |           |                             |                                                                                                   |
+    |           |                             |If used, the *output* field must also exist. This is to prevent ambiguity when solving the fields. |
+    +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
 
     ======  ============
-    **Composed Fields:**
+    **Composed Fields**
     --------------------
     *pipe*  Combination of unique fields in the form of: (.{output})\*.{version}.{index}**
     \* optional field. ** exists only when *output* is there as well.
     ====================
 
-    Basic use::
-
+    Example:
         >>> from naming import Pipe
         >>> class MyPipe(Pipe):
         ...     config = dict(base=r'\w+')
@@ -231,8 +228,9 @@ class Pipe(_BaseName):
 
 class PipeFile(File, Pipe):
     """
-    Basic use::
+    A convenience mixin for pipeline files in a project.
 
+    Example:
         >>> from naming import PipeFile
         >>> class MyPipeFile(PipeFile):
         ...     config = dict(base=r'\w+')
