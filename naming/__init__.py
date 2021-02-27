@@ -118,15 +118,16 @@ class Pipe(_BaseName):
     | **Field** | **Characters**              |  **Description**                                                                                  |
     +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
     | *version* | One or more digits          | Required field that helps track important states of a pipeline resource during its lifecycle.     |
+    |           |                             |                                                                                                   |
     |           |                             | This allows for history revision, rollbacks and comparisons.                                      |
     +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
     | *output*  | One or more word characters |Optional field used when the produced data can be separated into meaningful distinct streams, e.g: |
     |           |                             |                                                                                                   |
     |           |                             |- Left or right channel of a track.                                                                |
-    |           |                             |- Beauty, specular, diffues render passes.                                                         |
+    |           |                             |- Beauty, specular, diffuse render passes.                                                         |
     |           |                             |- Body, eyes, hair textures.                                                                       |
     +-----------+-----------------------------+---------------------------------------------------------------------------------------------------+
-    | *index*   | One or more digits          |Position of an element where the pipeline resource is a sequence, e.g:                             |
+    | *index*   | One or more digits          |Position of an element within the pipeline resource when it is a sequence, e.g:                    |
     |           |                             |                                                                                                   |
     |           |                             |- A frame of a rendered shot.                                                                      |
     |           |                             |- UDIM textures.                                                                                   |
