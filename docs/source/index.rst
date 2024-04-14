@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to naming's documentation!
-==================================
+.. include:: ../../README.md
+   :parser: myst_parser.sphinx_
 
 .. toctree::
     :maxdepth: 2
@@ -12,9 +12,4 @@ Welcome to naming's documentation!
 
     Overview
     Class List
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
+    genindex
