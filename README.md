@@ -5,22 +5,22 @@
 [![PyPI version](https://badge.fury.io/py/naming.svg)](https://badge.fury.io/py/naming)
 [![PyPI](https://img.shields.io/pypi/pyversions/naming.svg)](https://pypi.python.org/pypi/naming)
 
-Object-oriented names for the digital era.
+> Object-oriented names for the digital era.
 
 `naming` provides an interface for dealing with naming conventions; from
 defining them, to identifying names and creating new ones.
     
-### Installation
+## Installation
 
-`naming` is available for Python 3.7 onwards via PyPI.
+`naming` is available for Python 3.8+ via PyPI.
 
 ```bash
 $ pip install naming
 ```
 
-### Usage
+## Example
 
-Please refer to the [documentation](http://naming.readthedocs.io/en/latest/) for details on contents and usage.
+Please refer to the [documentation walkthrough](http://naming.readthedocs.io/en/latest/) for details on contents and usage.
 
 ```python
 >>> import naming
