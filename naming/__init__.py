@@ -26,7 +26,7 @@ class Name(_BaseName):
     Example:
         >>> from naming import Name
         >>> class MyName(Name):
-        ...     config = dict(base=r'\w+')
+        ...     config = dict(base=r'\\w+')
         ...
         >>> n = MyName()
         >>> n.get()  # no name has been set on the object, convention is solved with {missing} fields
@@ -64,7 +64,7 @@ class File(_BaseName):
     Example:
         >>> from naming import File
         >>> class MyFile(File):
-        ...     config = dict(base=r'\w+')
+        ...     config = dict(base=r'\\w+')
         ...
         >>> f = MyFile()
         >>> f.get()
@@ -82,7 +82,7 @@ class File(_BaseName):
         >>> f.path
         WindowsPath('hello.abc')
     """
-    file_config = NameConfig(dict(suffix='\w+'))
+    file_config = NameConfig(dict(suffix=r'\w+'))
 
     @property
     def _pattern(self) -> str:
@@ -139,14 +139,14 @@ class Pipe(_BaseName):
     ======  ============
     **Composed Fields**
     --------------------
-    *pipe*  Combination of unique fields in the form of: (.{output})\*.{version}.{index}**
-    \* optional field. ** exists only when *output* is there as well.
+    *pipe*  Combination of unique fields in the form of: (.{output})*.{version}.{index}**
+    \\* optional field. ** exists only when *output* is there as well.
     ====================
 
     Example:
         >>> from naming import Pipe
         >>> class MyPipe(Pipe):
-        ...     config = dict(base=r'\w+')
+        ...     config = dict(base=r'\\w+')
         ...
         >>> p = MyPipe()
         >>> p.get()
@@ -176,7 +176,7 @@ class Pipe(_BaseName):
         >>> p.values
         {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'index': '101'}
     """
-    pipe_config = NameConfig(dict(pipe='\w+', output='\w+', version='\d+', index='\d+'))
+    pipe_config = NameConfig(dict(pipe=r'\w+', output=r'\w+', version=r'\d+', index=r'\d+'))
 
     @property
     def _pattern(self):
@@ -234,7 +234,7 @@ class PipeFile(File, Pipe):
     Example:
         >>> from naming import PipeFile
         >>> class MyPipeFile(PipeFile):
-        ...     config = dict(base=r'\w+')
+        ...     config = dict(base=r'\\w+')
         ...
         >>> p = MyPipeFile('wipfile.7.ext')
         >>> p.values

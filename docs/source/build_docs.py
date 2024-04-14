@@ -2,10 +2,10 @@ import shutil
 from pathlib import Path
 from sphinx.cmd import build
 
-source_path = Path(__file__).parent
-build_path = source_path.parent / "build"
+source_root = Path(__file__).parent
+build_root = source_root.parent / "build"
 try:
-    shutil.rmtree(build_path)
+    shutil.rmtree(build_root)
 except FileNotFoundError:
     pass
-build.build_main([str(source_path), str(build_path)])
+build.build_main([str(source_root), str(build_root)])
