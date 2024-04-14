@@ -6,7 +6,7 @@ from types import MappingProxyType
 
 
 def _dct_from_mro(cls: type, attr_name: str) -> dict:
-    """"Get a merged dictionary from `cls` bases attribute `attr_name`. MRO defines importance (closest = strongest)."""
+    """Get a merged dictionary from `cls` bases attribute `attr_name`. MRO defines importance (closest = strongest)."""
     d = {}
     for c in reversed(cls.mro()):
         d.update(getattr(c, attr_name, {}))
