@@ -15,7 +15,6 @@
    :parser: myst_parser.sphinx_
 
 .. py-editor::
-   :config: '{"packages":["naming"]}'
 
    import naming
    class NameFileConvention(naming.Name, naming.File):
