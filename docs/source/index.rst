@@ -15,7 +15,7 @@
    :parser: myst_parser.sphinx_
 
 .. py-editor::
-   :config: ../pyscript_config.toml
+   :config: '{"packages":["naming"]}'
 
    import naming
    class NameFileConvention(naming.Name, naming.File):
