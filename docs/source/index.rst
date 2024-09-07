@@ -14,9 +14,17 @@
 
 .. py-editor::
 
-    print("hallo world")
-    from pprint import pp
-    pp(dir(1))
+   import naming
+   class NameFileConvention(naming.Name, naming.File):
+       config = dict(first=r'\w+', last=r'\w+', number=r'\d+')
+
+   name = NameFileConvention('john doe 07.jpg')
+   print(name.last)
+   print(name.number)
+   print(name.get(first='jane', number=99))  # returns new name string
+   name.last = 'connor'  # mutates current name
+   print(name)
+   name.number = 'not_a_number'
 
 .. toctree::
     :maxdepth: 2
