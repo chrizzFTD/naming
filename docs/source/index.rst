@@ -7,7 +7,6 @@
 
     splashscreen:
         enabled: false
-    runtime: micropython
     packages:
     - naming
 
