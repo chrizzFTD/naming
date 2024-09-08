@@ -15,11 +15,7 @@
    :parser: myst_parser.sphinx_
 
 .. py-editor::
-
-    print("hallo world")
-    import matplotlib.pyplot as plt
-    plt.plot([1, 2, 3])
-    plt.gcf()
+    :config: pyscript.toml
 
     import naming
     class NameFileConvention(naming.Name, naming.File):
