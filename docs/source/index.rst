@@ -16,7 +16,6 @@
 
 .. py-editor::
     :config: pyscript.toml
-    :env: index
 
     # definition
     import naming
