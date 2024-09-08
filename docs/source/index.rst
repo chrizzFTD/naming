@@ -7,9 +7,6 @@
 
     splashscreen:
         enabled: false
-    packages:
-    - matplotlib
-    - naming
 
 .. include:: ../../README.md
    :parser: myst_parser.sphinx_
