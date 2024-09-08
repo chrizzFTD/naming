@@ -8,6 +8,7 @@
     splashscreen:
         enabled: false
     packages:
+    - matplotlib
     - naming
 
 .. include:: ../../README.md
