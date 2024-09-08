@@ -15,17 +15,22 @@
 
 .. py-editor::
 
-   import naming
-   class NameFileConvention(naming.Name, naming.File):
-       config = dict(first=r'\w+', last=r'\w+', number=r'\d+')
+    print("hallo world")
+    import matplotlib.pyplot as plt
+    plt.plot([1, 2, 3])
+    plt.gcf()
 
-   name = NameFileConvention('john doe 07.jpg')
-   print(name.last)
-   print(name.number)
-   print(name.get(first='jane', number=99))  # returns new name string
-   name.last = 'connor'  # mutates current name
-   print(name)
-   name.number = 'not_a_number'
+    import naming
+    class NameFileConvention(naming.Name, naming.File):
+        config = dict(first=r'\w+', last=r'\w+', number=r'\d+')
+
+    name = NameFileConvention('john doe 07.jpg')
+    print(name.last)
+    print(name.number)
+    print(name.get(first='jane', number=99))  # returns new name string
+    name.last = 'connor'  # mutates current name
+    print(name)
+    name.number = 'not_a_number'
 
 .. toctree::
     :maxdepth: 2
