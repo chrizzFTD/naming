@@ -1,4 +1,0 @@
-packages = ["naming"]
-
-[js_modules.main]
-"code.js" = "code"
