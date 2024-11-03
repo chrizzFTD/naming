@@ -21,8 +21,8 @@
 
     # inspection
     name = NameFileConvention('john doe 07.jpg')
-    print(f"{name.last=}")
-    print(f"{name.number=}")
+    print(name.last)
+    print(name.number)
 
     # modification
     print(name.get(first='jane', number=99))  # returns new name string
