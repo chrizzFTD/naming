@@ -3,18 +3,17 @@
 
 name: Python CI
 on: [push]
-
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.13"]
+        python-version: ["3.8", "3.13", "3.13t"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: Quansight-Labs/setup-python@v5 # until https://github.com/actions/setup-python/issues/771 is resolved
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install
@@ -24,7 +23,9 @@ jobs:
           python -m pip install .
       - name: Test
         run: |
-          pytest --cov=./ --cov-report xml
-          codecov
+          pytest --cov .
+        # https://github.com/marketplace/actions/codecov
       - name: Codecov Report
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
