@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx_autodoc_typehints',
     'sphinx_copybutton',
+    'sphinx_pyscript',
     'sphinx_togglebutton',
     'sphinx_toggleprompt',
 ]
