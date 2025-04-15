@@ -1,3 +1,8 @@
+.. py-config::
+
+    splashscreen:
+        enabled: false
+
 Overview
 ========
 
@@ -20,107 +25,84 @@ Usage
     Inherit from the class to use and assign a class attribute `config` as a
     mapping of {field_name: regex_pattern} to use.
 
-    Name::
 
-        >>> from naming import Name
-        >>> class BasicName(Name):
-        ...     config = dict(base=r'\w+')
-        ...
-        >>> n = BasicName()
-        >>> n.get()  # no name has been set on the object, convention is solved with {missing} fields
-        '{base}'
-        >>> n.values
-        {}
-        >>> n.name = 'hello_world'
-        >>> n
-        Name("hello_world")
-        >>> str(n)  # cast to string
-        'hello_world'
-        >>> n.values
-        {'base': 'hello_world'}
-        >>> # modify name and get values from field names
-        >>> n.base = 'through_field_name'
-        >>> n.values
-        {'base': 'through_field_name'}
-        >>> n.base
-        'through_field_name'
+**Name**
 
-    Pipe::
+.. py-editor::
+    :config: pyscript.toml
 
-        >>> from naming import Pipe
-        >>> class BasicPipe(Pipe):
-        ...     config = dict(base=r'\w+')
-        ...
-        >>> p = BasicPipe()
-        >>> p.get()
-        '{base}.{pipe}'
-        >>> p.get(version=10)
-        '{base}.10'
-        >>> p.get(output='data')
-        '{base}.data.{version}'
-        >>> p.get(output='cache', version=7, index=24)
-        '{base}.cache.7.24'
-        >>> p = BasicPipe('my_wip_data.1')
-        >>> p.version
-        '1'
-        >>> p.values
-        {'base': 'my_wip_data', 'pipe': '.1', 'version': '1'}
-        >>> p.get(output='exchange')  # returns a new string
-        'my_wip_data.exchange.1'
-        >>> p.name
-        'my_wip_data.1'
-        >>> p.output = 'exchange'  # mutates the object
-        >>> p.name
-        'my_wip_data.exchange.1'
-        >>> p.index = 101
-        >>> p.version = 7
-        >>> p.name
-        'my_wip_data.exchange.7.101'
-        >>> p.values
-        {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'index': '101'}
+    from naming import Name
+    class BasicName(Name):
+        config = dict(base=r'\w+')
 
-    File::
+    n = BasicName()
+    print(f"{n.get()=}")  # no name has been set on the object, convention is solved with {missing} fields
+    print(f"{n.values=}")
 
-        >>> from naming import File
-        >>> class BasicFile(File):
-        ...     config = dict(base=r'\w+')
-        ...
-        >>> f = BasicFile()
-        >>> f.get()
-        '{basse}.{suffix}'
-        >>> f.get(suffix='png')
-        '{base}.png'
-        >>> f = BasicFile('hello.world')
-        >>> f.values
-        {'base': 'hello', 'suffix': 'world'}
-        >>> f.suffix
-        'world'
-        >>> f.suffix = 'abc'
-        >>> f.name
-        'hello.abc'
-        >>> f.path
-        WindowsPath('hello.abc')
+    n.name = 'hello_world'
+    print(f"{n=!r}")
+    print(f"{str(n)=}")  # cast to string
 
-    PipeFile::
+    # modify name and get values from field names
+    n.base = 'through_field_name'
+    print(f"{n.values=}")
+    print(f"{n.base=}")
 
-        >>> from naming import PipeFile
-        >>> class BasicPipeFile(PipeFile):
-        ...     config = dict(base=r'\w+')
-        ...
-        >>> p = BasicPipeFile('wipfile.7.ext')
-        >>> p.values
-        {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
-        >>> [p.get(index=x, output='render') for x in range(10)]
-        ['wipfile.render.7.0.ext',
-        'wipfile.render.7.1.ext',
-        'wipfile.render.7.2.ext',
-        'wipfile.render.7.3.ext',
-        'wipfile.render.7.4.ext',
-        'wipfile.render.7.5.ext',
-        'wipfile.render.7.6.ext',
-        'wipfile.render.7.7.ext',
-        'wipfile.render.7.8.ext',
-        'wipfile.render.7.9.ext']
+
+**Pipe**
+
+.. py-editor::
+    :config: pyscript.toml
+
+    from naming import Pipe
+    class BasicPipe(Pipe):
+        config = dict(base=r'\w+')
+
+    p = BasicPipe()
+    print(f"{p.get()=}")
+    print(f"{p.get(version=10)=}")
+    print(f"{p.get(output='cache', version=7, index=24)=}")
+
+    p = BasicPipe('my_wip_data.1')
+    print(f"{p.values=}")
+    p.output = 'exchange'  # mutates the object
+    p.index = 101
+    p.version = 7
+    print(f"{p.name=}")
+    print(f"{p.values=}")
+
+**File**
+
+.. py-editor::
+    :config: pyscript.toml
+
+    from naming import File
+    class BasicFile(File):
+        config = dict(base=r'\w+')
+
+    f = BasicFile()
+    print(f"{f.get()=}")
+    print(f"{f.get(suffix='png')=}")
+
+    f = BasicFile('hello.world')
+    print(f"{f.values=}")
+    f.suffix = 'abc'
+    print(f"{f.path=}")
+
+**PipeFile**
+
+.. py-editor::
+    :config: pyscript.toml
+
+    from naming import PipeFile
+    class BasicPipeFile(PipeFile):
+        config = dict(base=r'\w+')
+
+    p = BasicPipeFile('wipfile.7.ext')
+    print(f"{p.values=}")
+    for idx in range(10):
+        print(p.get(index=idx, output='render'))
+
 
 .. topic:: Extending Names
 
