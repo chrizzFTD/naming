@@ -273,7 +273,7 @@ class TestDrops(unittest.TestCase):
         self.assertEqual('{without}_replaced.{output}.{version}.101.{suffix}',
                          d.get(basename='replaced', index=101))
 
-        Subdropper = type('Dropper', (Dropper,), dict(config=dict(subdrop='[\w]')))
+        Subdropper = type('Dropper', (Dropper,), dict(config=dict(subdrop=r'[\w]')))
         s = Subdropper(sep='_')
         self.assertEqual('{without}_{basename}_{subdrop}.{pipe}.{suffix}', s.get())
         self.assertEqual('awesome_{basename}_{subdrop}.{pipe}.{suffix}', s.get(without='awesome'))
