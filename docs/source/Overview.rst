@@ -30,7 +30,6 @@ Usage
        >>> from naming import Name
        >>> class BasicName(Name):
        ...     config = dict(base=r'\w+')
-       ...
        >>> n = BasicName()
        >>> n.get()  # no name has been set on the object, convention is solved with {missing} fields
        >>> n.values
@@ -53,7 +52,6 @@ Usage
        >>> from naming import Pipe
        >>> class BasicPipe(Pipe):
        ...     config = dict(base=r'\w+')
-       ...
        >>> p = BasicPipe()
        >>> p.get()
        >>> p.get(version=10)
@@ -81,7 +79,6 @@ Usage
        >>> from naming import File
        >>> class BasicFile(File):
        ...     config = dict(base=r'\w+')
-       ...
        >>> f = BasicFile()
        >>> f.get()
        >>> f.get(suffix='png')
@@ -102,7 +99,6 @@ Usage
        >>> from naming import PipeFile
        >>> class BasicPipeFile(PipeFile):
        ...     config = dict(base=r'\w+')
-       ...
        >>> p = BasicPipeFile('wipfile.7.ext')
        >>> p.values
        >>> [p.get(index=x, output='render') for x in range(10)]
@@ -124,7 +120,6 @@ Usage
        ...                   user='[a-z]+',
        ...                   another='(constant)',
        ...                   last='[a-zA-Z0-9]+')
-       ...
        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast.data.17.abc', sep='_')
        >>> pf.values
        >>> pf.nice_name  # no pipe & suffix fields
@@ -147,7 +142,6 @@ Usage
        >>> class Dropper(BasicPipeFile):
        ...     config = dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+')
        ...     drop=('base',)
-       ...
        >>> d = Dropper()
        >>> d.get()
        >>> # New subclasses will drop the 'base' field as well
@@ -167,7 +161,6 @@ Usage
        >>> class Compound(BasicPipeFile):
        ...     config=dict(first=r'\d+', second=r'[a-zA-Z]+')
        ...     join=dict(base=('first', 'second'))
-       ...
        >>> c = Compound()
        >>> c.get()  # we see the original field 'base'
        >>> c.get(first=50, second='abc')  # providing each field to join will work
@@ -176,7 +169,6 @@ Usage
        >>> c.get(first=200)
        >>> class CompoundByDash(Compound):
        ...     join_sep = '-'  # you can specify the string to join compounds
-       ...
        >>> c = CompoundByDash('101-dalmatians.1.png')
        >>> c.get(first=300)
 
@@ -195,7 +187,6 @@ Usage
        ...     def get_path_pattern_list(self):
        ...         # As an example we are returning the pattern list from the name object (base, extrafield)
        ...         return super().get_pattern_list()
-       ...
        >>> fp = FilePath()
        >>> fp.get()
        >>> # path attribute will vary depending on the OS
