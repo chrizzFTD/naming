@@ -43,6 +43,7 @@ extensions = [
     'sphinx_copybutton',
     'sphinx_togglebutton',
     'sphinx_toggleprompt',
+    'sphinx_pyrepl_web',
 ]
 
 # Offset to play well with copybutton
