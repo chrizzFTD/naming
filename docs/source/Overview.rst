@@ -20,237 +20,220 @@ Usage
     Inherit from the class to use and assign a class attribute `config` as a
     mapping of {field_name: regex_pattern} to use.
 
-    Name::
+    Name
 
-        >>> from naming import Name
-        >>> class BasicName(Name):
-        ...     config = dict(base=r'\w+')
-        ...
-        >>> n = BasicName()
-        >>> n.get()  # no name has been set on the object, convention is solved with {missing} fields
-        '{base}'
-        >>> n.values
-        {}
-        >>> n.name = 'hello_world'
-        >>> n
-        Name("hello_world")
-        >>> str(n)  # cast to string
-        'hello_world'
-        >>> n.values
-        {'base': 'hello_world'}
-        >>> # modify name and get values from field names
-        >>> n.base = 'through_field_name'
-        >>> n.values
-        {'base': 'through_field_name'}
-        >>> n.base
-        'through_field_name'
+    .. py-repl::
+       :packages: naming
+       :repl-title: Name
+       :no-banner:
 
-    Pipe::
+       >>> from naming import Name
+       >>> class BasicName(Name):
+       ...     config = dict(base=r'\w+')
+       ...
+       >>> n = BasicName()
+       >>> n.get()  # no name has been set on the object, convention is solved with {missing} fields
+       >>> n.values
+       >>> n.name = 'hello_world'
+       >>> n
+       >>> str(n)  # cast to string
+       >>> n.values
+       >>> # modify name and get values from field names
+       >>> n.base = 'through_field_name'
+       >>> n.values
+       >>> n.base
 
-        >>> from naming import Pipe
-        >>> class BasicPipe(Pipe):
-        ...     config = dict(base=r'\w+')
-        ...
-        >>> p = BasicPipe()
-        >>> p.get()
-        '{base}.{pipe}'
-        >>> p.get(version=10)
-        '{base}.10'
-        >>> p.get(output='data')
-        '{base}.data.{version}'
-        >>> p.get(output='cache', version=7, index=24)
-        '{base}.cache.7.24'
-        >>> p = BasicPipe('my_wip_data.1')
-        >>> p.version
-        '1'
-        >>> p.values
-        {'base': 'my_wip_data', 'pipe': '.1', 'version': '1'}
-        >>> p.get(output='exchange')  # returns a new string
-        'my_wip_data.exchange.1'
-        >>> p.name
-        'my_wip_data.1'
-        >>> p.output = 'exchange'  # mutates the object
-        >>> p.name
-        'my_wip_data.exchange.1'
-        >>> p.index = 101
-        >>> p.version = 7
-        >>> p.name
-        'my_wip_data.exchange.7.101'
-        >>> p.values
-        {'base': 'my_wip_data', 'pipe': '.exchange.7.101', 'output': 'exchange', 'version': '7', 'index': '101'}
+    Pipe
 
-    File::
+    .. py-repl::
+       :packages: naming
+       :repl-title: Pipe
+       :no-banner:
 
-        >>> from naming import File
-        >>> class BasicFile(File):
-        ...     config = dict(base=r'\w+')
-        ...
-        >>> f = BasicFile()
-        >>> f.get()
-        '{basse}.{suffix}'
-        >>> f.get(suffix='png')
-        '{base}.png'
-        >>> f = BasicFile('hello.world')
-        >>> f.values
-        {'base': 'hello', 'suffix': 'world'}
-        >>> f.suffix
-        'world'
-        >>> f.suffix = 'abc'
-        >>> f.name
-        'hello.abc'
-        >>> f.path
-        WindowsPath('hello.abc')
+       >>> from naming import Pipe
+       >>> class BasicPipe(Pipe):
+       ...     config = dict(base=r'\w+')
+       ...
+       >>> p = BasicPipe()
+       >>> p.get()
+       >>> p.get(version=10)
+       >>> p.get(output='data')
+       >>> p.get(output='cache', version=7, index=24)
+       >>> p = BasicPipe('my_wip_data.1')
+       >>> p.version
+       >>> p.values
+       >>> p.get(output='exchange')  # returns a new string
+       >>> p.name
+       >>> p.output = 'exchange'  # mutates the object
+       >>> p.name
+       >>> p.index = 101
+       >>> p.version = 7
+       >>> p.name
+       >>> p.values
 
-    PipeFile::
+    File
 
-        >>> from naming import PipeFile
-        >>> class BasicPipeFile(PipeFile):
-        ...     config = dict(base=r'\w+')
-        ...
-        >>> p = BasicPipeFile('wipfile.7.ext')
-        >>> p.values
-        {'base': 'wipfile', 'pipe': '.7', 'version': '7', 'suffix': 'ext'}
-        >>> [p.get(index=x, output='render') for x in range(10)]
-        ['wipfile.render.7.0.ext',
-        'wipfile.render.7.1.ext',
-        'wipfile.render.7.2.ext',
-        'wipfile.render.7.3.ext',
-        'wipfile.render.7.4.ext',
-        'wipfile.render.7.5.ext',
-        'wipfile.render.7.6.ext',
-        'wipfile.render.7.7.ext',
-        'wipfile.render.7.8.ext',
-        'wipfile.render.7.9.ext']
+    .. py-repl::
+       :packages: naming
+       :repl-title: File
+       :no-banner:
+
+       >>> from naming import File
+       >>> class BasicFile(File):
+       ...     config = dict(base=r'\w+')
+       ...
+       >>> f = BasicFile()
+       >>> f.get()
+       >>> f.get(suffix='png')
+       >>> f = BasicFile('hello.world')
+       >>> f.values
+       >>> f.suffix
+       >>> f.suffix = 'abc'
+       >>> f.name
+       >>> f.path
+
+    PipeFile
+
+    .. py-repl::
+       :packages: naming
+       :repl-title: PipeFile
+       :no-banner:
+
+       >>> from naming import PipeFile
+       >>> class BasicPipeFile(PipeFile):
+       ...     config = dict(base=r'\w+')
+       ...
+       >>> p = BasicPipeFile('wipfile.7.ext')
+       >>> p.values
+       >>> [p.get(index=x, output='render') for x in range(10)]
 
 .. topic:: Extending Names
 
     The **config**, **drop** and **join** attributes are merged on subclasses.
 
-    Inheriting from an existing name::
+    Inheriting from an existing name
 
-        >>> class ProjectFile(BasicPipeFile):
-        ...     config = dict(year='[0-9]{4}',
-        ...                   user='[a-z]+',
-        ...                   another='(constant)',
-        ...                   last='[a-zA-Z0-9]+')
-        ...
-        >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast.data.17.abc', sep='_')
-        >>> pf.values
-        {'base': 'project_data_name',
-        'year': '2017',
-        'user': 'christianl',
-        'another': 'constant',
-        'last': 'iamlast',
-        'pipe': '.data.17',
-        'output': 'data',
-        'version': '17',
-        'suffix': 'abc'}
-        >>> pf.nice_name  # no pipe & suffix fields
-        'project_data_name_2017_christianl_constant_iamlast'
-        >>> pf.year
-        '2017'
-        >>> pf.year = 'nondigits'  # mutating with invalid fields raises a ValueError
-        Traceback (most recent call last):
-        ...
-        ValueError: Can't set field 'year' with invalid value 'nondigits' on 'ProjectFile("project_data_name_2017_christianl_constant_iamlast.data.17.abc")'. A valid field value should match pattern: '[0-9]{4}'
-        >>> pf.year = 1907
-        >>> pf
-        ProjectFile("project_data_name_1907_christianl_constant_iamlast.data.17.abc")
-        >>> pf.suffix
-        'abc'
-        >>> pf.sep = '  '  # you can set the separator to a different set of characters
-        >>> pf.name
-        'project_data_name   1907   christianl   constant   iamlast.data.17.abc'
+    .. py-repl::
+       :packages: naming
+       :src: _static/pyrepl_bootstrap.py
+       :repl-title: Extending names
+       :no-banner:
 
-    Dropping fields from bases::
+       >>> class ProjectFile(BasicPipeFile):
+       ...     config = dict(year='[0-9]{4}',
+       ...                   user='[a-z]+',
+       ...                   another='(constant)',
+       ...                   last='[a-zA-Z0-9]+')
+       ...
+       >>> pf = ProjectFile('project_data_name_2017_christianl_constant_iamlast.data.17.abc', sep='_')
+       >>> pf.values
+       >>> pf.nice_name  # no pipe & suffix fields
+       >>> pf.year
+       >>> pf.year = 'nondigits'  # mutating with invalid fields raises a ValueError
+       >>> pf.year = 1907
+       >>> pf
+       >>> pf.suffix
+       >>> pf.sep = '  '  # you can set the separator to a different set of characters
+       >>> pf.name
 
-        >>> class Dropper(BasicPipeFile):
-        ...     config = dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+')
-        ...     drop=('base',)
-        ...
-        >>> d = Dropper()
-        >>> d.get()
-        '{without}_{basename}.{pipe}.{suffix}'
-        >>> # New subclasses will drop the 'base' field as well
-        >>> Subdropper = type('Dropper', (Dropper,), dict(config=dict(subdrop='[\w]')))
-        >>> s = Subdropper()
-        >>> s.get()
-        '{without}_{basename}_{subdrop}.{pipe}.{suffix}'
+    Dropping fields from bases
 
-    Setting compound fields::
+    .. py-repl::
+       :packages: naming
+       :src: _static/pyrepl_bootstrap.py
+       :repl-title: Dropping fields
+       :no-banner:
 
-        >>> # splitting the 'base' field into multiple joined fields
-        >>> class Compound(BasicPipeFile):
-        ...     config=dict(first=r'\d+', second=r'[a-zA-Z]+')
-        ...     join=dict(base=('first', 'second'))
-        ...
-        >>> c = Compound()
-        >>> c.get()  # we see the original field 'base'
-        '{base}.{pipe}.{suffix}'
-        >>> c.get(first=50, second='abc')  # providing each field to join will work
-        '50abc.{pipe}.{suffix}'
-        >>> c.name = c.get(base='101dalmatians', version=1, suffix='png')  # providing the key field will also work
-        >>> c.nice_name
-        '101dalmatians'
-        >>> c.get(first=200)
-        '200dalmatians.1.png'
-        >>> class CompoundByDash(Compound):
-        ...     join_sep = '-'  # you can specify the string to join compounds
-        ...
-        >>> c = CompoundByDash('101-dalmatians.1.png')
-        >>> c.get(first=300)
-        '300-dalmatians.1.png'
+       >>> class Dropper(BasicPipeFile):
+       ...     config = dict(without=r'[a-zA-Z0-9]+', basename=r'[a-zA-Z0-9]+')
+       ...     drop=('base',)
+       ...
+       >>> d = Dropper()
+       >>> d.get()
+       >>> # New subclasses will drop the 'base' field as well
+       >>> Subdropper = type('Dropper', (Dropper,), dict(config=dict(subdrop='[\w]')))
+       >>> s = Subdropper()
+       >>> s.get()
 
-    Defining path rules for File subclasses::
+    Setting compound fields
 
-        >>> from naming import File
-        >>> class FilePath(File):
-        ...     config = dict(base=r'\w+', extrafield='[a-z0-9]+')
-        ...     def get_path_pattern_list(self):
-        ...         # As an example we are returning the pattern list from the name object (base, extrafield)
-        ...         return super().get_pattern_list()
-        ...
-        >>> fp = FilePath()
-        >>> fp.get()
-        '{base} {extrafield}.{suffix}'
-        >>> # path attribute will vary depending on the OS
-        >>> fp.path
-        WindowsPath('{base}/{extrafield}/{base} {extrafield}.{suffix}')
+    .. py-repl::
+       :packages: naming
+       :src: _static/pyrepl_bootstrap.py
+       :repl-title: Compound fields
+       :no-banner:
 
-    Using properties as fields while solving names::
+       >>> # splitting the 'base' field into multiple joined fields
+       >>> class Compound(BasicPipeFile):
+       ...     config=dict(first=r'\d+', second=r'[a-zA-Z]+')
+       ...     join=dict(base=('first', 'second'))
+       ...
+       >>> c = Compound()
+       >>> c.get()  # we see the original field 'base'
+       >>> c.get(first=50, second='abc')  # providing each field to join will work
+       >>> c.name = c.get(base='101dalmatians', version=1, suffix='png')  # providing the key field will also work
+       >>> c.nice_name
+       >>> c.get(first=200)
+       >>> class CompoundByDash(Compound):
+       ...     join_sep = '-'  # you can specify the string to join compounds
+       ...
+       >>> c = CompoundByDash('101-dalmatians.1.png')
+       >>> c.get(first=300)
 
-        >>> from naming import PipeFile
-        >>> class PropertyField(PipeFile):
-        ...     config = dict(base=r'\w+', extrafield='[a-z0-9]+')
-        ...
-        ...     @property
-        ...     def nameproperty(self):
-        ...         return 'staticvalue'
-        ...
-        ...     @property
-        ...     def pathproperty(self):
-        ...         return 'path_field'
-        ...
-        ...     def get_path_pattern_list(self):
-        ...         result = super().get_pattern_list()
-        ...         result.append('pathproperty')
-        ...         return result
-        ...
-        ...     def get_pattern_list(self):
-        ...         result = super().get_pattern_list()
-        ...         result.append('nameproperty')
-        ...         return result
-        ...
-        >>> pf = PropertyField()
-        >>> pf.get()
-        '{base} {extrafield} staticvalue.{pipe}.{suffix}'
-        >>> pf.name = 'simple props staticvalue.1.abc'
-        >>> pf.values
-        {'base': 'simple',
-        'extrafield': 'props',
-        'nameproperty': 'staticvalue',
-        'pipe': '.1',
-        'version': '1',
-        'suffix': 'abc'}
-        >>> pf.path
-        WindowsPath('simple/props/path_field/simple props staticvalue.1.abc')
+    Defining path rules for File subclasses
+
+    In the browser REPL, paths appear as ``PosixPath``.
+
+    .. py-repl::
+       :packages: naming
+       :repl-title: Path rules
+       :no-banner:
+
+       >>> from naming import File
+       >>> class FilePath(File):
+       ...     config = dict(base=r'\w+', extrafield='[a-z0-9]+')
+       ...     def get_path_pattern_list(self):
+       ...         # As an example we are returning the pattern list from the name object (base, extrafield)
+       ...         return super().get_pattern_list()
+       ...
+       >>> fp = FilePath()
+       >>> fp.get()
+       >>> # path attribute will vary depending on the OS
+       >>> fp.path
+
+    Using properties as fields while solving names
+
+    In the browser REPL, paths appear as ``PosixPath``.
+
+    .. py-repl::
+       :packages: naming
+       :repl-title: Property fields
+       :no-banner:
+
+       >>> from naming import PipeFile
+       >>> class PropertyField(PipeFile):
+       ...     config = dict(base=r'\w+', extrafield='[a-z0-9]+')
+       ...
+       ...     @property
+       ...     def nameproperty(self):
+       ...         return 'staticvalue'
+       ...
+       ...     @property
+       ...     def pathproperty(self):
+       ...         return 'path_field'
+       ...
+       ...     def get_path_pattern_list(self):
+       ...         result = super().get_pattern_list()
+       ...         result.append('pathproperty')
+       ...         return result
+       ...
+       ...     def get_pattern_list(self):
+       ...         result = super().get_pattern_list()
+       ...         result.append('nameproperty')
+       ...         return result
+       ...
+       >>> pf = PropertyField()
+       >>> pf.get()
+       >>> pf.name = 'simple props staticvalue.1.abc'
+       >>> pf.values
+       >>> pf.path
