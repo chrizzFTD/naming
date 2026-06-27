@@ -29,7 +29,6 @@ from datetime import datetime
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'hoverxref.extension',
     'myst_parser',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosectionlabel',
@@ -53,12 +52,6 @@ togglebutton_hint = " "
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
 }
-hoverxref_auto_ref = True
-hoverxref_default_type = 'tooltip'
-
-hoverxref_intersphinx = list(set(intersphinx_mapping) - {'python'})
-hoverxref_intersphinx_types = dict.fromkeys(intersphinx_mapping, hoverxref_default_type)
-hoverxref_domains = ['py']
 
 always_document_param_types = True
 
