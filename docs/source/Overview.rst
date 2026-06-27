@@ -213,25 +213,20 @@ Usage
        >>> from naming import PipeFile
        >>> class PropertyField(PipeFile):
        ...     config = dict(base=r'\w+', extrafield='[a-z0-9]+')
-       ...
        ...     @property
        ...     def nameproperty(self):
        ...         return 'staticvalue'
-       ...
        ...     @property
        ...     def pathproperty(self):
        ...         return 'path_field'
-       ...
        ...     def get_path_pattern_list(self):
        ...         result = super().get_pattern_list()
        ...         result.append('pathproperty')
        ...         return result
-       ...
        ...     def get_pattern_list(self):
        ...         result = super().get_pattern_list()
        ...         result.append('nameproperty')
        ...         return result
-       ...
        >>> pf = PropertyField()
        >>> pf.get()
        >>> pf.name = 'simple props staticvalue.1.abc'
