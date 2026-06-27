@@ -227,6 +227,7 @@ Usage
        ...         result = super().get_pattern_list()
        ...         result.append('nameproperty')
        ...         return result
+       ...
        >>> pf = PropertyField()
        >>> pf.get()
        >>> pf.name = 'simple props staticvalue.1.abc'
