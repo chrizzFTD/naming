@@ -1,0 +1,206 @@
+diff --git a/sphinx_pyrepl_web/__init__.py b/sphinx_pyrepl_web/__init__.py
+index c94d765..85a5b7e 100644
+--- a/sphinx_pyrepl_web/__init__.py
++++ b/sphinx_pyrepl_web/__init__.py
+@@ -37,11 +37,15 @@ def setup(app: Sphinx):
+ 
+ def extract_doctest_source(text: str) -> str:
+     """Extract executable Python source from doctest-formatted text."""
++    examples = _DOCTEST_PARSER.get_examples(text)
++    if not examples:
++        return ""
++
+     lines: list[str] = []
+-    for example in _DOCTEST_PARSER.get_examples(text):
++    for index, example in enumerate(examples):
++        if index:
++            lines.append("")
+         lines.extend(example.source.splitlines())
+-    if not lines:
+-        return ""
+     return "\n".join(lines) + "\n"
+ 
+ 
+@@ -121,9 +125,15 @@ def register_startup_file(env, docname: str, path: Path) -> str:
+     return rel_src
+ 
+ 
+-def make_pyrepl_raw(replay_src: str, src: str | None = None) -> nodes.raw:
++def make_pyrepl_raw(
++    replay_src: str,
++    src: str | None = None,
++    packages: str | None = None,
++) -> nodes.raw:
+     """Build a raw HTML node for an autodoc doctest replay widget."""
+     attrs = ["no-header", "no-banner", f'replay-src="{replay_src}"']
++    if packages:
++        attrs.insert(0, f'packages="{packages}"')
+     if src:
+         attrs.insert(0, f'src="{src}"')
+     attr_str = " ".join(attrs)
+@@ -142,19 +152,19 @@ def _find_autodoc_desc(node: nodes.Node) -> addnodes.desc | None:
+ 
+ def _resolve_autodoc_bootstrap(
+     app: Sphinx, env, docname: str, desc: addnodes.desc
+-) -> tuple[str | None, str | None]:
+-    """Return (startup src path, generated bootstrap content) for autodoc REPLs."""
++) -> tuple[str | None, str | None, str | None]:
++    """Return (startup src path, generated bootstrap content, packages) for autodoc REPLs."""
+     if not app.config.pyrepl_autodoc_bootstrap:
+-        return None, None
++        return None, None, None
+ 
+     sig = desc.next_node(addnodes.desc_signature)
+     if sig is None:
+-        return None, None
++        return None, None, None
+ 
+     module_name = sig.get("module")
+     fullname = sig.get("fullname")
+     if not module_name:
+-        return None, None
++        return None, None, None
+ 
+     try:
+         mod = sys.modules.get(module_name)
+@@ -169,11 +179,13 @@ def _resolve_autodoc_bootstrap(
+         srcdir = Path(env.srcdir).resolve()
+         try:
+             source_path.relative_to(srcdir)
+-            return register_startup_file(env, docname, source_path), None
++            return register_startup_file(env, docname, source_path), None, None
+         except ValueError:
+-            return None, inspect.getsource(mod_obj) + "\n"
++            # Installed/out-of-tree modules cannot be exec'd from source (relative
++            # imports need package context). Load them via micropip instead.
++            return None, None, module_name.split(".")[0]
+     except (AttributeError, ImportError, OSError, TypeError):
+-        return None, None
++        return None, None, None
+ 
+ 
+ def _inside_autodoc_desc(node: nodes.Node) -> bool:
+@@ -198,9 +210,10 @@ def transform_doctest_blocks(app: Sphinx, doctree: nodes.document):
+             continue
+         bootstrap_src = None
+         bootstrap_content = None
++        packages = None
+         desc = _find_autodoc_desc(node)
+         if desc is not None:
+-            bootstrap_src, bootstrap_content = _resolve_autodoc_bootstrap(
++            bootstrap_src, bootstrap_content, packages = _resolve_autodoc_bootstrap(
+                 app, env, docname, desc
+             )
+         replay_src, startup_src = register_autodoc_repl(
+@@ -210,7 +223,7 @@ def transform_doctest_blocks(app: Sphinx, doctree: nodes.document):
+             bootstrap_src=bootstrap_src,
+             bootstrap_content=bootstrap_content,
+         )
+-        node.replace_self(make_pyrepl_raw(replay_src, startup_src))
++        node.replace_self(make_pyrepl_raw(replay_src, startup_src, packages))
+         replaced = True
+ 
+     if replaced:
+diff --git a/tests/test_autodoc_doctest.py b/tests/test_autodoc_doctest.py
+index 17c82b6..0bd8b57 100644
+--- a/tests/test_autodoc_doctest.py
++++ b/tests/test_autodoc_doctest.py
+@@ -94,32 +94,21 @@ def test_autodoc_doctest_becomes_pyrepl(autodoc_project):
+     replay_files = json.loads(
+         app.env.metadata["index"].get("pyrepl-replay-files", "{}")
+     )
+-    assert len(replay_files) == 2
+-    replay_scripts = {
+-        name: content for name, content in replay_files.items() if not name.endswith("-bootstrap.py")
+-    }
+-    bootstrap_scripts = {
+-        name: content for name, content in replay_files.items() if name.endswith("-bootstrap.py")
+-    }
+-    assert len(replay_scripts) == 1
+-    assert len(bootstrap_scripts) == 1
+-    script_name = next(iter(replay_scripts))
+-    script = replay_scripts[script_name]
++    assert len(replay_files) == 1
++    script_name = next(iter(replay_files))
++    script = replay_files[script_name]
+     assert script == "print([i for i in example_generator(4)])\n"
+     assert "[0, 1, 2, 3]" not in script
+-    assert "def example_generator" in next(iter(bootstrap_scripts.values()))
+ 
+     html = (outdir / "index.html").read_text(encoding="utf-8")
+     assert f'replay-src="_static/pyrepl/{script_name}"' in html
+-    assert 'src="_static/pyrepl/' in html
++    assert 'packages="repl_test_demo"' in html
++    assert not any(name.endswith("-bootstrap.py") for name in replay_files)
+     assert "no-header" in html
+     assert "no-banner" in html
+ 
+     script_path = outdir / "_static" / "pyrepl" / script_name
+     assert script_path.is_file(), f"missing replay script at {script_path}"
+-    bootstrap_name = next(iter(bootstrap_scripts))
+-    bootstrap_path = outdir / "_static" / "pyrepl" / bootstrap_name
+-    assert bootstrap_path.is_file(), f"missing bootstrap script at {bootstrap_path}"
+ 
+ 
+ def test_autodoc_scope_skips_plain_rst_doctest(autodoc_project):
+@@ -129,7 +118,7 @@ def test_autodoc_scope_skips_plain_rst_doctest(autodoc_project):
+     replay_files = json.loads(
+         app.env.metadata["index"].get("pyrepl-replay-files", "{}")
+     )
+-    assert len(replay_files) == 2
++    assert len(replay_files) == 1
+ 
+     html = (outdir / "index.html").read_text(encoding="utf-8")
+     assert html.count("replay-src=") == 1
+@@ -146,7 +135,7 @@ def test_all_scope_transforms_plain_rst_doctest(autodoc_project):
+     replay_files = json.loads(
+         app.env.metadata["index"].get("pyrepl-replay-files", "{}")
+     )
+-    assert len(replay_files) == 3
++    assert len(replay_files) == 2
+ 
+     html = (outdir / "index.html").read_text(encoding="utf-8")
+     assert html.count("replay-src=") == 2
+diff --git a/tests/test_strip_doctest_prompts.py b/tests/test_strip_doctest_prompts.py
+index 17c55e2..2d5063d 100644
+--- a/tests/test_strip_doctest_prompts.py
++++ b/tests/test_strip_doctest_prompts.py
+@@ -3,7 +3,7 @@ from sphinx_pyrepl_web import extract_doctest_source, strip_doctest_prompts
+ 
+ def test_extract_doctest_source_strips_expected_output():
+     block = ">>> add(1, 2)\n3\n>>> add(0, 0)\n0"
+-    assert extract_doctest_source(block) == "add(1, 2)\nadd(0, 0)\n"
++    assert extract_doctest_source(block) == "add(1, 2)\n\nadd(0, 0)\n"
+ 
+ 
+ def test_extract_doctest_source_example_generator():
+@@ -13,9 +13,28 @@ def test_extract_doctest_source_example_generator():
+     )
+ 
+ 
++def test_extract_doctest_source_name_class_example():
++    block = (
++        ">>> from naming import Name\n"
++        ">>> class MyName(Name):\n"
++        "...     config = dict(base=r'\\w+')\n"
++        "...\n"
++        ">>> n = MyName()\n"
++        "'{base}'"
++    )
++    assert extract_doctest_source(block) == (
++        "from naming import Name\n"
++        "\n"
++        "class MyName(Name):\n"
++        "    config = dict(base=r'\\w+')\n"
++        "\n"
++        "n = MyName()\n"
++    )
++
++
+ def test_extract_doctest_source_multiline_class():
+     block = ">>> class Foo:\n...     x = 1\n...\n>>> Foo()\n<Foo object>"
+-    assert extract_doctest_source(block) == "class Foo:\n    x = 1\nFoo()\n"
++    assert extract_doctest_source(block) == "class Foo:\n    x = 1\n\nFoo()\n"
+ 
+ 
+ def test_extract_doctest_source_empty():
