@@ -49,6 +49,7 @@ extensions = [
 # Offset to play well with copybutton
 toggleprompt_offset_right = 35
 togglebutton_hint = " "
+pyrepl_doctest_blocks = "autodoc"
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
 }
