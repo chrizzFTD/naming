@@ -19,14 +19,6 @@
 
 from datetime import datetime
 
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent / "_ext"))
-import pyrepl_autodoc_fix
-
-pyrepl_autodoc_fix.apply()
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
