@@ -3,4 +3,6 @@ dist/
 build/
 naming.egg-info/
 docs/build/
+docs/_build/
+docs/source/_static/wheels/*.whl
 *.pyc
